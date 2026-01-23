@@ -1,0 +1,46 @@
+{
+  "name": "loop-web-client",
+  "version": "0.0.1",
+  "main": "build/index.js",
+  "description": "\"Loop TypeScript WebClient\"",
+  "engines": {
+    "node": ">=v18.0.0"
+  },
+  "scripts": {
+    "build": "rimraf ./build && tsc -p tsconfig.json",
+    "lint": "npx @biomejs/biome lint --write \"{src,apps,libs,test}/**/*.ts\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/triplesun/loop-client.git"
+  },
+  "author": "triple-sun",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/triplesun/loop-client/issues"
+  },
+  "homepage": "https://github.com/triplesun/loop-client/fox-mattermost#readme",
+  "files": [
+    "build/**/*",
+    "*.md"
+  ],
+  "dependencies": {
+    "@triplesunn/logger": "^0.0.1",
+    "again-ts": "^0.3.6",
+    "axios": "^1.11.0",
+    "breadline-ts": "^0.0.6",
+    "eventemitter3": "^5.0.1",
+    "form-data": "^4.0.5",
+    "is-stream": "^4.0.1",
+    "qs": "^6.14.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.11",
+    "@tsconfig/recommended": "^1",
+    "@types/qs": "^6.14.0",
+    "@types/ws": "^8.5.11",
+    "tsd": "^0.33.0",
+    "typescript": "5.9.3"
+  }
+}

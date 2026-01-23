@@ -1,0 +1,15 @@
+export const HEADER_AUTH = "Authorization";
+export const HEADER_BEARER = "BEARER";
+export const HEADER_CONTENT_TYPE = "Content-Type";
+export const HEADER_REQUESTED_WITH = "X-Requested-With";
+export const HEADER_USER_AGENT = "User-Agent";
+export const HEADER_X_CLUSTER_ID = "X-Cluster-Id";
+export const HEADER_X_CSRF_TOKEN = "X-CSRF-Token";
+export const HEADER_X_VERSION_ID = "X-Version-Id";
+export const LOGS_PER_PAGE_DEFAULT = 10000;
+export const AUTOCOMPLETE_LIMIT_DEFAULT = 25;
+export const PER_PAGE_DEFAULT = 60;
+export const DEFAULT_LIMIT_BEFORE = 30;
+export const DEFAULT_LIMIT_AFTER = 30;
+export const DEFAULT_FILE_NAME = 'Untitled'
+export const DEFAULT_USER_ME = 'me';
