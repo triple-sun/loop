@@ -99,6 +99,11 @@ export interface OptionalUserID {
 	/** @description Encoded user ID. */
 	user_id?: string;
 }
+
+export interface UserIDMe {
+	/** @description Encoded user ID. @default me - return data for current token */
+	user_id?: string | "me";
+}
 export interface UserIDMe {
 	/** @description Encoded user ID. @default me - return data for current token */
 	user_id?: string;

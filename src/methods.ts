@@ -1,20 +1,45 @@
 import EventEmitter from "eventemitter3";
+import type { Stream } from "form-data";
 import { WebClient } from "./client";
 import type {
 	UserCustomStatus,
 	UserProfile,
 	UserStatusResponse
 } from "./types";
+import type { Bot, BotPatch } from "./types/bots";
 import type {
 	Channel,
 	ChannelMembership,
 	ChannelStats,
 	ChannelViewResponse
 } from "./types/channels";
+import type {
+	CloudCustomer,
+	Invoice,
+	Limits,
+	Product,
+	Subscription
+} from "./types/cloud";
+import type { DataRetentionCustomPolicies } from "./types/data_retention";
 import type { CustomEmoji } from "./types/emojis";
 import { ContentType } from "./types/enum";
 import type { FileInfo, FileUploadResponse } from "./types/files";
+import type { Group, GroupStats, GroupSyncable } from "./types/groups";
+import type {
+	Command,
+	IncomingWebhook,
+	OAuthApp,
+	OutgoingWebhook
+} from "./types/integrations";
+import type { Job } from "./types/jobs";
 import type { AdminUpdateRolesArguments } from "./types/methods/admin.methods";
+import type {
+	BotsConvertUserArguments,
+	BotsCreateArguments,
+	BotsGetArguments,
+	BotsListArguments,
+	BotsPatchArguments
+} from "./types/methods/bots.methods";
 import type {
 	ChannelsCreateArguments,
 	ChannelsCreateDirectArguments,
@@ -31,7 +56,38 @@ import type {
 	ChannelsUpdateArguments,
 	ChannelsViewArguments
 } from "./types/methods/channel.methods";
+import type {
+	CloudConfirmCustomerPaymentArguments,
+	CloudCreateCustomerPaymentArguments,
+	CloudGetCustomerArguments,
+	CloudGetCustomerPaymentArguments,
+	CloudGetInvoicesArguments,
+	CloudGetLimitsArguments,
+	CloudGetProductsArguments,
+	CloudGetSubscriptionArguments,
+	CloudRequestTrialArguments,
+	CloudUpdateAddressArguments,
+	CloudUpdateCustomerArguments,
+	CloudUpdateSubscriptionArguments,
+	CloudValidateBusinessEmailArguments
+} from "./types/methods/cloud.methods";
 import type { UserID } from "./types/methods/common.methods";
+import type {
+	DataRetentionAddPolicyChannelsArguments,
+	DataRetentionAddPolicyTeamsArguments,
+	DataRetentionCreatePolicyArguments,
+	DataRetentionDeletePolicyArguments,
+	DataRetentionGetPoliciesArguments,
+	DataRetentionGetPolicyArguments,
+	DataRetentionGetPolicyChannelsArguments,
+	DataRetentionGetPolicyTeamsArguments,
+	DataRetentionPatchPolicyArguments,
+	DataRetentionRemovePolicyChannelsArguments,
+	DataRetentionRemovePolicyTeamsArguments,
+	DataRetentionSearchPolicyChannelsArguments,
+	DataRetentionSearchPolicyTeamsArguments,
+	DataRetentionUpdatePolicyArguments
+} from "./types/methods/data_retention.methods";
 import type {
 	EmojisAutocompleteArguments,
 	EmojisCreateArguments,
@@ -48,9 +104,72 @@ import type {
 	FilesUploadArguments
 } from "./types/methods/file.methods";
 import type {
+	GroupsAddSyncableArguments,
+	GroupsChannelArguments,
+	GroupsCreateArguments,
+	GroupsDeleteArguments,
+	GroupsGetArguments,
+	GroupsGetStatsArguments,
+	GroupsListArguments,
+	GroupsListForUserArguments,
+	GroupsListSyncablesArguments,
+	GroupsPatchArguments,
+	GroupsPatchSyncableArguments,
+	GroupsRemoveSyncableArguments,
+	GroupsRestoreArguments,
+	GroupsSearchArguments,
+	GroupsTeamArguments,
+	GroupsUpdateArguments
+} from "./types/methods/groups.methods";
+import type {
+	CommandsCreateArguments,
+	CommandsDeleteArguments,
+	CommandsExecuteArguments,
+	CommandsListArguments,
+	CommandsRegenerateTokenArguments,
+	CommandsUpdateArguments,
+	IncomingWebhooksCreateArguments,
+	IncomingWebhooksDeleteArguments,
+	IncomingWebhooksGetArguments,
+	IncomingWebhooksListArguments,
+	IncomingWebhooksUpdateArguments,
+	OAuthAppsCreateArguments,
+	OAuthAppsDeleteArguments,
+	OAuthAppsGetArguments,
+	OAuthAppsGetInfoArguments,
+	OAuthAppsListArguments,
+	OAuthAppsRegenerateSecretArguments,
+	OAuthAppsUpdateArguments,
+	OutgoingWebhooksCreateArguments,
+	OutgoingWebhooksDeleteArguments,
+	OutgoingWebhooksGetArguments,
+	OutgoingWebhooksListArguments,
+	OutgoingWebhooksRegenerateTokenArguments,
+	OutgoingWebhooksUpdateArguments
+} from "./types/methods/integrations.methods";
+import type {
 	MethodWithOptionalArgument,
 	MethodWithRequiredArgument
 } from "./types/methods/internal.methods";
+import type {
+	JobsCancelArguments,
+	JobsCreateArguments,
+	JobsGetArguments,
+	JobsListArguments,
+	JobsListByTypeArguments
+} from "./types/methods/jobs.methods";
+import type {
+	PluginsDisableArguments,
+	PluginsEnableArguments,
+	PluginsGetArguments,
+	PluginsGetMarketplaceArguments,
+	PluginsGetStatusesArguments,
+	PluginsGetWebappArguments,
+	PluginsInstallFromUrlArguments,
+	PluginsInstallMarketplaceArguments,
+	PluginsRemoveArguments,
+	PluginsUploadArguments
+} from "./types/methods/plugins.methods";
 import type {
 	PostsCreateArguments,
 	PostsDeleteArguments,
@@ -72,6 +191,22 @@ import type {
 	ReactionsGetBulkArguments,
 	ReactionsGetForPostArguments
 } from "./types/methods/reaction.methods";
+import type { ReportsStartUsersBatchExportArguments } from "./types/methods/reports.methods";
+import type {
+	RolesGetArguments,
+	RolesGetByNameArguments,
+	RolesGetByNamesArguments,
+	RolesPatchArguments
+} from "./types/methods/roles.methods";
+import type {
+	SchemesCreateArguments,
+	SchemesDeleteArguments,
+	SchemesGetArguments,
+	SchemesGetChannelsArguments,
+	SchemesGetTeamsArguments,
+	SchemesListArguments,
+	SchemesPatchArguments
+} from "./types/methods/schemes.methods";
 import type {
 	TeamsCheckNameExistsArguments,
 	TeamsCreateArguments,
@@ -100,9 +235,12 @@ import type {
 	UsersStatusGetAruments,
 	UsersStatusSetAruments
 } from "./types/methods/user.methods";
+import type { PluginManifest, PluginStatus } from "./types/plugins";
 import type { Post, PostList } from "./types/posts";
 import type { PreferenceType } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
+import type { Role } from "./types/roles";
+import type { Scheme } from "./types/schemes";
 import type { Team, TeamStats } from "./types/teams";
 import type {
 	StatusOK,
@@ -110,10 +248,9 @@ import type {
 	WebApiCallResult,
 	WebClientEvent
 } from "./types/web-api";
-import { Stream } from "form-data";
 
 /**
- * Binds a certain `method` and its (required) arguments and result types to the `apiCall` method in `LoopClient`.
+ *  Binds a certain `method` and its (required) arguments and result types to the `apiCall` method in `LoopClient`.
  */
 function bindApiCall<ARGS, RESULT>(
 	self: Methods,
