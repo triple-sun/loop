@@ -1,6 +1,5 @@
 import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
-import { WebClient } from "./client";
 import type { UserCustomStatus, UserProfile, UserStatus } from "./types";
 import type { AnalyticsRow, LogFilter } from "./types/admin";
 import type { Bot } from "./types/bots";
@@ -275,6 +274,7 @@ import {
 	type WebApiCallResult,
 	type WebClientEvent
 } from "./types/web-api";
+import { WebClient } from "./web-client";
 
 /**
  *  Binds a certain `method` and its (required) arguments and result types to the `apiCall` method in `LoopClient`.
@@ -1528,14 +1528,14 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "brand/image",
 			type: ContentType.FormData
 		}),
-		deleteImage: bindApiCallWithOptionalArg<BrandDeleteImageArguments, StatusOK>(
-			this,
-			{
-				method: "DELETE",
-				path: "brand/image",
-				type: ContentType.URLEncoded
-			}
-		)
+		deleteImage: bindApiCallWithOptionalArg<
+			BrandDeleteImageArguments,
+			StatusOK
+		>(this, {
+			method: "DELETE",
+			path: "brand/image",
+			type: ContentType.URLEncoded
+		})
 	};
 
 	public readonly compliance = {
@@ -1570,11 +1570,14 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "actions/dialogs/open",
 			type: ContentType.JSON
 		}),
-		submitDialog: bindApiCall<InteractiveSubmitDialogArguments, StatusOK>(this, {
-			method: "POST",
-			path: "actions/dialogs/submit",
-			type: ContentType.JSON
-		})
+		submitDialog: bindApiCall<InteractiveSubmitDialogArguments, StatusOK>(
+			this,
+			{
+				method: "POST",
+				path: "actions/dialogs/submit",
+				type: ContentType.JSON
+			}
+		)
 	};
 
 	public readonly termsOfService = {

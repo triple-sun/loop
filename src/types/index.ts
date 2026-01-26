@@ -48,3 +48,5 @@ export * from "./threads";
 export * from "./typing";
 export * from "./users";
 export * from "./utilities";
+export * from "./web-api";
+export * from "./websocket";

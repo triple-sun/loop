@@ -1,4 +1,3 @@
-export { WebClient } from "./client";
 export * from "./const";
 export {
 	ServerErrorID,
@@ -7,4 +6,5 @@ export {
 } from "./errors";
 export * from "./instrument";
 export * from "./types";
-export * from "./websocket";
+export { WebClient } from "./web-client";
+export * from "./websocket-client";

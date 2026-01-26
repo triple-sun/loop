@@ -3,57 +3,47 @@
 
 import { ConsoleLogger, type Logger } from "@triplesunn/logger";
 import WebSocket from "ws";
+import {
+	WEBSOCKET_HELLO,
+	WEBSOCKET_JITTER_RANGE,
+	WEBSOCKET_MAX_FAILS,
+	WEBSOCKET_MAX_RETRY_TIME,
+	WEBSOCKET_MIN_RETRY_TIME
+} from "./const";
 import { getUserAgent } from "./instrument";
-
-const MAX_WEBSOCKET_FAILS = 7;
-const MIN_WEBSOCKET_RETRY_TIME = 3000; // 3 sec
-const MAX_WEBSOCKET_RETRY_TIME = 300000; // 5 mins
-const JITTER_RANGE = 2000; // 2 sec
-
-const WEBSOCKET_HELLO = "hello";
-
-export type MessageListener = (msg: WebSocketMessage) => void;
-export type FirstConnectListener = () => void;
-export type ReconnectListener = () => void;
-export type MissedMessageListener = () => void;
-export type ErrorListener = (event: Event) => void;
-export type CloseListener = (connectFailCount: number) => void;
-
-export type WebSocketClientInitArguments = {
-	url?: string | null | undefined;
-	token?: string | undefined;
-	postedAck?: boolean | undefined;
-	/** Сброс счетчика при переподключении */
-	resetCount?: boolean | undefined;
-};
-
-export type WebSocketBroadcast = {
-	omit_users: Record<string, boolean>;
-	user_id: string;
-	channel_id: string;
-	team_id: string;
-};
-
-export type WebSocketMessage<T = unknown> = {
-	event: string;
-	data: T;
-	broadcast: WebSocketBroadcast;
-	seq: number;
-};
+import type {
+	CloseListener,
+	FirstConnectListener,
+	MessageListener,
+	MissedMessageListener,
+	ReconnectListener,
+	WebSocketClientInitArguments,
+	WebSocketClientOptions
+} from "./types";
 
 export default class WebSocketClient {
 	private conn: WebSocket | null;
+	/**
+	 * @example wss://your-loop.loop.ru/api/v4/websocket
+	 */
 	private url: string | null;
+	private token: string;
 
-	// responseSequence is the number to track a response sent
-	// via the websocket. A response will always have the same sequence number
-	// as the request.
-	private responseSequence: number;
+	private logger: Logger;
 
-	// serverSequence is the incrementing sequence number from the
-	// server-sent event stream.
-	private serverSequence: number;
-	private connectFailCount: number;
+	/**
+	 * @description rSequence is the number to track a response sent
+	 * via the websocket. A response will always have the same sequence number
+	 * as the request.
+	 */
+	private rSequence: number;
+
+	/**
+	 * @description  sSequence is the incrementing sequence number from the
+	 * server-sent event stream.
+	 */
+	private sSequence: number;
+	private connFailCount: number;
 	private responseCallbacks: { [x: number]: (msg: unknown) => void };
 
 	private messageListeners = new Set<MessageListener>();
@@ -66,19 +56,38 @@ export default class WebSocketClient {
 	private postedAck: boolean;
 
 	private resetCount: boolean;
-	private logger: Logger;
 
-	constructor(logger: Logger = new ConsoleLogger()) {
+	private jitterRange: number;
+	private maxFails: number;
+	private minRetryTime: number;
+	private maxRetryTime: number;
+
+	constructor({
+		url,
+		token,
+		resetCount = true,
+		postedAck = false,
+		logger = new ConsoleLogger(),
+		jitterRange = WEBSOCKET_JITTER_RANGE,
+		maxFails = WEBSOCKET_MAX_FAILS,
+		minRetryTime = WEBSOCKET_MIN_RETRY_TIME,
+		maxRetryTime = WEBSOCKET_MAX_RETRY_TIME
+	}: WebSocketClientOptions) {
 		this.conn = null;
-		this.url = null;
-		this.responseSequence = 1;
-		this.serverSequence = 0;
-		this.connectFailCount = 0;
+		this.url = url;
+		this.token = token;
+		this.rSequence = 1;
+		this.sSequence = 0;
+		this.connFailCount = 0;
 		this.responseCallbacks = {};
 		this.connectionId = "";
-		this.postedAck = false;
-		this.resetCount = true;
+		this.postedAck = postedAck;
+		this.resetCount = resetCount;
 		this.logger = logger;
+		this.jitterRange = jitterRange;
+		this.maxFails = maxFails;
+		this.minRetryTime = minRetryTime;
+		this.maxRetryTime = maxRetryTime;
 	}
 
 	// on connect, only send auth cookie and blank state.
@@ -86,11 +95,11 @@ export default class WebSocketClient {
 	// on reconnect, send cookie, connectionID, sequence number.
 	initialize(
 		{
-			token,
 			postedAck,
 			resetCount,
-			url = this.url
-		}: WebSocketClientInitArguments = { url: this.url }
+			url = this.url,
+			token = this.token
+		}: WebSocketClientInitArguments = { url: this.url, token: this.token }
 	): void {
 		if (this.conn) return;
 
@@ -99,7 +108,7 @@ export default class WebSocketClient {
 			return;
 		}
 
-		if (this.connectFailCount === 0) {
+		if (this.connFailCount === 0) {
 			this.logger.info(`websocket connecting to ${url}`);
 		}
 
@@ -111,13 +120,13 @@ export default class WebSocketClient {
 		// We cannot also send it as part of the auth_challenge, because the session cookie is already sent with the request.
 		this.url = url;
 		this.conn = new WebSocket(
-			`${url}?connection_id=${this.connectionId}&sequence_number=${this.serverSequence}${this.postedAck ? "&posted_ack=true" : ""}`
+			`${url}?connection_id=${this.connectionId}&sequence_number=${this.sSequence}${this.postedAck ? "&posted_ack=true" : ""}`
 		);
 
 		this.conn.onopen = () => {
 			if (token) this.sendMessage("authentication_challenge", { token });
 
-			if (this.connectFailCount > 0) {
+			if (this.connFailCount > 0) {
 				this.logger.info("websocket re-established connection");
 				this.reconnectListeners.forEach(listener => {
 					listener();
@@ -128,41 +137,37 @@ export default class WebSocketClient {
 				});
 			}
 
-			this.connectFailCount = 0;
+			this.connFailCount = 0;
 		};
 
 		this.conn.onclose = () => {
 			this.conn = null;
-			this.responseSequence = 1;
+			this.rSequence = 1;
 
 			if (this.resetCount) {
-				this.serverSequence = 0;
+				this.sSequence = 0;
 				this.connectionId = null;
 			}
 
-			if (this.connectFailCount === 0) this.logger.info("websocket closed");
+			if (this.connFailCount === 0) this.logger.info("websocket closed");
 
-			this.connectFailCount++;
+			this.connFailCount++;
 
 			this.closeListeners.forEach(listener => {
-				listener(this.connectFailCount);
+				listener(this.connFailCount);
 			});
 
-			let retryTime = MIN_WEBSOCKET_RETRY_TIME;
+			let retryTime = WEBSOCKET_MIN_RETRY_TIME;
 
 			// If we've failed a bunch of connections then start backing off
-			if (this.connectFailCount > MAX_WEBSOCKET_FAILS) {
-				retryTime =
-					MIN_WEBSOCKET_RETRY_TIME *
-					this.connectFailCount *
-					this.connectFailCount;
-				if (retryTime > MAX_WEBSOCKET_RETRY_TIME) {
-					retryTime = MAX_WEBSOCKET_RETRY_TIME;
-				}
+			if (this.connFailCount > this.maxFails) {
+				retryTime = this.minRetryTime * this.connFailCount * this.connFailCount;
+
+				if (retryTime > this.maxRetryTime) retryTime = this.maxRetryTime;
 			}
 
 			// Applying jitter to avoid thundering herd problems.
-			retryTime += Math.random() * JITTER_RANGE;
+			retryTime += Math.random() * this.jitterRange;
 
 			setTimeout(() => {
 				this.initialize({ url, token, postedAck });
@@ -213,7 +218,7 @@ export default class WebSocketClient {
 							}
 						}
 
-						this.serverSequence = 0;
+						this.sSequence = 0;
 					}
 
 					// If it's a fresh connection, we have to set the connectionId regardless.
@@ -223,20 +228,20 @@ export default class WebSocketClient {
 
 				// Now we check for sequence number, and if it does not match,
 				// we just disconnect and reconnect.
-				if (msg.seq !== this.serverSequence) {
+				if (msg.seq !== this.sSequence) {
 					this.logger.info(
 						"missed websocket event, act_seq=" +
 							msg.seq +
 							" exp_seq=" +
-							this.serverSequence
+							this.sSequence
 					);
 					// We are not calling this.close() because we need to auto-restart.
-					this.connectFailCount = 0;
-					this.responseSequence = 1;
+					this.connFailCount = 0;
+					this.rSequence = 1;
 					this.conn?.close(); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
 					return;
 				}
-				this.serverSequence = msg.seq + 1;
+				this.sSequence = msg.seq + 1;
 
 				this.messageListeners.forEach(listener => {
 					listener(msg);
@@ -318,8 +323,8 @@ export default class WebSocketClient {
 	};
 
 	close() {
-		this.connectFailCount = 0;
-		this.responseSequence = 1;
+		this.connFailCount = 0;
+		this.rSequence = 1;
 		if (this.conn && this.conn.readyState === WebSocket.OPEN) {
 			this.conn.onclose = () => {};
 			this.conn.close();
@@ -335,7 +340,7 @@ export default class WebSocketClient {
 	) {
 		const msg = {
 			action,
-			seq: this.responseSequence++,
+			seq: this.rSequence++,
 			data
 		};
 
