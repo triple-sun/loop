@@ -1,6 +1,6 @@
 
 import type { Audit } from "./audits";
-import type { Compliance } from "./compliance";
+import type { ComplianceReport } from "./compliance";
 import type { AdminConfig, ClientLicense, EnvironmentConfig } from "./config";
 import type { DataRetentionCustomPolicies } from "./data-retention";
 import type { MixedUnlinkedGroupRedux } from "./groups";
@@ -52,7 +52,7 @@ export type AdminState = {
 	audits: Record<string, Audit>;
 	config: Partial<AdminConfig>;
 	environmentConfig: Partial<EnvironmentConfig>;
-	complianceReports: Record<string, Compliance>;
+	complianceReports: Record<string, ComplianceReport>;
 	ldapGroups: Record<string, MixedUnlinkedGroupRedux>;
 	ldapGroupsCount: number;
 	userAccessTokens: Record<string, UserAccessToken>;

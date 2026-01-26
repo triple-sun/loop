@@ -83,3 +83,7 @@ export interface GroupsPatchSyncableArguments {
 		scheme_admin: boolean;
 	};
 }
+
+export interface GroupsDeleteLdapLinkArguments {
+	group_id: string;
+}

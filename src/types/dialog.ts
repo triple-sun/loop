@@ -45,8 +45,3 @@ export type SubmitDialogResponse = {
   errors?: Record<string, string>;
 };
 
-export type OpenDialogParams = {
-  trigger_id: string;
-  url?: string;
-  dialog: Dialog;
-};

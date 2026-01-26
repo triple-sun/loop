@@ -15,6 +15,10 @@ export interface PostsCreateArguments extends TokenOverridable, ChannelID {
 	props?: Record<string, unknown>;
 	/** An optional JSON property bag to attach to the post metadata */
 	metadata?: Record<string, unknown>;
+	/**
+	 * @description Whether to set the user status as online or not.
+	 */
+	set_online?: boolean;
 }
 
 /**
@@ -92,4 +96,53 @@ export interface PostsMoveArguments extends TokenOverridable {
 	post_id: string;
 	/** ID of the channel to move the post to */
 	channel_id: string;
+}
+
+export interface PostsCreateEphemeralArguments extends TokenOverridable {
+	user_id: string;
+	post: Omit<PostsCreateArguments, "channel_id"> & { channel_id?: string };
+}
+
+export interface PostsMarkAsUnreadArguments extends TokenOverridable {
+	user_id: string;
+	post_id: string;
+}
+
+export interface PostsGetFlaggedArguments extends TokenOverridable, Paginated {
+	user_id: string;
+	team_id?: string;
+	channel_id?: string;
+}
+
+export interface PostsGetFileInfoArguments extends TokenOverridable {
+	post_id: string;
+}
+
+export interface PostsGetAroundLastUnreadArguments extends TokenOverridable {
+	channel_id: string;
+	user_id: string;
+	limit_before?: number;
+	limit_after?: number;
+}
+
+export interface PostsSearchArguments extends TokenOverridable {
+	team_id: string;
+	terms: string;
+	is_or_search: boolean;
+	time_zone_offset?: number;
+	include_deleted_channels?: boolean;
+	page?: number;
+	per_page?: number;
+}
+
+export interface PostsDoActionArguments extends TokenOverridable {
+	post_id: string;
+	action_id: string;
+	channel_id?: string;
+}
+
+export interface PostsSetReminderArguments extends TokenOverridable {
+	user_id: string;
+	post_id: string;
+	target_time: number;
 }

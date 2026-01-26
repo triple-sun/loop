@@ -1,11 +1,11 @@
-import type { Compliance } from "../compliance";
+import type { ComplianceReport } from "../compliance";
 
 /**
  * Arguments for creating a compliance report.
  */
 export interface ComplianceCreateReportArguments {
 	/** The compliance report details */
-	job: Partial<Compliance>;
+	job: Partial<ComplianceReport>;
 }
 
 /**

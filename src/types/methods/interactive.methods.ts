@@ -1,11 +1,21 @@
-import type { OpenDialogParams } from "../dialog";
+import type { Dialog } from "../dialog";
 
 /**
  * Arguments for opening a dialog.
  */
 export interface InteractiveOpenDialogArguments {
-	/** The dialog parameters */
-	dialog: OpenDialogParams;
+	/**
+	 * @description Trigger ID provided by other action
+	 */
+	trigger_id: string;
+	/**
+	 * @description Dialog to open
+	 */
+	dialog: Dialog;
+	/**
+	 * @description The URL to send the submitted dialog payload to
+	 */
+	url?: string;
 }
 
 /**

@@ -7,13 +7,66 @@ import type {
 	TokenOverridable
 } from "./common.methods";
 
-// Commands
-export interface CommandsCreateArguments extends Omit<Command, "id"> {}
+/**
+ * Arguments for creating a command.
+ */
+export interface CommandsCreateArguments {
+	/**
+	 * @description Team ID to where the command should be created
+	 */
+	team_id: string;
+	/**
+	 * @description `P` for post request, `G` for get request
+	 */
+	method: "P" | "G";
+	/**
+	 * @description Activation word to trigger the command
+	 */
+	trigger: string;
+	/**
+	 * @description The URL that the command will make the request
+	 */
+	url: string;
+	/**
+	 * @description The name of the command
+	 */
+	display_name?: string;
+	/**
+	 * @description The description of the command
+	 */
+	description?: string;
+	/**
+	 * @description The username that the command will show
+	 */
+	username?: string;
+	/**
+	 * @description The icon URL that the command will show
+	 */
+	icon_url?: string;
+	/**
+	 * @description Whether to show autocomplete options
+	 */
+	auto_complete?: boolean;
+	/**
+	 * @description The description of the autocomplete usage
+	 */
+	auto_complete_desc?: string;
+	/**
+	 * @description The hint of the autocomplete usage
+	 */
+	auto_complete_hint?: string;
+}
 
+/**
+ * Arguments for updating a command.
+ */
 export interface CommandsUpdateArguments extends Partial<Command> {
 	id: string;
 }
 
+/**
+ * Arguments for deleting a command.
+ */
 export interface CommandsDeleteArguments {
 	command_id: string;
 }
@@ -32,6 +85,11 @@ export interface CommandsExecuteArguments {
 	team_id: string;
 	channel_id: string;
 	root_id?: string;
+}
+
+export interface CommandsListAutocompleteArguments {
+	team_id: string;
+	user_input: string;
 }
 
 // Incoming Webhooks

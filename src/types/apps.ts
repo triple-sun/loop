@@ -1,7 +1,7 @@
 
 import type { ProductScope } from './products';
 
-export enum Permission {
+export enum AppPermission {
   UserJoinedChannelNotification = 'user_joined_channel_notification',
   ActAsBot = 'act_as_bot',
   ActAsUser = 'act_as_user',
@@ -10,12 +10,34 @@ export enum Permission {
   RemoteWebhooks = 'remote_webhooks',
 }
 
-export enum Locations {
+export enum AppLocations {
   PostMenu = '/post_menu',
   ChannelHeader = '/channel_header',
   Command = '/command',
   InPost = '/in_post',
 }
+
+/** Тип поля формы приложений mattermost */
+export enum AppFormFieldType {
+  Boolean = "boolean" /**   A boolean selector represented as a checkbox. */,
+  Channel = "channel" /**    A dropdown to select channels. */,
+  DynamicSelect = "dynamic_select" /** A dropdown select that loads the elements dynamically. */,
+  Markdown = "markdown" /**  An arbitrary markdown text; only visible in modal dialogs. Read-only. */,
+  StaticSelect = "static_select" /**  A dropdown select with static elements. */,
+  Text = "text" /**   A plain text field. */,
+  User = "user" /**   A dropdown to select users. */
+}
+/** The text field subtypes, except textarea, map to the types of the HTML input form element */
+export enum AppFormFieldSubType {
+  Input = "input" /**  A single-line text input field. */,
+  TextArea = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
+  Email = "email" /**  A field for editing an email address. */,
+  Number = "number" /** A field for entering a number; includes a spinner component. */,
+  Password = "password" /** A single-line text input field whose value is obscured. */,
+  Tel = "tel" /**  A field for entering a telephone number. */,
+  Url = "url" /**  A field for entering a URL. */
+}
+
 
 export type AppManifest = {
   app_id: string;
@@ -24,8 +46,8 @@ export type AppManifest = {
   icon?: string;
   display_name: string;
   description?: string;
-  requested_permissions?: Permission[];
-  requested_locations?: Locations[];
+  requested_permissions?: AppPermission[];
+  requested_locations?: AppLocations[];
 };
 
 export type AppModalState = {
@@ -182,6 +204,7 @@ export type AppForm = {
   depends_on?: string[];
 };
 
+
 export type AppFormValue = string | AppSelectOption | boolean | null;
 export type AppFormValues = { [name: string]: AppFormValue };
 
@@ -197,7 +220,7 @@ export type AppFieldType = string;
 export type AppField = {
   // Name is the name of the JSON field to use.
   name: string;
-  type: AppFieldType;
+  type: AppFormFieldType;
   is_required?: boolean;
   readonly?: boolean;
 
@@ -219,7 +242,7 @@ export type AppField = {
   lookup?: AppCall;
 
   // Text props
-  subtype?: string;
+  subtype?: AppFormFieldSubType;
   min_length?: number;
   max_length?: number;
 };

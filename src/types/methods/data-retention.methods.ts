@@ -73,3 +73,19 @@ export interface DataRetentionSearchPolicyChannelsArguments {
 	policy_id: string;
 	term: string;
 }
+
+export interface DataRetentionGetUserTeamPoliciesArguments {
+	user_id: string;
+	page?: number;
+	per_page?: number;
+}
+
+export interface DataRetentionGetUserChannelPoliciesArguments {
+	user_id: string;
+	page?: number;
+	per_page?: number;
+}
+
+export type DataRetentionGetGlobalPolicyArguments = {};
+
+export type DataRetentionGetPolicyCountArguments = {};

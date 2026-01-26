@@ -46,6 +46,10 @@ export interface ChannelsListArguments
 	include_total_count?: boolean;
 	/** Include deleted channels in the response */
 	include_deleted?: boolean;
+	/** Exclude default channels from search results */
+	exclude_default_channels?: boolean;
+	/** If set, exclude channels that are associated to the given group */
+	not_associated_to_group?: string;
 }
 
 /**
@@ -134,3 +138,43 @@ export interface ChannelsMembersArguments
 	extends TokenOverridable,
 		ChannelID,
 		Paginated {}
+
+/**
+ * Arguments for searching all channels.
+ */
+export interface ChannelsSearchAllArguments extends TokenOverridable {
+	term: string;
+	not_associated_to_group?: string;
+	exclude_default_channels?: boolean;
+	include_deleted?: boolean;
+	exclude_group_constrained?: boolean;
+	public?: boolean;
+	private?: boolean;
+	deleted?: boolean;
+	page?: number;
+	per_page?: number;
+}
+
+/**
+ * Arguments for searching archived channels.
+ */
+export interface ChannelsSearchArchivedArguments
+	extends TokenOverridable,
+		TeamID,
+		Paginated {
+	term: string;
+}
+
+/**
+ * Arguments for autocompleting channels.
+ */
+export interface ChannelsAutocompleteArguments extends TokenOverridable, TeamID {
+	name: string;
+}
+
+/**
+ * Arguments for getting channels by IDs.
+ */
+export interface ChannelsGetByIdsArguments extends TokenOverridable, TeamID {
+	channel_ids: string[];
+}

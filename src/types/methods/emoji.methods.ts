@@ -29,3 +29,11 @@ export interface EmojisSearchArguments extends TokenOverridable, Paginated {
 export interface EmojisAutocompleteArguments extends TokenOverridable {
 	name: string;
 }
+
+export interface EmojisGetByNameArguments extends TokenOverridable {
+	name: string;
+}
+
+export interface EmojisGetImageArguments extends TokenOverridable {
+	emoji_id: string;
+}
