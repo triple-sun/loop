@@ -53,14 +53,10 @@ import type {
 } from "./types/methods/channel.methods";
 import type {
 	CloudConfirmCustomerPaymentArguments,
-	CloudCreateCustomerPaymentArguments,
-	CloudGetCustomerArguments,
-	CloudGetCustomerPaymentArguments,
 	CloudGetInvoicesArguments,
 	CloudGetLimitsArguments,
 	CloudGetProductsArguments,
 	CloudGetSubscriptionArguments,
-	CloudRequestTrialArguments,
 	CloudUpdateAddressArguments,
 	CloudUpdateCustomerArguments,
 	CloudUpdateSubscriptionArguments,
@@ -112,7 +108,6 @@ import type {
 	GroupsPatchSyncableArguments,
 	GroupsRemoveSyncableArguments,
 	GroupsRestoreArguments,
-	GroupsSearchArguments,
 	GroupsTeamArguments,
 	GroupsUpdateArguments
 } from "./types/methods/groups.methods";

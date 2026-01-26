@@ -1,19 +1,10 @@
 /** biome-ignore-all lint/complexity/useLiteralKeys: <ts4111> */
 import { basename } from "node:path";
 import type { Logger } from "@triplesunn/logger";
-import type {
-	AxiosHeaders,
-	AxiosResponse,
-	InternalAxiosRequestConfig
-} from "axios";
+import type { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import { isStream } from "is-stream";
 import { DEFAULT_FILE_NAME } from "./const";
-import type {
-	CursorPaginationEnabled,
-	TraditionalPagingEnabled
-} from "./types/methods/common.methods";
-import type { WebApiCallResult } from "./types/web-api";
 
 export const wait = (ms: number) => {
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -142,43 +133,6 @@ export const redact = (data: unknown): string => {
 			{} as Record<string, unknown>
 		)
 	);
-};
-
-/**
- * Determines an appropriate set of cursor pagination options for the next request to a paginated API method.
- * @param prev - the result of the last request, where the next cursor might be found.
- * @param pageSize - the maximum number of additional items to fetch in the next request.
- */
-export const paginationOptionsForNextPage = (
-	prev: WebApiCallResult | undefined,
-	pageSize: number
-): CursorPaginationEnabled | TraditionalPagingEnabled | undefined => {
-	if (
-		prev !== undefined &&
-		prev["ctx"] !== undefined &&
-		prev["ctx"]?.["next_cursor"] !== undefined &&
-		prev["ctx"]?.["next_cursor"] !== ""
-	) {
-		return {
-			limit: pageSize,
-			cursor: prev["ctx"].next_cursor as string
-		};
-	}
-	return undefined;
-};
-
-/**
- * Extract the amount of time (in seconds) the platform has recommended this client wait before sending another request
- * from a rate-limited HTTP response (statusCode = 429).
- */
-export const parseRetryHeaders = (
-	headers: AxiosResponse["headers"]
-): number | undefined => {
-	if (headers["retry-after"] !== undefined) {
-		const retryAfter = Number.parseInt(headers["retry-after"] as string, 10);
-		if (!Number.isNaN(retryAfter)) return retryAfter;
-	}
-	return undefined;
 };
 
 /**

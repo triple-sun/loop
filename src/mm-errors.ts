@@ -1,4 +1,4 @@
-export enum MattermostErrorCode {
+export enum MattermostErrorID {
 	// 400
 	API_CONTEXT_INVALID_PARAM = "api.context.invalid_param.app_error",
 	// 401

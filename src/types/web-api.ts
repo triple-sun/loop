@@ -1,7 +1,7 @@
 import type { Agent } from "node:http";
 import type { SecureContextOptions } from "node:tls";
 import type { Logger, LogLevel } from "@triplesunn/logger";
-import type { RetryOptions } from "again-ts";
+import type { RetryContext, RetryOptions } from "again-ts";
 import type {
 	AxiosAdapter,
 	InternalAxiosRequestConfig,
@@ -61,15 +61,10 @@ export type RequestInterceptor = (
  * */
 export type AdapterConfig = AxiosAdapter;
 
-export interface WebApiCallContext {
-	warnings?: string[];
-	// added from the headers of the http response
-	scopes?: string[];
-	acceptedScopes?: string[];
-	retryAfter?: number;
-	// `chat.postMessage` returns an array of error messages (e.g., "messages": ["[ERROR] invalid_keys"])
-	messages?: string[];
-	next_cursor?: string;
+export interface WebApiCallContext extends RetryContext {
+	errors: Error[];
+	data?: unknown
+	headers?: RawAxiosRequestHeaders;
 }
 
 export interface WebApiCallOk<DATA_TYPE = unknown> {
@@ -80,7 +75,6 @@ export interface WebApiCallOk<DATA_TYPE = unknown> {
 
 export interface WebApiCallFailed {
 	ok: false;
-	errors: Error[];
 	ctx?: WebApiCallContext;
 }
 
@@ -97,7 +91,6 @@ export interface WebClientOptions {
 	agent?: Agent;
 	tls?: TLSOptions;
 	timeout?: number;
-	rejectRateLimitedCalls?: boolean;
 	headers?: RawAxiosRequestHeaders;
 	requestInterceptor?: RequestInterceptor;
 	adapter?: AdapterConfig;

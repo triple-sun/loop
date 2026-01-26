@@ -1,39 +1,33 @@
 import { type Logger, LogLevel } from "@triplesunn/logger";
-import { type RetryOptions, retry } from "again-ts";
+import {
+	type RetryFailedResult,
+	type RetryOkResult,
+	type RetryOptions,
+	retry
+} from "again-ts";
 import axios, {
 	type AxiosInstance,
 	type AxiosRequestConfig,
 	type AxiosResponse,
-	type InternalAxiosRequestConfig
+	type InternalAxiosRequestConfig,
+	isAxiosError
 } from "axios";
 import { Breadline } from "breadline-ts";
 import { HEADER_X_CLUSTER_ID, HEADER_X_VERSION_ID } from "./const";
-import {
-	httpErrorFromResponse,
-	platformErrorFromResult,
-	rateLimitedErrorWithDelay,
-	requestErrorWithOriginal
-} from "./errors";
+import { isServerError, type ServerError, WebAPIServerError } from "./errors";
 import { getUserAgent } from "./instrument";
 import { getLogger } from "./logger";
 import { Methods } from "./methods";
 import { tenRetriesInAboutThirtyMinutes } from "./retry-policies.const";
 import { ContentType } from "./types/enum";
-import {
-	type TLSOptions,
-	type WebApiCallConfig,
-	type WebApiCallContext,
-	type WebApiCallResult,
-	WebClientEvent,
-	type WebClientOptions
+import type {
+	TLSOptions,
+	WebApiCallConfig,
+	WebApiCallContext,
+	WebApiCallResult,
+	WebClientOptions
 } from "./types/web-api";
-import {
-	flattenRequestData,
-	getFormDataConfig,
-	parseRetryHeaders,
-	redact,
-	wait
-} from "./utils";
+import { flattenRequestData, getFormDataConfig, redact } from "./utils";
 
 export class WebClient extends Methods {
 	/** The base URL for reaching Loop/Mattermost Web API */
@@ -63,11 +57,6 @@ export class WebClient extends Methods {
 	private tlsConfig: TLSOptions | undefined;
 
 	/**
-	 * Preference for immediately rejecting API calls which result in a rate-limited response
-	 */
-	private rejectRateLimitedCalls: boolean;
-
-	/**
 	 * The name used to prefix all logging generated from this object
 	 * */
 	private static loggerName = "WebClient";
@@ -91,7 +80,6 @@ export class WebClient extends Methods {
 			agent = undefined,
 			tls = undefined,
 			timeout = 0,
-			rejectRateLimitedCalls = false,
 			headers = {},
 			requestInterceptor = undefined,
 			adapter = undefined
@@ -107,7 +95,6 @@ export class WebClient extends Methods {
 		this.breadline = new Breadline({ concurrency: maxRequestConcurrency });
 		// NOTE: may want to filter the keys to only those acceptable for TLS options
 		this.tlsConfig = tls;
-		this.rejectRateLimitedCalls = rejectRateLimitedCalls;
 
 		if (typeof logger !== "undefined") {
 			// Logging
@@ -187,9 +174,6 @@ export class WebClient extends Methods {
 			);
 		}
 
-		//if (method === "files.uploadV2")
-		//	return this.filesUploadV2(options as FilesUploadV2Arguments);
-
 		const headers: Record<string, string> = {};
 
 		/** handle TokenOverridable */
@@ -210,45 +194,6 @@ export class WebClient extends Methods {
 		);
 		const result = this.buildResult<T>(response);
 		this.logger.debug(`http request result: ${JSON.stringify(result)}`);
-
-		// log warnings in response metadata
-		if (result.ctx?.warnings !== undefined) {
-			result.ctx.warnings.forEach(this.logger.warn.bind(this.logger));
-		}
-
-		// log warnings and errors in response metadata messages
-		// related to https://docs.slack.dev/changelog/2016/09/28/response-metadata-is-on-the-way
-		if (result.ctx?.messages !== undefined) {
-			for (const msg of result.ctx.messages) {
-				const errReg: RegExp = /\[ERROR\](.*)/;
-				const warnReg: RegExp = /\[WARN\](.*)/;
-				if (errReg.test(msg)) {
-					const errMatch = msg.match(errReg);
-					if (errMatch != null) {
-						this.logger.error(errMatch[1]?.trim());
-					}
-				} else if (warnReg.test(msg)) {
-					const warnMatch = msg.match(warnReg);
-					if (warnMatch != null) {
-						this.logger.warn(warnMatch[1]?.trim());
-					}
-				}
-			}
-		}
-
-		// If result's content is gzip, "ok" property is not returned with successful response
-		// TODO: look into simplifying this code block to only check for the second condition
-		// if an { ok: false } body applies for all API errors
-		if (!result.ok && response.headers["content-type"] !== "application/gzip") {
-			throw platformErrorFromResult(
-				result as WebApiCallResult & { error: string }
-			);
-		}
-		if ("ok" in result && result.ok === false) {
-			throw platformErrorFromResult(
-				result as WebApiCallResult & { error: string }
-			);
-		}
 		this.logger.debug(`apiCall('${config.path}') end`);
 		return result;
 	}
@@ -305,7 +250,7 @@ export class WebClient extends Methods {
 	private async makeRequest<T>(
 		url: string,
 		config: AxiosRequestConfig
-	): Promise<AxiosResponse<T>> {
+	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
 		// TODO: better input types - remove any
 		const task = () =>
 			this.breadline.add(async () => {
@@ -339,59 +284,20 @@ export class WebClient extends Methods {
 						this.clusterId = resClusterId;
 					}
 
-					if (response.status === 429) {
-						const retrySec = parseRetryHeaders(response.headers);
-						if (retrySec !== undefined) {
-							this.emit(WebClientEvent.RateLimited, retrySec, {
-								url,
-								body: config.data
-							});
-							if (this.rejectRateLimitedCalls) {
-								throw rateLimitedErrorWithDelay(retrySec);
-							}
-							this.logger.info(
-								`API Call failed due to rate limiting. Will retry in ${retrySec} seconds.`
-							);
-							// pause the request queue and then delay the rejection by the amount of time in the retry header
-							this.breadline.pause();
-							// NOTE: if there was a way to introspect the current RetryOperation and know what the next timeout
-							// would be, then we could subtract that time from the following delay, knowing that it the next
-							// attempt still wouldn't occur until after the rate-limit header has specified. an even better
-							// solution would be to subtract the time from only the timeout of this next attempt of the
-							// RetryOperation. this would result in the staying paused for the entire duration specified in the
-							// header, yet this operation not having to pay the timeout cost in addition to that.
-							await wait(retrySec * 1000);
-							// resume the request queue and throw a non-abort error to signal a retry
-							this.breadline.start();
-							// TODO: We may want to have more detailed info such as team_id, params except tokens, and so on.
-							throw new Error(
-								`A rate limit was exceeded (url: ${url}, retry-after: ${retrySec})`
-							);
-						}
-						// TODO: turn this into some CodedError
-						throw new Error(
-							`Retry header did not contain a valid timeout (url: ${url}, retry-after header: ${response.headers["retry-after"]})`
-						);
+					if (isServerError(response.data)) {
+						throw new WebAPIServerError(response.data as ServerError);
 					}
-
-					if (response.status !== 200) throw httpErrorFromResponse(response);
 
 					return response;
 				} catch (error) {
-					// To make this compatible with tsd, casting here instead of `catch (error: any)`
-					// biome-ignore lint/suspicious/noExplicitAny: errors can be anything
-					const e = error as any;
-					this.logger.warn("http request failed", e.message);
-					if (e.request) throw requestErrorWithOriginal(e);
+					if (isAxiosError(error) && error.response) {
+						return error.response;
+					}
 					throw error;
 				}
 			});
 
-		const result = await retry(task, this.retryConfig);
-
-		if (result.ok) return result.value;
-
-		throw result.ctx.errors[result.ctx.errors.length - 1];
+		return await retry<AxiosResponse<T>>(task, this.retryConfig);
 	}
 
 	/**
@@ -399,39 +305,47 @@ export class WebClient extends Methods {
 	 * HTTP headers into the object.
 	 * @param response - an http response
 	 */
-	private buildResult<T>({
-		data,
-		headers
-	}: AxiosResponse): WebApiCallResult<T> {
-		const ctx: WebApiCallContext = { ...data };
+	private buildResult<T>(
+		result: RetryOkResult<AxiosResponse<T>> | RetryFailedResult
+	): WebApiCallResult<T> {
+		const ctx: WebApiCallContext = { ...result.ctx };
+		/** short-circuit if we have an error */
+		if (!result.ok) {
+			return { ok: false, ctx };
+		}
 
-		if (typeof data === "string") {
-			// response.data can be a string, not an object for some reason
+		/** nandle error status codes */
+		if (result.value.status > 300) {
+			ctx.headers = result.value.headers;
+			/** Push error if response data is an error object */
+			if (isServerError(result.value.data)) {
+				ctx.errors.push(
+					new WebAPIServerError(result.value.data as ServerError)
+				);
+			}
+			return { ok: false, ctx };
+		}
+
+		/**
+		 * handle string responses?
+		 * @todo: check if it's needed
+		 */
+		if (typeof result.value.data === "string") {
 			try {
-				data = JSON.parse(data);
-			} catch (_) {
+				result.value.data = JSON.parse(result.value.data);
+			} catch (err) {
+				ctx.errors.push(
+					err instanceof Error ? err : new TypeError(`non-error type thrown`)
+				);
 				// failed to parse the string value as JSON data
-				return { ok: false, errors: [data] };
+				return {
+					ok: false,
+					ctx
+				};
 			}
 		}
 
-		// add scopes metadata from headers
-		if (headers["x-oauth-scopes"] !== undefined) {
-			ctx.scopes = String(headers["x-oauth-scopes"])
-				.trim()
-				.split(/\s*,\s*/);
-		}
-		if (headers["x-accepted-oauth-scopes"] !== undefined) {
-			ctx.acceptedScopes = String(headers["x-accepted-oauth-scopes"])
-				.trim()
-				.split(/\s*,\s*/);
-		}
-
-		// add retry metadata from headers
-		const retrySec = parseRetryHeaders(headers);
-		if (retrySec !== undefined) ctx.retryAfter = retrySec;
-
-		return { ok: true, data, ctx };
+		return { ok: true, data: result.value.data, ctx };
 	}
 
 	/**

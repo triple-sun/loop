@@ -1,13 +1,6 @@
 import type { IncomingHttpHeaders } from "node:http";
-import type { AxiosResponse } from "axios";
+import type { MattermostErrorID } from "./mm-errors";
 import type { WebApiCallResult } from "./types/web-api";
-
-/**
- * All errors produced by this package adhere to this interface
- */
-export interface CodedError extends NodeJS.ErrnoException {
-	code: ErrorCode;
-}
 
 /**
  * A dictionary of codes for errors produced by this package
@@ -16,40 +9,63 @@ export enum ErrorCode {
 	// general error
 	RequestError = "request_error",
 	HTTPError = "http_error",
-	PlatformError = "platform_error",
-	RateLimitedError = "rate_limited_error",
-	// file uploads errors
-	FileUploadInvalidArgumentsError = "file_upload_invalid_args_error",
-	FileUploadReadFileDataError = "file_upload_read_file_data_error"
+	ServerError = "server_error",
+	RateLimitedError = "rate_limited_error"
+}
+
+export interface ServerError {
+	/**
+	 * @description Error id
+	 * @example app.user.missing_account.const
+	 */
+	id: string | MattermostErrorID;
+	request_id?: string;
+	message: string;
+	status_code: number;
+	detailed_error?: string;
+}
+
+export interface WebClientCodedError extends Error {
+	code: ErrorCode;
 }
 
 export type WebAPICallError =
-	| WebAPIPlatformError
+	| WebAPIServerError
 	| WebAPIRequestError
 	| WebAPIHTTPError
 	| WebAPIRateLimitedError;
-export type WebAPIFilesUploadError = WebAPIFileUploadInvalidArgumentsError;
 
-export interface WebAPIFileUploadInvalidArgumentsError extends CodedError {
-	code: ErrorCode.FileUploadInvalidArgumentsError;
-	data: WebApiCallResult & {
-		error: string;
-	};
+export class WebAPIServerError implements WebClientCodedError, ServerError {
+	code = ErrorCode.ServerError;
+	name = WebAPIServerError.name;
+	id: string;
+	status_code: number;
+	message: string;
+	request_id?: string;
+	detailed_error?: string;
+
+	constructor(error: ServerError) {
+		this.id = error.id;
+		this.status_code = error.status_code;
+		this.request_id = error.request_id;
+		this.detailed_error = error.detailed_error;
+		this.message = error.message;
+	}
 }
 
-export interface WebAPIPlatformError extends CodedError {
-	code: ErrorCode.PlatformError;
-	data: WebApiCallResult & {
-		error: string;
-	};
-}
-
-export interface WebAPIRequestError extends CodedError {
-	code: ErrorCode.RequestError;
+export class WebAPIRequestError implements WebClientCodedError {
+	name = WebAPIRequestError.name;
+	code = ErrorCode.RequestError;
 	original: Error;
+	message: string;
+
+	constructor(original: Error) {
+		this.message = `A request error occurred: ${original.message}`;
+		this.original = original;
+	}
 }
 
-export interface WebAPIHTTPError extends CodedError {
+export interface WebAPIHTTPError extends WebClientCodedError {
 	code: ErrorCode.HTTPError;
 	statusCode: number;
 	statusMessage: string;
@@ -58,10 +74,27 @@ export interface WebAPIHTTPError extends CodedError {
 	body?: any;
 }
 
-export interface WebAPIRateLimitedError extends CodedError {
+export interface WebAPIRateLimitedError extends WebClientCodedError {
 	code: ErrorCode.RateLimitedError;
 	retryAfter: number;
 }
+
+export const isServerError = (error: unknown): boolean => {
+	if (
+		error &&
+		typeof error === "object" &&
+		"id" in error &&
+		"message" in error &&
+		"status_code" in error &&
+		typeof error.id === "string" &&
+		typeof error.message === "string" &&
+		typeof error.status_code === "number"
+	) {
+		return true;
+	}
+
+	return false;
+};
 
 /**
  * Factory for producing a {@link CodedError} from a generic error
@@ -119,13 +152,13 @@ export function httpErrorFromResponse(
  */
 export function platformErrorFromResult(
 	result: WebApiCallResult & { error: string }
-): WebAPIPlatformError {
+): WebAPIServerError {
 	const error = errorWithCode(
 		new Error(`An API error occurred: ${result.error}`),
 		ErrorCode.PlatformError
-	) as Partial<WebAPIPlatformError>;
+	) as Partial<WebAPIServerError>;
 	error.data = result;
-	return error as WebAPIPlatformError;
+	return error as WebAPIServerError;
 }
 
 /**
