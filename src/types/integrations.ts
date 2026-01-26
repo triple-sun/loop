@@ -66,7 +66,7 @@ export type CommandResponse = {
 	response_type: string;
 	text: string;
 	username: string;
-	channel_id: SVGAnimatedString;
+	channel_id: string;
 	icon_url: string;
 	type: string;
 	props: Record<string, unknown>;
