@@ -43,11 +43,17 @@ import {
 } from "./utils";
 
 export class WebClient extends Methods {
-	/** The base URL for reaching Loop/Mattermost Web API */
+	/**
+	 * @description The base URL for reaching Loop/Mattermost Web API
+	 * Must end with `api/v4/`
+	 * @example https://your-loop.loop.ru/api/v4/
+	 */
 	public url: string;
-	/** Authentication and authorization token for accessing Loop/Mattermost API */
+
+	/**
+	 * @descripton Authentication and authorization token for accessing Loop/Mattermost API
+	 */
 	public token: string | undefined;
-	public me: string;
 
 	/**
 	 * Configuration for retry operations. See {@link https://github.com/triplesunn/again-ts|Again} for more details.
@@ -79,7 +85,6 @@ export class WebClient extends Methods {
 	 * This object's logger instance
 	 * */
 	private logger: Logger;
-
 	private clusterId: string;
 	private serverVersion: string;
 
@@ -104,9 +109,11 @@ export class WebClient extends Methods {
 		this.token = token;
 		this.url = url;
 		if (!this.url.endsWith("/")) this.url += "/";
-		this.me = "";
+		if (!this.url.endsWith(`api/v4/`)) this.url += `api/v4/`
+
 		this.clusterId = "";
 		this.serverVersion = "";
+
 		this.retryConfig = retryConfig;
 		this.breadline = new Breadline({ concurrency: maxRequestConcurrency });
 		// NOTE: may want to filter the keys to only those acceptable for TLS options
@@ -167,28 +174,7 @@ export class WebClient extends Methods {
 			null
 		);
 
-		/** set current user id */
-		this.setMe();
-
 		this.logger.debug("initialized");
-	}
-
-	public setMe() {
-		this.users.profile
-			.me()
-			.then(res => {
-				if (res.ok) {
-					this.me = res.data.id;
-				}
-				return res;
-			})
-			.then(res => {
-				if (res.ok) {
-					this.logger.debug(`set "userId" to ${res.data.id}`);
-				} else {
-					throw res.ctx?.errors[res.ctx.errors.length - 1];
-				}
-			});
 	}
 
 	/**
