@@ -13,21 +13,34 @@ import axios, {
 	isAxiosError
 } from "axios";
 import { Breadline } from "breadline-ts";
-import { HEADER_X_CLUSTER_ID, HEADER_X_VERSION_ID } from "./const";
-import { isServerError, type ServerError, WebAPIServerError } from "./errors";
+import {
+	HEADER_X_CLUSTER_ID,
+	HEADER_X_VERSION_ID,
+	tenRetriesInAboutThirtyMinutes
+} from "./const";
+import {
+	isServerError,
+	type ServerError,
+	WebAPIRequestError,
+	WebAPIServerError
+} from "./errors";
 import { getUserAgent } from "./instrument";
 import { getLogger } from "./logger";
 import { Methods } from "./methods";
-import { tenRetriesInAboutThirtyMinutes } from "./retry-policies.const";
-import { ContentType } from "./types/enum";
-import type {
-	TLSOptions,
-	WebApiCallConfig,
-	WebApiCallContext,
-	WebApiCallResult,
-	WebClientOptions
+import {
+	ContentType,
+	type TLSOptions,
+	type WebApiCallConfig,
+	type WebApiCallContext,
+	type WebApiCallResult,
+	type WebClientOptions
 } from "./types/web-api";
-import { flattenRequestData, getFormDataConfig, redact } from "./utils";
+import {
+	flattenRequestData,
+	getFormDataConfig,
+	redact,
+	warnIfFallbackIsMissing
+} from "./utils";
 
 export class WebClient extends Methods {
 	/** The base URL for reaching Loop/Mattermost Web API */
@@ -66,8 +79,8 @@ export class WebClient extends Methods {
 	 * */
 	private logger: Logger;
 
-	private clusterId!: string;
-	private serverVersion!: string;
+	private clusterId: string;
+	private serverVersion: string;
 
 	constructor(
 		url: Readonly<string>,
@@ -90,7 +103,8 @@ export class WebClient extends Methods {
 		this.token = token;
 		this.url = url;
 		if (!this.url.endsWith("/")) this.url += "/";
-
+		this.clusterId = "";
+		this.serverVersion = "";
 		this.retryConfig = retryConfig;
 		this.breadline = new Breadline({ concurrency: maxRequestConcurrency });
 		// NOTE: may want to filter the keys to only those acceptable for TLS options
@@ -112,15 +126,16 @@ export class WebClient extends Methods {
 			);
 		}
 
-		if (this.token && !headers.Authorization)
+		if (this.token && !headers.Authorization) {
 			headers.Authorization = `Bearer ${this.token}`;
+		}
 
 		this.axios = axios.create({
 			timeout,
 			baseURL: this.url,
-			headers: { ...headers, "User-Agent": getUserAgent() },
 			httpAgent: agent,
 			httpsAgent: agent,
+			headers: { ...headers, "User-Agent": getUserAgent() },
 			validateStatus: () => true, // all HTTP status codes should result in a resolved promise (as opposed to only 2xx)
 			maxRedirects: 0,
 			// disabling axios' automatic proxy support:
@@ -155,7 +170,7 @@ export class WebClient extends Methods {
 
 	/**
 	 * Generic method for calling a Web API method
-	 * @param path - the Web API method to call {@link https://docs.slack.dev/reference/methods}
+	 * @param path - the Web API path to call
 	 * @param options - options
 	 */
 	public async apiCall<T = unknown>(
@@ -182,17 +197,15 @@ export class WebClient extends Methods {
 			options["token"] = undefined;
 		}
 
-		const response = await this.makeRequest<T>(
-			this.fillRequestUrl(config.path, options),
-			{
-				method: config.method,
-				data: {
-					// team_id: this.teamId,
-					...options
-				}
-			}
-		);
-		const result = this.buildResult<T>(response);
+		/** warn if no fallback */
+		warnIfFallbackIsMissing(config.path, this.logger, options);
+
+		const url = this.fillRequestUrl(config.path, options);
+		const response = await this.makeRequest<T>(url, {
+			method: config.method,
+			data: options
+		});
+		const result = this.buildResult<T>(url, response);
 		this.logger.debug(`http request result: ${JSON.stringify(result)}`);
 		this.logger.debug(`apiCall('${config.path}') end`);
 		return result;
@@ -290,8 +303,9 @@ export class WebClient extends Methods {
 
 					return response;
 				} catch (error) {
-					if (isAxiosError(error) && error.response) {
-						return error.response;
+					if (isAxiosError(error)) {
+						if (error.response) return error.response;
+						if (error.request) throw new WebAPIRequestError(error);
 					}
 					throw error;
 				}
@@ -306,9 +320,10 @@ export class WebClient extends Methods {
 	 * @param response - an http response
 	 */
 	private buildResult<T>(
+		url: string,
 		result: RetryOkResult<AxiosResponse<T>> | RetryFailedResult
 	): WebApiCallResult<T> {
-		const ctx: WebApiCallContext = { ...result.ctx };
+		const ctx: WebApiCallContext = { ...result.ctx, url };
 		/** short-circuit if we have an error */
 		if (!result.ok) {
 			return { ok: false, ctx };

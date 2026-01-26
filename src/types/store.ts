@@ -9,7 +9,7 @@ import type { EmojisState } from "./emojis";
 import type { FilesState } from "./files";
 import type { GeneralState } from "./general";
 import type { GroupsState } from "./groups";
-import type { HostedCustomerState } from "./hosted_customer";
+import type { HostedCustomerState } from "./hosted-customer";
 import type { IntegrationsState } from "./integrations";
 import type { JobsState } from "./jobs";
 import type { LimitsState } from "./limits";

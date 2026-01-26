@@ -136,85 +136,25 @@ export const redact = (data: unknown): string => {
 };
 
 /**
- * Log a warning when using chat.postMessage without text argument or attachments with fallback argument
- * @param method api method being called
+ * @param path api method being called
  * @param logger instance of we clients logger
  * @param options arguments for the Web API method
  */
 export const warnIfFallbackIsMissing = (
-	method: string,
+	path: string,
 	logger: Logger,
 	options?: Record<string, unknown>
 ): void => {
-	const targetMethods = [
-		"chat.postEphemeral",
-		"chat.postMessage",
-		"chat.scheduleMessage"
-	];
-	const isTargetMethod = targetMethods.includes(method);
-
-	const hasAttachments = (args: Record<string, unknown>) =>
-		Array.isArray(args["attachments"]) && args["attachments"].length;
-
-	const missingAttachmentFallbackDetected = (args: Record<string, unknown>) =>
-		Array.isArray(args["attachments"]) &&
-		args["attachments"].some(
-			attachment => !attachment.fallback || attachment.fallback.trim() === ""
-		);
-
-	const isEmptyText = (args: Record<string, unknown>) =>
-		(args["text"] === undefined ||
-			args["text"] === null ||
-			args["text"] === "") &&
-		(args["markdown_text"] === undefined ||
-			args["markdown"] === null ||
-			args["markdown_text"] === "");
-
-	const buildMissingTextWarning = () =>
-		`The top-level \`text\` argument is missing in the request payload for a ${method} call - It's a best practice to always provide a \`text\` argument when posting a message. The \`text\` is used in places where the content cannot be rendered such as: system push notifications, assistive technology such as screen readers, etc.`;
-
-	const buildMissingFallbackWarning = () =>
-		`Additionally, the attachment-level \`fallback\` argument is missing in the request payload for a ${method} call - To avoid this warning, it is recommended to always provide a top-level \`text\` argument when posting a message. Alternatively, you can provide an attachment-level \`fallback\` argument, though this is now considered a legacy field (see https://docs.slack.dev/legacy/legacy-messaging/legacy-secondary-message-attachments for more details).`;
-	if (isTargetMethod && typeof options === "object") {
-		if (hasAttachments(options)) {
-			if (missingAttachmentFallbackDetected(options) && isEmptyText(options)) {
-				logger.warn(buildMissingTextWarning());
-				logger.warn(buildMissingFallbackWarning());
-			}
-		} else if (isEmptyText(options)) {
-			logger.warn(buildMissingTextWarning());
-		}
-	}
-};
-
-/**
- * Log a warning when thread_ts is not a string
- * @param method api method being called
- * @param logger instance of web clients logger
- * @param options arguments for the Web API method
- */
-export const warnIfThreadTsIsNotString = (
-	method: string,
-	logger: Logger,
-	options?: Record<string, unknown>
-): void => {
-	const targetMethods = [
-		"chat.postEphemeral",
-		"chat.postMessage",
-		"chat.scheduleMessage",
-		"files.upload"
-	];
-	const isTargetMethod = targetMethods.includes(method);
-
 	if (
-		isTargetMethod &&
-		options?.["thread_ts"] !== undefined &&
-		typeof options?.["thread_ts"] !== "string"
+		typeof options === "object" &&
+		Array.isArray(options["attachments"]) &&
+		options["attachments"].length > 0 &&
+		options["attachments"].some(
+			attachment => !attachment.fallback || attachment.fallback.trim() === ""
+		)
 	) {
-		logger.warn(buildThreadTsWarningMessage(method));
+		logger.warn(
+			`The attachment-level \`fallback\` argument is missing in the request payload for a ${path} call - To avoid this warning, it is recommended to always provide a top-level \`text\` argument when posting a message. Alternatively, you can provide an attachment-level \`fallback\` argument, though this is now considered a legacy field (see https://docs.slack.dev/legacy/legacy-messaging/legacy-secondary-message-attachments for more details).`
+		);
 	}
-};
-
-export const buildThreadTsWarningMessage = (method: string): string => {
-	return `The given thread_ts value in the request payload for a ${method} call is a float value. We highly recommend using a string value instead.`;
 };

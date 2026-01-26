@@ -8,11 +8,16 @@ import type {
 	Method,
 	RawAxiosRequestHeaders
 } from "axios";
-import type { ContentType } from "./enum";
 
 /*
  * Exported types
  */
+
+export enum ContentType {
+	FormData = "multipart/form-data",
+	JSON = "application/json",
+	URLEncoded = "application/x-www-form-urlencoded"
+}
 
 export type StatusOK = {
 	status: "OK";
@@ -36,7 +41,7 @@ export type FileUploadData = {
 };
 
 export type WebApiCallConfig = {
-	path: `/${string}`;
+	path: string;
 	method: Method;
 	type: ContentType;
 };
@@ -63,8 +68,9 @@ export type AdapterConfig = AxiosAdapter;
 
 export interface WebApiCallContext extends RetryContext {
 	errors: Error[];
-	data?: unknown
+	data?: unknown;
 	headers?: RawAxiosRequestHeaders;
+	url: string
 }
 
 export interface WebApiCallOk<DATA_TYPE = unknown> {

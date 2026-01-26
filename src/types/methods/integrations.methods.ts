@@ -1,5 +1,5 @@
-import { ContentType } from "../enum";
-import type { Command, IncomingWebhook, OAuthApp } from "../integrations";
+import type { Command, OAuthApp } from "../integrations";
+import type { ContentType } from "../web-api";
 import type {
 	ChannelID,
 	OptionalUserID,
