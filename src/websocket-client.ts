@@ -22,14 +22,23 @@ import type {
 } from "./types";
 
 export default class WebSocketClient {
-	private conn: WebSocket | null;
 	/**
+	 * @description Websocket connection url
 	 * @example wss://your-loop.loop.ru/api/v4/websocket
 	 */
 	private url: string | null;
+	/**
+	 * @description Websocket auth token (usually is the same as regular auth token)
+	 */
 	private token: string;
-
+	/**
+	 * @description logger instance
+	 */
 	private logger: Logger;
+	/**
+	 * @description WebSocket connection (if connected)
+	 */
+	private conn: WebSocket | null;
 
 	/**
 	 * @description rSequence is the number to track a response sent
