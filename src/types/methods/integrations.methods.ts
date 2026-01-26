@@ -2,7 +2,6 @@ import type {
 	Command,
 	IncomingWebhook,
 	OAuthApp,
-	OutgoingOAuthConnection,
 	OutgoingWebhook
 } from "../integrations";
 

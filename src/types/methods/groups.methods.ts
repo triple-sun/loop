@@ -2,16 +2,15 @@ import type {
 	CustomGroupPatch,
 	GetGroupsForUserParams,
 	GetGroupsParams,
-	GroupcreateWithUserIds,
+	GroupCreateWithUserIds,
 	GroupPatch,
 	GroupSearchOpts,
-	GroupStats,
 	GroupSyncable
 } from "../groups";
 import type { UserIDMe } from "./common.methods";
 
 export interface GroupsCreateArguments {
-	group: GroupcreateWithUserIds;
+	group: GroupCreateWithUserIds;
 }
 
 export interface GroupsGetArguments {

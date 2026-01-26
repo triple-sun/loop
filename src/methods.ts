@@ -20,7 +20,7 @@ import type {
 	Product,
 	Subscription
 } from "./types/cloud";
-import type { DataRetentionCustomPolicies } from "./types/data_retention";
+import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
 import { ContentType } from "./types/enum";
 import type { FileInfo, FileUploadResponse } from "./types/files";
@@ -87,7 +87,7 @@ import type {
 	DataRetentionSearchPolicyChannelsArguments,
 	DataRetentionSearchPolicyTeamsArguments,
 	DataRetentionUpdatePolicyArguments
-} from "./types/methods/data_retention.methods";
+} from "./types/methods/data-retention.methods";
 import type {
 	EmojisAutocompleteArguments,
 	EmojisCreateArguments,

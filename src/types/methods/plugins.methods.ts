@@ -1,5 +1,4 @@
 import type { Stream } from "form-data";
-import type { PluginManifest } from "../plugins";
 
 export interface PluginsUploadArguments {
 	plugin: Stream | Buffer;
@@ -12,9 +11,9 @@ export interface PluginsInstallFromUrlArguments {
 }
 
 // TODO: Review response types
-export type PluginsGetArguments = {};
+export type PluginsGetArguments = never;
 
-export type PluginsGetStatusesArguments = {};
+export type PluginsGetStatusesArguments = never;
 
 export interface PluginsRemoveArguments {
 	plugin_id: string;

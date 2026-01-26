@@ -2,7 +2,7 @@
 import type { Audit } from "./audits";
 import type { Compliance } from "./compliance";
 import type { AdminConfig, ClientLicense, EnvironmentConfig } from "./config";
-import type { DataRetentionCustomPolicies } from "./data_retention";
+import type { DataRetentionCustomPolicies } from "./data-retention";
 import type { MixedUnlinkedGroupRedux } from "./groups";
 import type { PluginRedux, PluginStatusRedux } from "./plugins";
 import type { SamlCertificateStatus, SamlMetadataResponse } from "./saml";

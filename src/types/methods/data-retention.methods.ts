@@ -3,7 +3,7 @@ import type {
 	PatchDataRetentionCustomPolicy,
 	PatchDataRetentionCustomPolicyChannels,
 	PatchDataRetentionCustomPolicyTeams
-} from "../data_retention";
+} from "../data-retention";
 
 export interface DataRetentionGetPolicyArguments {
 	policy_id: string;
