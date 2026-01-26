@@ -1,10 +1,6 @@
+export type BoardType = 'O' | 'P';
 
-const BoardTypeOpen = 'O';
-const BoardTypePrivate = 'P';
-const boardTypes = [BoardTypeOpen, BoardTypePrivate];
-type BoardTypes = (typeof boardTypes)[number];
-
-type PropertyTypeEnum =
+export type BoardCardPropertyType =
   | 'text'
   | 'number'
   | 'select'
@@ -22,26 +18,27 @@ type PropertyTypeEnum =
   | 'updatedBy'
   | 'unknown';
 
-interface IPropertyOption {
+export interface BoardCardPropertyOption {
   id: string;
   value: string;
   color: string;
 }
 
 // A template for card properties attached to a board
-interface IPropertyTemplate {
+export interface BoardCardPropertyTemplate {
   id: string;
   name: string;
-  type: PropertyTypeEnum;
-  options: IPropertyOption[];
+  type: BoardCardPropertyType;
+  options: BoardCardPropertyOption[];
 }
+
 export declare type Board = {
   id: string;
   teamId: string;
   channelId?: string;
   createdBy: string;
   modifiedBy: string;
-  type: BoardTypes;
+  type: BoardType;
   minimumRole: string;
 
   title: string;
@@ -51,7 +48,7 @@ export declare type Board = {
   isTemplate: boolean;
   templateVersion: number;
   properties: Record<string, string | string[]>;
-  cardProperties: IPropertyTemplate[];
+  cardProperties: BoardCardPropertyTemplate[];
 
   createAt: number;
   updateAt: number;

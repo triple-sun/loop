@@ -1,6 +1,6 @@
-import type { IDMappedObjects } from "../../../src/types/utilities";
 import type { Dialog } from "./dialog";
-import type { MessageAttachment } from "./message_attachments";
+import type { PostAttachment } from "./posts/posts-attachment";
+import type { IDMappedObjects } from "./utilities";
 
 export type IncomingWebhook = {
 	id: string;
@@ -69,11 +69,11 @@ export type CommandResponse = {
 	channel_id: SVGAnimatedString;
 	icon_url: string;
 	type: string;
-	props: Record<string, any>;
+	props: Record<string, unknown>;
 	goto_location: string;
 	trigger_id: string;
 	skip_slack_parsing: boolean;
-	attachments: MessageAttachment[];
+	attachments: PostAttachment[];
 	extra_responses: CommandResponse[];
 };
 

@@ -4,7 +4,7 @@ import { WebClient } from "./client";
 import type {
 	UserCustomStatus,
 	UserProfile,
-	UserStatusResponse
+	UserStatus
 } from "./types";
 import type { Bot, BotPatch } from "./types/bots";
 import type {
@@ -12,7 +12,7 @@ import type {
 	ChannelMembership,
 	ChannelStats,
 	ChannelViewResponse
-} from "./types/channels";
+} from "./types/channels/channels";
 import type {
 	CloudCustomer,
 	Invoice,
@@ -236,11 +236,9 @@ import type {
 	UsersStatusSetAruments
 } from "./types/methods/user.methods";
 import type { PluginManifest, PluginStatus } from "./types/plugins";
-import type { Post, PostList } from "./types/posts";
+import type { Post, PostList } from "./types/posts/posts";
 import type { PreferenceType } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
-import type { Role } from "./types/roles";
-import type { Scheme } from "./types/schemes";
 import type { Team, TeamStats } from "./types/teams";
 import type {
 	StatusOK,
@@ -321,7 +319,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			 * @description Update users status by id
 			 * Must have edit_other_users permission for the team.
 			 */
-			setStatus: bindApiCall<UsersStatusSetAruments, UserStatusResponse>(this, {
+			setStatus: bindApiCall<UsersStatusSetAruments, UserStatus>(this, {
 				method: "PUT",
 				path: `/users/:user_id/status`,
 				type: ContentType.JSON
@@ -721,7 +719,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			/**
 			 * @description Gets status for user
 			 */
-			get: bindApiCall<UsersStatusGetAruments, UserStatusResponse>(this, {
+			get: bindApiCall<UsersStatusGetAruments, UserStatus>(this, {
 				method: "GET",
 				path: `/users/:user_id/status`,
 				type: ContentType.URLEncoded

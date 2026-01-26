@@ -1,21 +1,20 @@
-
-import type { AdminState } from "../../oldsrc/client/types/admin";
-import type { AppsState } from "../../oldsrc/client/types/apps";
-import type { Bot } from "../../oldsrc/client/types/bots";
-import type { ChannelBookmarksState } from "../../oldsrc/client/types/channel_bookmarks";
-import type { ChannelCategoriesState } from "../../oldsrc/client/types/channel_categories";
-import type { ChannelsState } from "../../oldsrc/client/types/channels";
-import type { CloudState, CloudUsage } from "../../oldsrc/client/types/cloud";
-import type { EmojisState } from "../../oldsrc/client/types/emojis";
-import type { FilesState } from "../../oldsrc/client/types/files";
-import type { GeneralState } from "../../oldsrc/client/types/general";
-import type { HostedCustomerState } from "../../oldsrc/client/types/hosted_customer";
-import type { IntegrationsState } from "../../oldsrc/client/types/integrations";
-import type { JobsState } from "../../oldsrc/client/types/jobs";
-import type { LimitsState } from "../../oldsrc/client/types/limits";
-import type { PostsState } from "../../oldsrc/client/types/posts";
-import type { PreferenceType } from "../../oldsrc/client/types/preferences";
+import type { AdminState } from "./admin";
+import type { AppsState } from "./apps";
+import type { Bot } from "./bots";
+import type { ChannelsState } from "./channels/channels";
+import type { ChannelBookmarksState } from "./channels/channels-bookmarks";
+import type { ChannelCategoriesState } from "./channels/channels-categories";
+import type { CloudState, CloudUsage } from "./cloud";
+import type { EmojisState } from "./emojis";
+import type { FilesState } from "./files";
+import type { GeneralState } from "./general";
 import type { GroupsState } from "./groups";
+import type { HostedCustomerState } from "./hosted_customer";
+import type { IntegrationsState } from "./integrations";
+import type { JobsState } from "./jobs";
+import type { LimitsState } from "./limits";
+import type { PostsState } from "./posts/posts";
+import type { PreferenceType } from "./preferences";
 import type {
 	AdminRequestsStatuses,
 	ChannelsRequestsStatuses,
@@ -73,7 +72,7 @@ export type GlobalState = {
 		hostedCustomer: HostedCustomerState;
 		usage: CloudUsage;
 	};
-	errors: any[];
+	errors: unknown[];
 	requests: {
 		channels: ChannelsRequestsStatuses;
 		general: GeneralRequestsStatuses;

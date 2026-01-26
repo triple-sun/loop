@@ -1,12 +1,12 @@
 
-import type { UserProfileResponse } from '../../../src/types/users';
+import type { UserProfile } from './users';
 
 export type UserAutocomplete = {
-  users: UserProfileResponse[];
+  users: UserProfile[];
 
   // out_of_channel contains users that aren't in the given channel. It's only populated when autocompleting users in
   // a given channel ID.
-  out_of_channel?: UserProfileResponse[];
+  out_of_channel?: UserProfile[];
 };
 
 export type AutocompleteSuggestion = {

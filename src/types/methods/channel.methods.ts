@@ -1,4 +1,4 @@
-import type { Channel, ChannelType } from "../channels";
+import type { Channel, ChannelType } from "../channels/channels";
 import type {
 	ChannelID,
 	TeamID,

@@ -1,5 +1,5 @@
 import type { Audit } from "./audits";
-import type { Channel } from "./channels";
+import type { Channel } from "./channels/channels";
 import type { Group } from "./groups";
 import type { Session } from "./sessions";
 import type { Team } from "./teams";
@@ -42,7 +42,7 @@ export enum PushStatus {
 	Online = "online"
 }
 
-export enum UserStatus {
+export enum UserStatusValue {
 	Onlines = 'online',
 	Away = 'away',
 	Offline = 'offline',
@@ -158,9 +158,9 @@ export interface UserTimezone {
 	manualTimezone: string;
 }
 
-export interface UserStatusResponse {
+export interface UserStatus {
 	user_id: string;
-	status: UserStatus;
+	status: UserStatusValue;
 	manual?: boolean;
 	last_activity_at?: number;
 	active_channel?: string;

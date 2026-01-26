@@ -1,5 +1,5 @@
 
-import type { IDMappedObjects } from '../../../src/types/utilities';
+import type { IDMappedObjects } from './utilities';
 
 export type JobType =
   | 'data_retention'
@@ -7,6 +7,7 @@ export type JobType =
   | 'bleve_post_indexing'
   | 'ldap_sync'
   | 'message_export';
+
 export type JobStatus =
   | 'pending'
   | 'in_progress'
@@ -15,6 +16,7 @@ export type JobStatus =
   | 'cancel_requested'
   | 'canceled'
   | 'warning';
+
 export type Job = JobTypeBase & {
   id: string;
   priority: number;
@@ -23,15 +25,18 @@ export type Job = JobTypeBase & {
   last_activity_at: number;
   status: JobStatus;
   progress: number;
-  data: any;
+  data: unknown;
 };
+
 export type JobsByType = {
   [x in JobType]?: Job[];
 };
+
 export type JobsState = {
   jobs: IDMappedObjects<Job>;
   jobsByTypeList: JobsByType;
 };
+
 export type JobTypeBase = {
   type: JobType;
 };

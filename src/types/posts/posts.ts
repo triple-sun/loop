@@ -1,17 +1,37 @@
-
-import type { AppBinding } from "./apps";
-import type { Channel, ChannelType } from "./channels";
-import type { CustomEmoji } from "./emojis";
-import type { FileInfo } from "./files";
-import type { Reaction } from "./reactions";
-import type { TeamType } from "./teams";
-import type { UserProfile } from "./users";
+import type { AppBinding } from "../apps";
+import type { Channel, ChannelType } from "../channels/channels";
+import type { CustomEmoji } from "../emojis";
+import type { FileInfo } from "../files";
+import type { Reaction } from "../reactions";
+import type { TeamType } from "../teams";
+import type { UserProfile } from "../users";
 import type {
 	IDMappedObjects,
 	RelationOneToMany,
 	RelationOneToOne,
 	StringBool
-} from "./utilities";
+} from "../utilities";
+import type { PostAttachment } from "./posts-attachment";
+
+export type PostStateDeleted = "DELETED";
+
+export enum PostPriority {
+	URGENT = "urgent",
+	IMPORTANT = "important"
+}
+
+export type PostEmbedType =
+	| "image"
+	| "link"
+	| "message_attachment"
+	| "opengraph"
+	| "permalink";
+
+export type NotificationStatus =
+	| "error"
+	| "not_sent"
+	| "unsupported"
+	| "success";
 
 export type PostType =
 	| "system_add_remove"
@@ -35,13 +55,6 @@ export type PostType =
 	| "system_wrangler"
 	| "";
 
-export type PostEmbedType =
-	| "image"
-	| "link"
-	| "message_attachment"
-	| "opengraph"
-	| "permalink";
-
 export type PostEmbed = {
 	type: PostEmbedType;
 	url: string;
@@ -56,8 +69,8 @@ export type PostImage = {
 };
 
 export type PostAcknowledgement = {
-	post_id: Post["id"];
-	user_id: UserProfile["id"];
+	post_id: string;
+	user_id: string;
 	acknowledged_at: number;
 };
 
@@ -77,7 +90,9 @@ export type PostMetadata = {
 	acknowledgements?: PostAcknowledgement[];
 };
 
-export type Post = {
+export type Post<
+	PROPS_TYPE extends Record<string, unknown> = Record<string, unknown>
+> = {
 	id: string;
 	create_at: number;
 	update_at: number;
@@ -90,9 +105,9 @@ export type Post = {
 	original_id: string;
 	message: string;
 	type: PostType;
-	props?: Record<string, unknown> & {
+	props?: PROPS_TYPE & {
 		app_bindings?: AppBinding[];
-		attachments?: Record<string, unknown>[];
+		attachments?: PostAttachment[];
 		from_bot?: StringBool;
 	};
 	hashtags: string;
@@ -102,7 +117,7 @@ export type Post = {
 	metadata: PostMetadata;
 	failed?: boolean;
 	user_activity_posts?: Post[];
-	state?: PostState;
+	state?: PostStateDeleted;
 	filenames?: string[];
 	last_reply_at?: number;
 	participants?: Array<UserProfile | UserProfile["id"]>;
@@ -110,13 +125,6 @@ export type Post = {
 	is_following?: boolean;
 	exists?: boolean;
 };
-
-export type PostState = "DELETED";
-
-export enum PostPriority {
-	URGENT = "urgent",
-	IMPORTANT = "important"
-}
 
 export type PostList = {
 	order: Array<Post["id"]>;
@@ -163,10 +171,7 @@ export type PostsState = {
 		channels: Record<Channel["id"], number>;
 		threads: Record<Post["root_id"], number>;
 	};
-	acknowledgements: RelationOneToOne<
-		Post,
-		Record<UserProfile["id"], number>
-	>;
+	acknowledgements: RelationOneToOne<Post, Record<UserProfile["id"], number>>;
 };
 
 export declare type OpenGraphMetadataImage = {
@@ -218,7 +223,7 @@ export type PostAnalytics = {
 	persistent_notifications?: boolean | undefined;
 };
 export type ActivityEntry = {
-	postType: Post["type"];
+	postType: PostType;
 	actorId: string[];
 	userIds: string[];
 	usernames: string[];
@@ -235,11 +240,6 @@ export type PostInfo = {
 	has_joined_team: boolean;
 };
 
-export type NotificationStatus =
-	| "error"
-	| "not_sent"
-	| "unsupported"
-	| "success";
 export type NotificationResult = {
 	status: NotificationStatus;
 	reason?: string;

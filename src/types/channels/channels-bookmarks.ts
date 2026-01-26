@@ -1,6 +1,6 @@
-import type { IDMappedObjects } from "../../../src/types/utilities";
-import type { FileInfo } from "./files";
-import type { Channel } from "./mm/channels";
+import type { FileInfo } from "../files";
+import type { IDMappedObjects } from "../utilities";
+import type { Channel } from "./channels";
 
 type ChannelBookmarkType = "link" | "file";
 

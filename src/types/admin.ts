@@ -1,19 +1,14 @@
-import type { MixedUnlinkedGroupRedux } from "../../../src/types/groups";
-import type {
-	SamlCertificateStatus,
-	SamlMetadataResponse
-} from "../../../src/types/saml";
-import type {
-	UserAccessToken,
-	UserProfileResponse
-} from "../../../src/types/users";
-import type { RelationOneToOne } from "../../../src/types/utilities";
+
 import type { Audit } from "./audits";
 import type { Compliance } from "./compliance";
 import type { AdminConfig, ClientLicense, EnvironmentConfig } from "./config";
 import type { DataRetentionCustomPolicies } from "./data_retention";
+import type { MixedUnlinkedGroupRedux } from "./groups";
 import type { PluginRedux, PluginStatusRedux } from "./plugins";
+import type { SamlCertificateStatus, SamlMetadataResponse } from "./saml";
 import type { Team } from "./teams";
+import type { UserAccessToken, UserProfile } from "./users";
+import type { RelationOneToOne } from "./utilities";
 
 export enum LogLevelEnum {
 	SILLY = "silly",
@@ -66,7 +61,7 @@ export type AdminState = {
 	analytics: AnalyticsState;
 	teamAnalytics: RelationOneToOne<Team, AnalyticsState>;
 	userAccessTokensByUser?: RelationOneToOne<
-		UserProfileResponse,
+		UserProfile,
 		Record<string, UserAccessToken>
 	>;
 	plugins?: Record<string, PluginRedux>;

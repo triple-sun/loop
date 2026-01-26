@@ -1,6 +1,6 @@
 import type { Stream } from "form-data";
 import type { UserProfile } from "fox-loop-sdk";
-import type { UserCustomStatus, UserStatus } from "../users";
+import type { UserCustomStatus, UserStatusValue } from "../users";
 import type {
 	OptionalUserID,
 	TeamID,
@@ -155,7 +155,7 @@ export interface UsersStatusSetAruments extends TokenOverridable, UserID {
 	/**
 	 * @description User status to set
 	 */
-	status: UserStatus;
+	status: UserStatusValue;
 }
 export interface UsersCustomStatusSetArguments
 	extends TokenOverridable,

@@ -1,4 +1,4 @@
-import type { Post } from "../posts";
+import type { Post } from "../posts/posts";
 import type {
 	ChannelID,
 	TeamID,

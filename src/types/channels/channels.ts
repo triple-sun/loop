@@ -1,10 +1,10 @@
 
-import type { Team } from './teams';
+import type { Team } from '../teams';
 import type {
   IDMappedObjects,
   RelationOneToManyUnique,
   RelationOneToOne,
-} from './utilities';
+} from '../utilities';
 
 export enum ChannelType {
   Open = 'O',

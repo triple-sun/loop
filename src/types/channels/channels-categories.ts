@@ -1,10 +1,7 @@
-import type { UserProfileResponse } from "../../../src/types/users";
-import type {
-	IDMappedObjects,
-	RelationOneToOne
-} from "../../../src/types/utilities";
-import type { Channel } from "./mm/channels";
-import type { Team } from "./teams";
+import type { Team } from "../teams";
+import type { UserProfile } from "../users";
+import type { IDMappedObjects, RelationOneToOne } from "../utilities";
+import type { Channel } from "./channels";
 
 export type ChannelCategoryType =
 	| "favorites"
@@ -12,7 +9,7 @@ export type ChannelCategoryType =
 	| "direct_messages"
 	| "custom";
 
-export enum CategorySorting {
+export enum ChannelCategorySorting {
 	Alphabetical = "alpha",
 	Default = "", // behaves the same as manual
 	Recency = "recent",
@@ -21,11 +18,11 @@ export enum CategorySorting {
 
 export type ChannelCategory = {
 	id: string;
-	user_id: UserProfileResponse["id"];
+	user_id: UserProfile["id"];
 	team_id: Team["id"];
 	type: ChannelCategoryType;
 	display_name: string;
-	sorting: CategorySorting;
+	sorting: ChannelCategorySorting;
 	channel_ids: Array<Channel["id"]>;
 	muted: boolean;
 	collapsed: boolean;
