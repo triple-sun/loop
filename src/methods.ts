@@ -343,11 +343,19 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	): Promise<WebApiCallResult>;
 
 	public readonly bots = {
+		/**
+		 * @description Convert a user to a bot.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		convertUser: bindApiCall<BotsConvertUserArguments, StatusOK>(this, {
 			method: "POST",
 			path: "users/:user_id/convert_to_bot",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description Convert a bot to a user.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		convertBotToUser: bindApiCall<BotsConvertBotToUserArguments, StatusOK>(
 			this,
 			{
@@ -357,6 +365,10 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				type: ContentType.JSON
 			}
 		),
+		/**
+		 * @description Create a new bot.
+		 * @permissions Requires `create_bot` permission.
+		 */
 		create: bindApiCall<BotsCreateArguments, Bot>(this, {
 			method: "POST",
 			path: "bots",
@@ -430,21 +442,33 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "channels/group",
 			type: ContentType.JSON
 		}),
+		/**
+		 * @description List channels for a team.
+		 */
 		list: bindApiCall<ChannelsListArguments, Channel[]>(this, {
 			method: "GET",
 			path: "teams/:team_id/channels",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description Get a channel by ID.
+		 */
 		getById: bindApiCall<ChannelsGetByIdArguments, Channel>(this, {
 			method: "GET",
 			path: "channels/:channel_id",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description Update a channel.
+		 */
 		update: bindApiCall<ChannelsUpdateArguments, Channel>(this, {
 			method: "PUT",
 			path: "channels/:channel_id",
 			type: ContentType.JSON
 		}),
+		/**
+		 * @description Delete a channel.
+		 */
 		delete: bindApiCall<ChannelsDeleteArguments, StatusOK>(this, {
 			method: "DELETE",
 			path: "channels/:channel_id",
@@ -1013,7 +1037,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				}),
 				update: bindApiCall<OAuthAppsUpdateArguments, OAuthApp>(this, {
 					method: "PUT",
-					path: "oauth	/apps/:id",
+					path: "oauth/apps/:id",
 					type: ContentType.JSON
 				}),
 				delete: bindApiCall<OAuthAppsDeleteArguments, StatusOK>(this, {
@@ -1049,16 +1073,28 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	};
 
 	public readonly groups = {
+		/**
+		 * @description Create a new group.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		create: bindApiCall<GroupsCreateArguments, Group>(this, {
 			method: "POST",
 			path: "groups",
 			type: ContentType.JSON
 		}),
+		/**
+		 * @description Retrieve a group by its ID.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		get: bindApiCall<GroupsGetArguments, Group>(this, {
 			method: "GET",
 			path: "groups/:group_id",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description List all groups.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		list: bindApiCall<GroupsListArguments, Group[]>(this, {
 			method: "GET",
 			path: "groups",
@@ -1126,33 +1162,54 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	};
 
 	public readonly jobs = {
+		/**
+		 * @description Create a new job.
+		 * @permissions Requires `manage_jobs` permission.
+		 */
 		create: bindApiCall<JobsCreateArguments, Job>(this, {
 			method: "POST",
 			path: "jobs",
 			type: ContentType.JSON
 		}),
+		/**
+		 * @description Retrieve a job by its ID.
+		 */
 		get: bindApiCall<JobsGetArguments, Job>(this, {
 			method: "GET",
 			path: "jobs/:job_id",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description List all jobs.
+		 */
 		list: bindApiCall<JobsListArguments, Job[]>(this, {
 			method: "GET",
 			path: "jobs",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description List jobs by type.
+		 */
 		listByType: bindApiCall<JobsListByTypeArguments, Job[]>(this, {
 			method: "GET",
 			path: "jobs/type/:type",
 			type: ContentType.URLEncoded
 		}),
+		/**
+		 * @description Cancel a job.
+		 */
 		cancel: bindApiCall<JobsCancelArguments, StatusOK>(this, {
 			method: "POST",
 			path: "jobs/:job_id/cancel",
 			type: ContentType.JSON
 		})
 	};
+
 	public readonly plugins = {
+		/**
+		 * @description Upload a plugin.
+		 * @permissions Requires `manage_system` permission.
+		 */
 		upload: bindApiCall<PluginsUploadArguments, PluginManifest>(this, {
 			method: "POST",
 			path: "plugins",
@@ -1218,6 +1275,9 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	};
 
 	public readonly roles = {
+		/**
+		 * @description Retrieve a role by its ID.
+		 */
 		get: bindApiCall<RolesGetArguments, Role>(this, {
 			method: "GET",
 			path: "roles/:role_id",
@@ -1688,7 +1748,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		getReports: bindApiCall<ComplianceGetReportsArguments, ComplianceReport[]>(
 			this,
 			{
-				method: "GET",
+			method: "GET",
 				path: "compliance/reports",
 				type: ContentType.URLEncoded
 			}
@@ -1699,17 +1759,17 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		create: bindApiCall<TermsOfServiceCreateArguments, TermsOfService>(this, {
 			method: "POST",
 			path: "terms_of_service",
-			type: ContentType.JSON
+			type: ContentType.JSON	
 		}),
 		get: bindApiCall<TermsOfServiceGetArguments, TermsOfService>(this, {
 			method: "GET",
 			path: "terms_of_service",
 			type: ContentType.URLEncoded
 		}),
-		update: bindApiCall<TermsOfServiceUpdateArguments, TermsOfService>(this, {
-			method: "POST", // or PUT? Check if update is same as create or distinct.
-			path: "terms_of_service/:term_id", // Usually ID
+		update: bindApiCall<TermsOfServiceUpdateArguments, 	TermsOfService>(this, {
+			method: "POST", // or PUT? Check if update is same 	as create or distinct.
+			path: "terms_of_service/:id", // Usually ID
 			type: ContentType.JSON
 		})
 	};
-}
+};
