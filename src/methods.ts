@@ -1,12 +1,8 @@
 import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import { WebClient } from "./client";
-import type {
-	UserCustomStatus,
-	UserProfile,
-	UserStatus
-} from "./types";
-import type { Bot, BotPatch } from "./types/bots";
+import type { UserCustomStatus, UserProfile, UserStatus } from "./types";
+import type { Bot } from "./types/bots";
 import type {
 	Channel,
 	ChannelMembership,
@@ -191,7 +187,6 @@ import type {
 	ReactionsGetBulkArguments,
 	ReactionsGetForPostArguments
 } from "./types/methods/reaction.methods";
-import type { ReportsStartUsersBatchExportArguments } from "./types/methods/reports.methods";
 import type {
 	RolesGetArguments,
 	RolesGetByNameArguments,
@@ -239,6 +234,8 @@ import type { PluginManifest, PluginStatus } from "./types/plugins";
 import type { Post, PostList } from "./types/posts/posts";
 import type { PreferenceType } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
+import type { Role } from "./types/roles";
+import type { Scheme } from "./types/schemes";
 import type { Team, TeamStats } from "./types/teams";
 import type {
 	StatusOK,
@@ -298,6 +295,134 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	 * Admin methods
 	 */
 	public readonly admin = {
+		plugins: {
+			upload: bindApiCall<PluginsUploadArguments, PluginManifest>(this, {
+				method: "POST",
+				path: "/plugins",
+				type: ContentType.FormData
+			}),
+			installFromUrl: bindApiCall<
+				PluginsInstallFromUrlArguments,
+				PluginManifest
+			>(this, {
+				method: "POST",
+				path: "/plugins/install_from_url",
+				type: ContentType.JSON
+			}),
+			installMarketplace: bindApiCall<
+				PluginsInstallMarketplaceArguments,
+				PluginManifest
+			>(this, {
+				method: "POST",
+				path: "/plugins/marketplace",
+				type: ContentType.JSON
+			}),
+			remove: bindApiCall<PluginsRemoveArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "/plugins/:plugin_id",
+				type: ContentType.URLEncoded
+			}),
+			enable: bindApiCall<PluginsEnableArguments, StatusOK>(this, {
+				method: "POST",
+				path: "/plugins/:plugin_id/enable",
+				type: ContentType.URLEncoded
+			}),
+			disable: bindApiCall<PluginsDisableArguments, StatusOK>(this, {
+				method: "POST",
+				path: "/plugins/:plugin_id/disable",
+				type: ContentType.URLEncoded
+			}),
+			get: bindApiCall<PluginsGetArguments, PluginManifest[]>(this, {
+				method: "GET",
+				path: "/plugins",
+				type: ContentType.URLEncoded
+			}),
+			getWebapp: bindApiCall<PluginsGetWebappArguments, PluginManifest[]>(
+				this,
+				{
+					method: "GET",
+					path: "/plugins/webapp",
+					type: ContentType.URLEncoded
+				}
+			),
+			getStatuses: bindApiCall<PluginsGetStatusesArguments, PluginStatus[]>(
+				this,
+				{
+					method: "GET",
+					path: "/plugins/statuses",
+					type: ContentType.URLEncoded
+				}
+			),
+			getMarketplace: bindApiCall<
+				PluginsGetMarketplaceArguments,
+				PluginManifest[]
+			>(this, {
+				method: "GET",
+				path: "/plugins/marketplace",
+				type: ContentType.URLEncoded
+			})
+		},
+
+		roles: {
+			get: bindApiCall<RolesGetArguments, Role>(this, {
+				method: "GET",
+				path: "/roles/:role_id",
+				type: ContentType.URLEncoded
+			}),
+			getByName: bindApiCall<RolesGetByNameArguments, Role>(this, {
+				method: "GET",
+				path: "/roles/name/:role_name",
+				type: ContentType.URLEncoded
+			}),
+			getByNames: bindApiCall<RolesGetByNamesArguments, Role[]>(this, {
+				method: "POST",
+				path: "/roles/names",
+				type: ContentType.JSON
+			}),
+			patch: bindApiCall<RolesPatchArguments, Role>(this, {
+				method: "PUT",
+				path: "/roles/:role_id/patch",
+				type: ContentType.JSON
+			})
+		},
+
+		schemes: {
+			create: bindApiCall<SchemesCreateArguments, Scheme>(this, {
+				method: "POST",
+				path: "/schemes",
+				type: ContentType.JSON
+			}),
+			delete: bindApiCall<SchemesDeleteArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "/schemes/:scheme_id",
+				type: ContentType.URLEncoded
+			}),
+			get: bindApiCall<SchemesGetArguments, Scheme>(this, {
+				method: "GET",
+				path: "/schemes/:scheme_id",
+				type: ContentType.URLEncoded
+			}),
+			getChannels: bindApiCall<SchemesGetChannelsArguments, Channel[]>(this, {
+				method: "GET",
+				path: "/schemes/:scheme_id/channels",
+				type: ContentType.URLEncoded
+			}),
+			getTeams: bindApiCall<SchemesGetTeamsArguments, Team[]>(this, {
+				method: "GET",
+				path: "/schemes/:scheme_id/teams",
+				type: ContentType.URLEncoded
+			}),
+			list: bindApiCall<SchemesListArguments, Scheme[]>(this, {
+				method: "GET",
+				path: "/schemes",
+				type: ContentType.URLEncoded
+			}),
+			patch: bindApiCall<SchemesPatchArguments, Scheme>(this, {
+				method: "PUT",
+				path: "/schemes/:scheme_id/patch",
+				type: ContentType.JSON
+			})
+		},
 		users: {
 			promoteGuestToUser: bindApiCall<UserID, StatusOK>(this, {
 				method: "POST",
@@ -542,24 +667,6 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		)
 	};
 
-	public readonly preferences = {
-		get: bindApiCall<PreferencesGetArguments, PreferenceType[]>(this, {
-			method: "GET",
-			path: "/users/:user_id/preferences",
-			type: ContentType.URLEncoded
-		}),
-		save: bindApiCall<PreferencesSaveArguments, StatusOK>(this, {
-			method: "PUT",
-			path: "/users/:user_id/preferences",
-			type: ContentType.JSON
-		}),
-		delete: bindApiCall<PreferencesDeleteArguments, StatusOK>(this, {
-			method: "POST",
-			path: "/users/:user_id/preferences/delete",
-			type: ContentType.JSON
-		})
-	};
-
 	public readonly emojis = {
 		create: bindApiCall<EmojisCreateArguments, CustomEmoji>(this, {
 			method: "POST",
@@ -620,6 +727,498 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				type: ContentType.JSON
 			}
 		)
+	};
+
+	public readonly integrations = {
+		commands: {
+			create: bindApiCall<CommandsCreateArguments, Command>(this, {
+				method: "POST",
+				path: "/commands",
+				type: ContentType.JSON
+			}),
+			update: bindApiCall<CommandsUpdateArguments, Command>(this, {
+				method: "PUT",
+				path: "/commands/:id",
+				type: ContentType.JSON
+			}),
+			delete: bindApiCall<CommandsDeleteArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "/commands/:command_id",
+				type: ContentType.URLEncoded
+			}),
+			list: bindApiCall<CommandsListArguments, Command[]>(this, {
+				method: "GET",
+				path: "/commands",
+				type: ContentType.URLEncoded
+			}),
+			regenerateToken: bindApiCall<
+				CommandsRegenerateTokenArguments,
+				{ token: string }
+			>(this, {
+				method: "PUT",
+				path: "/commands/:command_id/regen_token",
+				type: ContentType.JSON
+			}),
+			execute: bindApiCall<CommandsExecuteArguments, StatusOK>(this, {
+				method: "POST",
+				path: "/commands/execute",
+				type: ContentType.JSON
+			})
+		},
+		webhooks: {
+			incoming: {
+				create: bindApiCall<IncomingWebhooksCreateArguments, IncomingWebhook>(
+					this,
+					{
+						method: "POST",
+						path: "/hooks/incoming",
+						type: ContentType.JSON
+					}
+				),
+				update: bindApiCall<IncomingWebhooksUpdateArguments, IncomingWebhook>(
+					this,
+					{
+						method: "PUT",
+						path: "/hooks/incoming/:id",
+						type: ContentType.JSON
+					}
+				),
+				delete: bindApiCall<IncomingWebhooksDeleteArguments, StatusOK>(this, {
+					method: "DELETE",
+					path: "/hooks/incoming/:hook_id",
+					type: ContentType.URLEncoded
+				}),
+				list: bindApiCall<IncomingWebhooksListArguments, IncomingWebhook[]>(
+					this,
+					{
+						method: "GET",
+						path: "/hooks/incoming",
+						type: ContentType.URLEncoded
+					}
+				),
+				get: bindApiCall<IncomingWebhooksGetArguments, IncomingWebhook>(this, {
+					method: "GET",
+					path: "/hooks/incoming/:hook_id",
+					type: ContentType.URLEncoded
+				})
+			},
+			outgoing: {
+				create: bindApiCall<OutgoingWebhooksCreateArguments, OutgoingWebhook>(
+					this,
+					{
+						method: "POST",
+						path: "/hooks/outgoing",
+						type: ContentType.JSON
+					}
+				),
+				update: bindApiCall<OutgoingWebhooksUpdateArguments, OutgoingWebhook>(
+					this,
+					{
+						method: "PUT",
+						path: "/hooks/outgoing/:id",
+						type: ContentType.JSON
+					}
+				),
+				delete: bindApiCall<OutgoingWebhooksDeleteArguments, StatusOK>(this, {
+					method: "DELETE",
+					path: "/hooks/outgoing/:hook_id",
+					type: ContentType.URLEncoded
+				}),
+				list: bindApiCall<OutgoingWebhooksListArguments, OutgoingWebhook[]>(
+					this,
+					{
+						method: "GET",
+						path: "/hooks/outgoing",
+						type: ContentType.URLEncoded
+					}
+				),
+				get: bindApiCall<OutgoingWebhooksGetArguments, OutgoingWebhook>(this, {
+					method: "GET",
+					path: "/hooks/outgoing/:hook_id",
+					type: ContentType.URLEncoded
+				}),
+				regenerateToken: bindApiCall<
+					OutgoingWebhooksRegenerateTokenArguments,
+					{ token: string }
+				>(this, {
+					method: "POST",
+					path: "/hooks/outgoing/:hook_id/regen_token",
+					type: ContentType.JSON
+				})
+			}
+		},
+
+		oauth: {
+			apps: {
+				create: bindApiCall<OAuthAppsCreateArguments, OAuthApp>(this, {
+					method: "POST",
+					path: "/oauth/apps",
+					type: ContentType.JSON
+				}),
+				update: bindApiCall<OAuthAppsUpdateArguments, OAuthApp>(this, {
+					method: "PUT",
+					path: "/oauth/apps/:id",
+					type: ContentType.JSON
+				}),
+				delete: bindApiCall<OAuthAppsDeleteArguments, StatusOK>(this, {
+					method: "DELETE",
+					path: "/oauth/apps/:app_id",
+					type: ContentType.URLEncoded
+				}),
+				get: bindApiCall<OAuthAppsGetArguments, OAuthApp>(this, {
+					method: "GET",
+					path: "/oauth/apps/:app_id",
+					type: ContentType.URLEncoded
+				}),
+				getInfo: bindApiCall<OAuthAppsGetInfoArguments, OAuthApp>(this, {
+					method: "GET",
+					path: "/oauth/apps/:app_id/info",
+					type: ContentType.URLEncoded
+				}),
+				list: bindApiCall<OAuthAppsListArguments, OAuthApp[]>(this, {
+					method: "GET",
+					path: "/oauth/apps",
+					type: ContentType.URLEncoded
+				}),
+				regenerateSecret: bindApiCall<
+					OAuthAppsRegenerateSecretArguments,
+					OAuthApp
+				>(this, {
+					method: "POST",
+					path: "/oauth/apps/:app_id/regen_secret",
+					type: ContentType.JSON
+				})
+			}
+		}
+	};
+
+	public readonly bots = {
+		create: bindApiCall<BotsCreateArguments, Bot>(this, {
+			method: "POST",
+			path: "/bots",
+			type: ContentType.JSON
+		}),
+		patch: bindApiCall<BotsPatchArguments, Bot>(this, {
+			method: "PUT",
+			path: "/bots/:user_id",
+			type: ContentType.JSON
+		}),
+		get: bindApiCall<BotsGetArguments, Bot>(this, {
+			method: "GET",
+			path: "/bots/:user_id",
+			type: ContentType.URLEncoded
+		}),
+		list: bindApiCall<BotsListArguments, Bot[]>(this, {
+			method: "GET",
+			path: "/bots",
+			type: ContentType.URLEncoded
+		}),
+		convertUser: bindApiCall<BotsConvertUserArguments, StatusOK>(this, {
+			method: "POST",
+			path: "/users/:user_id/convert_to_bot",
+			type: ContentType.JSON
+		})
+	};
+
+	public readonly dataRetention = {
+		policies: {
+			create: bindApiCall<
+				DataRetentionCreatePolicyArguments,
+				DataRetentionCustomPolicies
+			>(this, {
+				method: "POST",
+				path: "/data_retention/policies",
+				type: ContentType.JSON
+			}),
+			get: bindApiCall<
+				DataRetentionGetPolicyArguments,
+				DataRetentionCustomPolicies
+			>(this, {
+				method: "GET",
+				path: "/data_retention/policies/:policy_id",
+				type: ContentType.URLEncoded
+			}),
+			delete: bindApiCall<DataRetentionDeletePolicyArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "/data_retention/policies/:policy_id",
+				type: ContentType.URLEncoded
+			}),
+			update: bindApiCall<
+				DataRetentionUpdatePolicyArguments,
+				DataRetentionCustomPolicies
+			>(this, {
+				method: "PUT",
+				path: "/data_retention/policies/:policy_id",
+				type: ContentType.JSON
+			}),
+			patch: bindApiCall<
+				DataRetentionPatchPolicyArguments,
+				DataRetentionCustomPolicies
+			>(this, {
+				method: "PATCH",
+				path: "/data_retention/policies/:policy_id",
+				type: ContentType.JSON
+			}),
+			list: bindApiCall<
+				DataRetentionGetPoliciesArguments,
+				DataRetentionCustomPolicies[]
+			>(this, {
+				method: "GET",
+				path: "/data_retention/policies",
+				type: ContentType.URLEncoded
+			}),
+			teams: {
+				search: bindApiCall<DataRetentionSearchPolicyTeamsArguments, Team[]>(
+					this,
+					{
+						method: "POST",
+						path: "/data_retention/policies/:policy_id/teams/search",
+						type: ContentType.JSON
+					}
+				),
+				add: bindApiCall<DataRetentionAddPolicyTeamsArguments, StatusOK>(this, {
+					method: "POST",
+					path: "/data_retention/policies/:policy_id/teams",
+					type: ContentType.JSON
+				}),
+				remove: bindApiCall<DataRetentionRemovePolicyTeamsArguments, StatusOK>(
+					this,
+					{
+						method: "DELETE",
+						path: "/data_retention/policies/:policy_id/teams/:team_id",
+						type: ContentType.URLEncoded
+					}
+				),
+				get: bindApiCall<DataRetentionGetPolicyTeamsArguments, Team[]>(this, {
+					method: "GET",
+					path: "/data_retention/policies/:policy_id/teams",
+					type: ContentType.URLEncoded
+				})
+			},
+			channels: {
+				search: bindApiCall<
+					DataRetentionSearchPolicyChannelsArguments,
+					Channel[]
+				>(this, {
+					method: "POST",
+					path: "/data_retention/policies/:policy_id/channels/search",
+					type: ContentType.JSON
+				}),
+				add: bindApiCall<DataRetentionAddPolicyChannelsArguments, StatusOK>(
+					this,
+					{
+						method: "POST",
+						path: "/data_retention/policies/:policy_id/channels",
+						type: ContentType.JSON
+					}
+				),
+				remove: bindApiCall<
+					DataRetentionRemovePolicyChannelsArguments,
+					StatusOK
+				>(this, {
+					method: "DELETE",
+					path: "/data_retention/policies/:policy_id/channels/:channel_id",
+					type: ContentType.URLEncoded
+				}),
+				get: bindApiCall<DataRetentionGetPolicyChannelsArguments, Channel[]>(
+					this,
+					{
+						method: "GET",
+						path: "/data_retention/policies/:policy_id/channels",
+						type: ContentType.URLEncoded
+					}
+				)
+			}
+		}
+	};
+
+	public readonly jobs = {
+		create: bindApiCall<JobsCreateArguments, Job>(this, {
+			method: "POST",
+			path: "/jobs",
+			type: ContentType.JSON
+		}),
+		get: bindApiCall<JobsGetArguments, Job>(this, {
+			method: "GET",
+			path: "/jobs/:job_id",
+			type: ContentType.URLEncoded
+		}),
+		list: bindApiCall<JobsListArguments, Job[]>(this, {
+			method: "GET",
+			path: "/jobs",
+			type: ContentType.URLEncoded
+		}),
+		listByType: bindApiCall<JobsListByTypeArguments, Job[]>(this, {
+			method: "GET",
+			path: "/jobs/type/:type",
+			type: ContentType.URLEncoded
+		}),
+		cancel: bindApiCall<JobsCancelArguments, StatusOK>(this, {
+			method: "POST",
+			path: "/jobs/:job_id/cancel",
+			type: ContentType.JSON
+		})
+	};
+
+	public readonly groups = {
+		create: bindApiCall<GroupsCreateArguments, Group>(this, {
+			method: "POST",
+			path: "/groups",
+			type: ContentType.JSON
+		}),
+		get: bindApiCall<GroupsGetArguments, Group>(this, {
+			method: "GET",
+			path: "/groups/:group_id",
+			type: ContentType.URLEncoded
+		}),
+		list: bindApiCall<GroupsListArguments, Group[]>(this, {
+			method: "GET",
+			path: "/groups",
+			type: ContentType.URLEncoded
+		}),
+		update: bindApiCall<GroupsUpdateArguments, Group>(this, {
+			method: "PUT",
+			path: "/groups/:group_id",
+			type: ContentType.JSON
+		}),
+		delete: bindApiCall<GroupsDeleteArguments, StatusOK>(this, {
+			method: "DELETE",
+			path: "/groups/:group_id",
+			type: ContentType.URLEncoded
+		}),
+		patch: bindApiCall<GroupsPatchArguments, Group>(this, {
+			method: "PUT",
+			path: "/groups/:group_id/patch",
+			type: ContentType.JSON
+		}),
+		restore: bindApiCall<GroupsRestoreArguments, Group>(this, {
+			method: "POST",
+			path: "/groups/:group_id/restore",
+			type: ContentType.URLEncoded
+		}),
+		getStats: bindApiCall<GroupsGetStatsArguments, GroupStats>(this, {
+			method: "GET",
+			path: "/groups/:group_id/stats",
+			type: ContentType.URLEncoded
+		}),
+		syncables: {
+			list: bindApiCall<GroupsListSyncablesArguments, GroupSyncable[]>(this, {
+				method: "GET",
+				path: "/groups/:group_id/:syncable_type",
+				type: ContentType.URLEncoded
+			}),
+			add: bindApiCall<GroupsAddSyncableArguments, GroupSyncable>(this, {
+				method: "POST",
+				path: "/groups/:group_id/:syncable_type/:syncable_id/link",
+				type: ContentType.JSON
+			}),
+			remove: bindApiCall<GroupsRemoveSyncableArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "/groups/:group_id/:syncable_type/:syncable_id/link",
+				type: ContentType.URLEncoded
+			}),
+			patch: bindApiCall<GroupsPatchSyncableArguments, GroupSyncable>(this, {
+				method: "PUT",
+				path: "/groups/:group_id/:syncable_type/:syncable_id/patch",
+				type: ContentType.JSON
+			})
+		},
+		channel: {
+			list: bindApiCall<GroupsChannelArguments, Channel[]>(this, {
+				method: "GET",
+				path: "/groups/:group_id/channels",
+				type: ContentType.URLEncoded
+			})
+		},
+		team: {
+			list: bindApiCall<GroupsTeamArguments, Team[]>(this, {
+				method: "GET",
+				path: "/groups/:group_id/teams",
+				type: ContentType.URLEncoded
+			})
+		},
+		members: {
+			list: bindApiCall<GroupsListForUserArguments, Group[]>(this, {
+				method: "GET",
+				path: "/users/:user_id/groups",
+				type: ContentType.URLEncoded
+			})
+		}
+	};
+
+	public readonly cloud = {
+		customer: {
+			get: bindApiCall<CloudGetCustomerArguments, CloudCustomer>(this, {
+				method: "GET",
+				path: "/cloud/customer",
+				type: ContentType.URLEncoded
+			}),
+			update: bindApiCall<CloudUpdateCustomerArguments, CloudCustomer>(this, {
+				method: "PUT",
+				path: "/cloud/customer",
+				type: ContentType.JSON
+			}),
+			updateAddress: bindApiCall<CloudUpdateAddressArguments, CloudCustomer>(
+				this,
+				{
+					method: "PUT",
+					path: "/cloud/customer/address",
+					type: ContentType.JSON
+				}
+			),
+			validateBusinessEmail: bindApiCall<
+				CloudValidateBusinessEmailArguments,
+				StatusOK
+			>(this, {
+				method: "POST",
+				path: "/cloud/validate_business_email",
+				type: ContentType.JSON
+			}),
+			confirmPayment: bindApiCall<
+				CloudConfirmCustomerPaymentArguments,
+				StatusOK
+			>(this, {
+				method: "POST",
+				path: "/cloud/payment/confirm",
+				type: ContentType.JSON
+			})
+		},
+		invoices: {
+			get: bindApiCall<CloudGetInvoicesArguments, Invoice[]>(this, {
+				method: "GET",
+				path: "/cloud/invoices",
+				type: ContentType.URLEncoded
+			})
+		},
+		subscription: {
+			get: bindApiCall<CloudGetSubscriptionArguments, Subscription>(this, {
+				method: "GET",
+				path: "/cloud/subscription",
+				type: ContentType.URLEncoded
+			}),
+			update: bindApiCall<CloudUpdateSubscriptionArguments, Subscription>(
+				this,
+				{
+					method: "PUT",
+					path: "/cloud/subscription",
+					type: ContentType.JSON
+				}
+			)
+		},
+		products: {
+			get: bindApiCall<CloudGetProductsArguments, Product[]>(this, {
+				method: "GET",
+				path: "/cloud/products",
+				type: ContentType.URLEncoded
+			})
+		},
+		limits: {
+			get: bindApiCall<CloudGetLimitsArguments, Limits>(this, {
+				method: "GET",
+				path: "/cloud/limits",
+				type: ContentType.URLEncoded
+			})
+		}
 	};
 
 	/**
@@ -740,6 +1339,23 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 					type: ContentType.URLEncoded
 				}
 			)
+		},
+		preferences: {
+			get: bindApiCall<PreferencesGetArguments, PreferenceType[]>(this, {
+				method: "GET",
+				path: "/users/:user_id/preferences",
+				type: ContentType.URLEncoded
+			}),
+			save: bindApiCall<PreferencesSaveArguments, StatusOK>(this, {
+				method: "PUT",
+				path: "/users/:user_id/preferences",
+				type: ContentType.JSON
+			}),
+			delete: bindApiCall<PreferencesDeleteArguments, StatusOK>(this, {
+				method: "POST",
+				path: "/users/:user_id/preferences/delete",
+				type: ContentType.JSON
+			})
 		}
 	};
 }

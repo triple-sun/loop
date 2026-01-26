@@ -1,10 +1,8 @@
 import type { Post } from "../posts/posts";
 import type {
 	ChannelID,
-	TeamID,
 	TokenOverridable,
 	TraditionalPagingEnabled,
-	UserID
 } from "./common.methods";
 
 export interface PostsCreateArguments extends TokenOverridable, ChannelID {

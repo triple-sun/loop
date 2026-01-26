@@ -84,6 +84,10 @@ export interface ChannelID {
 	/** @description Encoded channel ID. */
 	channel_id: string;
 }
+export interface OptionalChannelID {
+	/** @description Encoded channel ID. */
+	channel_id?: string;
+}
 
 // Same for user IDs
 
