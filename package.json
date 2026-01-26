@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/triplesun/loop-client.git"
+    "url": "git+https://github.com/triple-sun/loop-client.git"
   },
   "author": "triple-sun",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/triplesun/loop-client/issues"
+    "url": "https://github.com/triple-sun/loop-client/issues"
   },
-  "homepage": "https://github.com/triplesun/loop-client/fox-mattermost#readme",
+  "homepage": "https://github.com/triple-sun/loop-client#readme",
   "files": [
     "build/**/*",
     "*.md"
