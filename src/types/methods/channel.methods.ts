@@ -1,9 +1,9 @@
 import type { Channel, ChannelType } from "../channels/channels";
 import type {
 	ChannelID,
+	Paginated,
 	TeamID,
 	TokenOverridable,
-	TraditionalPagingEnabled,
 	UserID
 } from "./common.methods";
 
@@ -15,9 +15,7 @@ export interface ChannelsCreateArguments extends TokenOverridable, TeamID {
 	header?: string;
 }
 
-export interface ChannelsCreateDirectArguments extends TokenOverridable {
-	term: string;
-}
+export type ChannelsCreateDirectArguments = [string, string]
 
 export interface ChannelsCreateGroupArguments extends TokenOverridable {
 	user_ids: string[];
@@ -25,7 +23,7 @@ export interface ChannelsCreateGroupArguments extends TokenOverridable {
 
 export interface ChannelsListArguments
 	extends TokenOverridable,
-		TraditionalPagingEnabled,
+		Paginated,
 		TeamID {
 	include_total_count?: boolean;
 	include_deleted?: boolean;
@@ -54,7 +52,7 @@ export interface ChannelsGetStatsArguments
 export interface ChannelsSearchArguments
 	extends TokenOverridable,
 		TeamID,
-		TraditionalPagingEnabled {
+		Paginated {
 	term: string;
 	not_associated_to_group?: string;
 	exclude_default_channels?: boolean;
@@ -77,4 +75,4 @@ export interface ChannelsMemberArguments
 export interface ChannelsMembersArguments
 	extends TokenOverridable,
 		ChannelID,
-		TraditionalPagingEnabled {}
+		Paginated {}

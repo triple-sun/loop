@@ -1,15 +1,9 @@
 import type { Team, TeamSearchOpts } from "../teams";
-import type {
-	TeamID,
-	TokenOverridable,
-	TraditionalPagingEnabled
-} from "./common.methods";
+import type { Paginated, TeamID, TokenOverridable } from "./common.methods";
 
 export interface TeamsCreateArguments extends TokenOverridable, Team {}
 
-export interface TeamsGetArguments
-	extends TokenOverridable,
-		TraditionalPagingEnabled {
+export interface TeamsGetArguments extends TokenOverridable, Paginated {
 	include_total_count?: boolean;
 }
 
@@ -40,7 +34,7 @@ export interface TeamsRegenerateInviteIdArguments
 export interface TeamsGetStatsArguments extends TokenOverridable, TeamID {}
 
 export type TeamsSearchArguments = TokenOverridable &
-	TraditionalPagingEnabled &
+	Paginated &
 	TeamSearchOpts & {
 		term: string;
 	};

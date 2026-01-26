@@ -1,9 +1,5 @@
 import type { Post } from "../posts/posts";
-import type {
-	ChannelID,
-	TokenOverridable,
-	TraditionalPagingEnabled,
-} from "./common.methods";
+import type { ChannelID, Paginated, TokenOverridable } from "./common.methods";
 
 export interface PostsCreateArguments extends TokenOverridable, ChannelID {
 	message: string;
@@ -27,16 +23,14 @@ export interface PostsDeleteArguments extends TokenOverridable {
 	post_id: string;
 }
 
-export interface PostsGetThreadArguments
-	extends TokenOverridable,
-		TraditionalPagingEnabled {
+export interface PostsGetThreadArguments extends TokenOverridable, Paginated {
 	post_id: string;
 }
 
 export interface PostsGetForChannelArguments
 	extends TokenOverridable,
 		ChannelID,
-		TraditionalPagingEnabled {
+		Paginated {
 	include_deleted?: boolean;
 	since?: number;
 	before?: string;

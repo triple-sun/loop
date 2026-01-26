@@ -1,8 +1,5 @@
 import type { Stream } from "form-data";
-import type {
-	TokenOverridable,
-	TraditionalPagingEnabled
-} from "./common.methods";
+import type { Paginated, TokenOverridable } from "./common.methods";
 
 export interface EmojisCreateArguments extends TokenOverridable {
 	image: Buffer | Stream;
@@ -12,9 +9,7 @@ export interface EmojisCreateArguments extends TokenOverridable {
 	};
 }
 
-export interface EmojisGetListArguments
-	extends TokenOverridable,
-		TraditionalPagingEnabled {
+export interface EmojisGetListArguments extends TokenOverridable, Paginated {
 	sort?: string;
 }
 
@@ -26,9 +21,7 @@ export interface EmojisDeleteArguments extends TokenOverridable {
 	emoji_id: string;
 }
 
-export interface EmojisSearchArguments
-	extends TokenOverridable,
-		TraditionalPagingEnabled {
+export interface EmojisSearchArguments extends TokenOverridable, Paginated {
 	term: string;
 	prefix_only?: string;
 }

@@ -48,7 +48,7 @@ import type {
 	ChannelsRestoreArguments,
 	ChannelsSearchArguments,
 	ChannelsUpdateArguments,
-	ChannelsViewArguments
+	ChannelsViewArguments,
 } from "./types/methods/channel.methods";
 import type {
 	CloudConfirmCustomerPaymentArguments,
@@ -1217,7 +1217,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			type: ContentType.URLEncoded
 		}),
 		/**
-		 * @description Search team.
+		 * @description Search for users.
 		 */
 		search: bindApiCall<UsersListArguments, UserProfile[]>(this, {
 			method: "GET",

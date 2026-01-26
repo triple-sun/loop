@@ -1,5 +1,5 @@
-import type { Bot, BotPatch } from "../bots";
-import type { UserID, UserIDMe } from "./common.methods";
+import type { BotPatch } from "../bots";
+import type { UserID } from "./common.methods";
 
 export interface BotsCreateArguments {
 	bot: BotPatch;

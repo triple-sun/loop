@@ -2,10 +2,12 @@ import type { Stream } from "form-data";
 import type { UserProfile } from "fox-loop-sdk";
 import type { UserCustomStatus, UserStatusValue } from "../users";
 import type {
+	OptionalChannelID,
+	OptionalTeamID,
 	OptionalUserID,
+	Paginated,
 	TeamID,
 	TokenOverridable,
-	TraditionalPagingEnabled,
 	UserID,
 	UserIDMe
 } from "./common.methods";
@@ -22,7 +24,7 @@ interface Username {
 
 export interface UsersChannelsArguments
 	extends TokenOverridable,
-		TraditionalPagingEnabled,
+		Paginated,
 		OptionalUserID {
 	/** @description Set to `true` to exclude deleted channels from the list. Default is `false`. */
 	exclude_deleted?: boolean;
@@ -49,9 +51,14 @@ export interface UsersSetImageArguments extends TokenOverridable, UserID {
 }
 export interface UsersDeleteImageArguments extends TokenOverridable, UserID {}
 
+/**
+ * @description Get a page of a list of users. Based on query string parameters, select users from a team, channel, or select users not in a specific channel.
+ * Since server version 4.0, some basic sorting is available using the sort query parameter. Sorting is currently only supported when selecting users on a team.
+ * Permissions: Requires an active session and (if specified) membership to the channel or team being selected from.
+ */
 export interface UsersListArguments
 	extends TokenOverridable,
-		TraditionalPagingEnabled,
+		Paginated,
 		TeamID {
 	/**
 	 * @description The ID of the team to get users for.
@@ -97,6 +104,11 @@ export interface UsersListArguments
 	roles?: string[];
 }
 
+/**
+ * @description Get a list of users based on search criteria provided in the request body. 
+ * Searches are typically done against username, full name, nickname and email unless otherwise configured by the server.
+ * Requires an active session and read_channel and/or view_team permissions for any channels or teams specified in the request body.
+ */
 export interface UsersSearchArguments {
 	term: string;
 	/**
@@ -127,7 +139,28 @@ export interface UsersSearchArguments {
 	without_team?: boolean;
 	/**
 	 * @description The maximum number of users to return in the results
-	 * Available as of server version 5.6. Defaults to 100 if not provided or on an earlier server version.
+	 * Available as of server @version 5.6. Defaults to 100 if not provided or on an earlier server version.
+	 * @default 100
+	 */
+	limit?: number;
+}
+
+/**
+ * @description Get a list of users for the purpose of autocompleting based on the provided search term.
+ * Specify a combination of team_id and channel_id to filter results further.
+ * Requires an active session and view_team and read_channel on any teams or channels used to filter the results further.
+ */
+export interface UsersAutocompleteArguments
+	extends TokenOverridable,
+		OptionalChannelID,
+		OptionalTeamID {
+	/**
+	 * @description Username, nickname first name or last name
+	 */
+	name: string;
+	/**
+	 * @description The maximum number of users to return in each subresult
+	 * Available as of server @version 5.6. Defaults to 100 if not provided or on an earlier server version.
 	 * @default 100
 	 */
 	limit?: number;
