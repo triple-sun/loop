@@ -1,18 +1,18 @@
 import type { Address, CloudCustomer, CloudCustomerPatch } from "../cloud";
 
-export type CloudGetLimitsArguments = {};
+export type CloudGetLimitsArguments = never;
 
-export type CloudGetProductsArguments = {};
+export type CloudGetProductsArguments = never;
 
-export type CloudGetSubscriptionArguments = {};
+export type CloudGetSubscriptionArguments = never;
 
-export type CloudUpdateSubscriptionArguments = {};
+export type CloudUpdateSubscriptionArguments = never;
 
-export type CloudGetInvoicesArguments = {};
+export type CloudGetInvoicesArguments = never;
 
-export type CloudGetCustomerArguments = {};
+export type CloudGetCustomerArguments = never;
 
-export interface CloudUpdateCustomerArguments {
+export interface CloudUpdateCustomerArguments extends CloudCustomerPatch {
 	customer: CloudCustomerPatch;
 }
 
@@ -20,15 +20,15 @@ export interface CloudUpdateAddressArguments {
 	address: Address;
 }
 
-export type CloudCreateCustomerPaymentArguments = {};
+export type CloudCreateCustomerPaymentArguments = never;
 
 export interface CloudConfirmCustomerPaymentArguments {
 	stripe_setup_intent_id: string;
 }
 
-export type CloudGetCustomerPaymentArguments = {};
+export type CloudGetCustomerPaymentArguments = never;
 
-export type CloudRequestTrialArguments = {};
+export type CloudRequestTrialArguments = never;
 
 export interface CloudValidateBusinessEmailArguments {
 	email: string;

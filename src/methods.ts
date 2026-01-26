@@ -159,7 +159,7 @@ import type {
 	PluginsGetArguments,
 	PluginsGetMarketplaceArguments,
 	PluginsGetStatusesArguments,
-	PluginsGetWebappArguments,
+	PluginsGetWebAppArguments,
 	PluginsInstallFromUrlArguments,
 	PluginsInstallMarketplaceArguments,
 	PluginsRemoveArguments,
@@ -367,16 +367,26 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	};
 	public readonly cloud = {
 		customer: {
-			get: bindApiCall<CloudGetCustomerArguments, CloudCustomer>(this, {
+			get: bindApiCallWithOptionalArg<never, CloudCustomer>(this, {
 				method: "GET",
 				path: "/cloud/customer",
 				type: ContentType.URLEncoded
 			}),
+			/**
+			 * Updates the customer information for the LOOP Cloud customer bound to this installation.
+			 * @description Must have manage_system permission and be licensed for Cloud.
+			 * Minimum server version: 5.29 Note: This is intended for internal use and is subject to change.
+			 */
 			update: bindApiCall<CloudUpdateCustomerArguments, CloudCustomer>(this, {
 				method: "PUT",
 				path: "/cloud/customer",
 				type: ContentType.JSON
 			}),
+			/**
+			 * @description Updates the company address for the LOOP Cloud customer bound to this installation.
+			 * Must have manage_system permission and be licensed for Cloud.
+			 * Minimum server version: 5.29 Note: This is intended for internal use and is subject to change.
+			 */
 			updateAddress: bindApiCall<CloudUpdateAddressArguments, CloudCustomer>(
 				this,
 				{
@@ -621,19 +631,22 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "/plugins",
 			type: ContentType.URLEncoded
 		}),
-		getWebapp: bindApiCall<PluginsGetWebappArguments, PluginManifest[]>(this, {
+		getWebapp: bindApiCallWithOptionalArg<
+			PluginsGetWebAppArguments,
+			PluginManifest[]
+		>(this, {
 			method: "GET",
 			path: "/plugins/webapp",
 			type: ContentType.URLEncoded
 		}),
-		getStatuses: bindApiCall<PluginsGetStatusesArguments, PluginStatus[]>(
-			this,
-			{
-				method: "GET",
-				path: "/plugins/statuses",
-				type: ContentType.URLEncoded
-			}
-		),
+		getStatuses: bindApiCallWithOptionalArg<
+			PluginsGetStatusesArguments,
+			PluginStatus[]
+		>(this, {
+			method: "GET",
+			path: "/plugins/statuses",
+			type: ContentType.URLEncoded
+		}),
 		getMarketplace: bindApiCall<
 			PluginsGetMarketplaceArguments,
 			PluginManifest[]
