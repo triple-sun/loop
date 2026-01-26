@@ -130,14 +130,9 @@ export interface MessageArgument {
 	timestamp: string;
 }
 
-export interface FileArgument {
+export interface FileID {
 	/** @description Encoded file ID. */
-	file: string;
-}
-
-export interface FileCommentArgument {
-	/** @description Encoded file comment ID. */
-	file_comment: string;
+	file_id: string;
 }
 
 // Some API methods offer search functionality whose sort order can be customized.

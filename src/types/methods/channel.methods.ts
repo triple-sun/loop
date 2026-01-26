@@ -23,7 +23,7 @@ export interface ChannelsCreateGroupArguments extends TokenOverridable {
 	user_ids: string[];
 }
 
-export interface ChannelsGetArguments
+export interface ChannelsListArguments
 	extends TokenOverridable,
 		TraditionalPagingEnabled,
 		TeamID {

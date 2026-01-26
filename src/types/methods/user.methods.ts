@@ -137,17 +137,19 @@ export interface UsersProfileGetArguments extends TokenOverridable, UserIDMe {}
 export interface UsersProfileSetArguments
 	extends TokenOverridable,
 		UserIDMe,
-		Pick<
-			UserProfile,
-			| "email"
-			| "username"
-			| "first_name"
-			| "last_name"
-			| "nickname"
-			| "locale"
-			| "position"
-			| "props"
-			| "notify_props"
+		Partial<
+			Pick<
+				UserProfile,
+				| "email"
+				| "username"
+				| "first_name"
+				| "last_name"
+				| "nickname"
+				| "locale"
+				| "position"
+				| "props"
+				| "notify_props"
+			>
 		> {}
 
 export interface UsersStatusGetAruments extends TokenOverridable, UserIDMe {}
@@ -164,3 +166,7 @@ export interface UsersCustomStatusSetArguments
 export interface UsersCustomStatusUnsetArguments
 	extends TokenOverridable,
 		UserIDMe {}
+
+export interface UsersUpdateRolesArguments extends UserID {
+	roles: string[];
+}
