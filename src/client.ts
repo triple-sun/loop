@@ -299,7 +299,6 @@ export class WebClient extends Methods {
 		url: string,
 		config: AxiosRequestConfig
 	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
-		// TODO: better input types - remove any
 		const task = () =>
 			this.breadline.add(async () => {
 				try {

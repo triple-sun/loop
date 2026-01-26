@@ -36,7 +36,7 @@ export type DialogElement = {
   data_source?: string;
   options?: Array<{
     text: string;
-    value: any;
+    value: unknown;
   }>;
 };
 

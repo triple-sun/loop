@@ -83,3 +83,13 @@ export interface PostsUnpinArguments extends TokenOverridable {
 	/** ID of the post to unpin */
 	post_id: string;
 }
+
+/**
+ * Arguments for moving a post.
+ */
+export interface PostsMoveArguments extends TokenOverridable {
+	/** ID of the post to move */
+	post_id: string;
+	/** ID of the channel to move the post to */
+	channel_id: string;
+}

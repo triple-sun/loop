@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import { WebClient } from "./client";
 import type { UserCustomStatus, UserProfile, UserStatus } from "./types";
+import type { AnalyticsRow, LogFilter } from "./types/admin";
 import type { Bot } from "./types/bots";
 import type {
 	Channel,
@@ -16,6 +17,12 @@ import type {
 	Product,
 	Subscription
 } from "./types/cloud";
+import type { Compliance } from "./types/compliance";
+import type {
+	AdminConfig,
+	ClientConfig,
+	EnvironmentConfig
+} from "./types/config";
 import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
 import type { FileInfo, FileUploadResponse } from "./types/files";
@@ -34,6 +41,11 @@ import type {
 	BotsListArguments,
 	BotsPatchArguments
 } from "./types/methods/bots.methods";
+import type {
+	BrandDeleteImageArguments,
+	BrandGetImageArguments,
+	BrandUploadImageArguments
+} from "./types/methods/brand.methods";
 import type {
 	ChannelsCreateArguments,
 	ChannelsCreateDirectArguments,
@@ -57,6 +69,12 @@ import type {
 	CloudValidateBusinessEmailArguments
 } from "./types/methods/cloud.methods";
 import type { UserID } from "./types/methods/common.methods";
+import type {
+	ComplianceCreateReportArguments,
+	ComplianceDownloadReportArguments,
+	ComplianceGetReportArguments,
+	ComplianceGetReportsArguments
+} from "./types/methods/compliance.methods";
 import type {
 	DataRetentionAddPolicyChannelsArguments,
 	DataRetentionAddPolicyTeamsArguments,
@@ -132,6 +150,10 @@ import type {
 	OutgoingWebhooksUpdateArguments
 } from "./types/methods/integrations.methods";
 import type {
+	InteractiveOpenDialogArguments,
+	InteractiveSubmitDialogArguments
+} from "./types/methods/interactive.methods";
+import type {
 	MethodWithOptionalArgument,
 	MethodWithRequiredArgument
 } from "./types/methods/internal.methods";
@@ -158,6 +180,7 @@ import type {
 	PostsGetArguments,
 	PostsGetForChannelArguments,
 	PostsGetThreadArguments,
+	PostsMoveArguments,
 	PostsPinArguments,
 	PostsUnpinArguments,
 	PostsUpdateArguments
@@ -189,19 +212,38 @@ import type {
 	SchemesPatchArguments
 } from "./types/methods/schemes.methods";
 import type {
+	SystemCheckIntegrityArguments,
+	SystemGetAnalyticsArguments,
+	SystemGetLogsArguments,
+	SystemGetPingArguments,
+	SystemTestEmailArguments,
+	SystemTestS3ConnectionArguments,
+	SystemTestSiteURLArguments,
+	SystemUpdateConfigArguments,
+	SystemUploadLogFileArguments
+} from "./types/methods/system.methods";
+import type {
 	TeamsCheckNameExistsArguments,
 	TeamsCreateArguments,
 	TeamsDeleteArguments,
 	TeamsGetArguments,
 	TeamsGetByIdArguments,
 	TeamsGetByNameArguments,
+	TeamsGetIconArguments,
 	TeamsGetStatsArguments,
 	TeamsImportArguments,
 	TeamsPatchArguments,
 	TeamsRegenerateInviteIdArguments,
+	TeamsRemoveIconArguments,
 	TeamsSearchArguments,
+	TeamsSetIconArguments,
 	TeamsUpdateArguments
 } from "./types/methods/team.methods";
+import type {
+	TermsOfServiceCreateArguments,
+	TermsOfServiceGetArguments,
+	TermsOfServiceUpdateArguments
+} from "./types/methods/terms-of-service.methods";
 import type {
 	UsersAutocompleteArguments,
 	UsersChannelsArguments,
@@ -225,6 +267,7 @@ import type { Reaction } from "./types/reactions";
 import type { Role } from "./types/roles";
 import type { Scheme } from "./types/schemes";
 import type { Team, TeamStats } from "./types/teams";
+import type { TermsOfService } from "./types/terms-of-service";
 import {
 	ContentType,
 	type StatusOK,
@@ -769,6 +812,21 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			method: "POST",
 			path: "teams/import",
 			type: ContentType.FormData
+		}),
+		setIcon: bindApiCall<TeamsSetIconArguments, StatusOK>(this, {
+			method: "POST",
+			path: "teams/:team_id/image",
+			type: ContentType.FormData
+		}),
+		removeIcon: bindApiCall<TeamsRemoveIconArguments, StatusOK>(this, {
+			method: "DELETE",
+			path: "teams/:team_id/image",
+			type: ContentType.URLEncoded
+		}),
+		getIcon: bindApiCall<TeamsGetIconArguments, Blob>(this, {
+			method: "GET",
+			path: "teams/:team_id/image",
+			type: ContentType.URLEncoded
 		})
 	};
 
@@ -812,6 +870,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			method: "POST",
 			path: "posts/:post_id/unpin",
 			type: ContentType.URLEncoded
+		}),
+		move: bindApiCall<PostsMoveArguments, StatusOK>(this, {
+			method: "POST",
+			path: "posts/:post_id/move",
+			type: ContentType.JSON
 		})
 	};
 
@@ -1367,6 +1430,168 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			method: "PUT",
 			path: `users/:user_id/roles`,
 			type: ContentType.URLEncoded
+		})
+	};
+	public readonly system = {
+		getPing: bindApiCall<SystemGetPingArguments, { status: string }>(this, {
+			method: "GET",
+			path: "system/ping",
+			type: ContentType.URLEncoded
+		}),
+		getConfig: bindApiCallWithOptionalArg<never, ClientConfig>(this, {
+			method: "GET",
+			path: "config",
+			type: ContentType.URLEncoded
+		}),
+		updateConfig: bindApiCall<SystemUpdateConfigArguments, AdminConfig>(this, {
+			method: "PUT",
+			path: "config",
+			type: ContentType.JSON
+		}),
+		reloadConfig: bindApiCallWithOptionalArg<never, StatusOK>(this, {
+			method: "POST",
+			path: "config/reload",
+			type: ContentType.URLEncoded
+		}),
+		getEnvironmentConfig: bindApiCallWithOptionalArg<never, EnvironmentConfig>(
+			this,
+			{
+				method: "GET",
+				path: "config/environment",
+				type: ContentType.URLEncoded
+			}
+		),
+		getAnalytics: bindApiCall<SystemGetAnalyticsArguments, AnalyticsRow[]>(
+			this,
+			{
+				method: "GET",
+				path: "analytics/old",
+				type: ContentType.URLEncoded
+			}
+		),
+		testEmail: bindApiCall<SystemTestEmailArguments, StatusOK>(this, {
+			method: "POST",
+			path: "email/test",
+			type: ContentType.JSON
+		}),
+		testSiteURL: bindApiCall<SystemTestSiteURLArguments, StatusOK>(this, {
+			method: "POST",
+			path: "site_url/test",
+			type: ContentType.JSON
+		}),
+		testS3Connection: bindApiCall<SystemTestS3ConnectionArguments, StatusOK>(
+			this,
+			{
+				method: "POST",
+				path: "file/s3_test",
+				type: ContentType.JSON
+			}
+		),
+		invalidateCaches: bindApiCallWithOptionalArg<never, StatusOK>(this, {
+			method: "POST",
+			path: "caches/invalidate",
+			type: ContentType.URLEncoded
+		}),
+		recycleDatabaseConnection: bindApiCallWithOptionalArg<never, StatusOK>(
+			this,
+			{
+				method: "POST",
+				path: "database/recycle",
+				type: ContentType.URLEncoded
+			}
+		),
+		checkIntegrity: bindApiCall<SystemCheckIntegrityArguments, StatusOK>(this, {
+			method: "POST",
+			path: "database/check_integrity",
+			type: ContentType.URLEncoded
+		}),
+		getLogs: bindApiCall<SystemGetLogsArguments, LogFilter[]>(this, {
+			method: "GET",
+			path: "logs",
+			type: ContentType.URLEncoded
+		}),
+		uploadLogFile: bindApiCall<SystemUploadLogFileArguments, StatusOK>(this, {
+			method: "POST",
+			path: "logs",
+			type: ContentType.FormData
+		})
+	};
+
+	public readonly brand = {
+		getImage: bindApiCall<BrandGetImageArguments, Blob>(this, {
+			method: "GET",
+			path: "brand/image",
+			type: ContentType.URLEncoded
+		}),
+		uploadImage: bindApiCall<BrandUploadImageArguments, StatusOK>(this, {
+			method: "POST",
+			path: "brand/image",
+			type: ContentType.FormData
+		}),
+		deleteImage: bindApiCallWithOptionalArg<BrandDeleteImageArguments, StatusOK>(
+			this,
+			{
+				method: "DELETE",
+				path: "brand/image",
+				type: ContentType.URLEncoded
+			}
+		)
+	};
+
+	public readonly compliance = {
+		createReport: bindApiCall<ComplianceCreateReportArguments, Compliance>(
+			this,
+			{
+				method: "POST",
+				path: "compliance/reports",
+				type: ContentType.JSON
+			}
+		),
+		getReports: bindApiCall<ComplianceGetReportsArguments, Compliance[]>(this, {
+			method: "GET",
+			path: "compliance/reports",
+			type: ContentType.URLEncoded
+		}),
+		getReport: bindApiCall<ComplianceGetReportArguments, Compliance>(this, {
+			method: "GET",
+			path: "compliance/reports/:report_id",
+			type: ContentType.URLEncoded
+		}),
+		downloadReport: bindApiCall<ComplianceDownloadReportArguments, Blob>(this, {
+			method: "GET",
+			path: "compliance/reports/:report_id/download",
+			type: ContentType.URLEncoded
+		})
+	};
+
+	public readonly interactive = {
+		openDialog: bindApiCall<InteractiveOpenDialogArguments, StatusOK>(this, {
+			method: "POST",
+			path: "actions/dialogs/open",
+			type: ContentType.JSON
+		}),
+		submitDialog: bindApiCall<InteractiveSubmitDialogArguments, StatusOK>(this, {
+			method: "POST",
+			path: "actions/dialogs/submit",
+			type: ContentType.JSON
+		})
+	};
+
+	public readonly termsOfService = {
+		create: bindApiCall<TermsOfServiceCreateArguments, TermsOfService>(this, {
+			method: "POST",
+			path: "terms_of_service",
+			type: ContentType.JSON
+		}),
+		get: bindApiCall<TermsOfServiceGetArguments, TermsOfService>(this, {
+			method: "GET",
+			path: "terms_of_service",
+			type: ContentType.URLEncoded
+		}),
+		update: bindApiCall<TermsOfServiceUpdateArguments, TermsOfService>(this, {
+			method: "POST",
+			path: "terms_of_service/:id",
+			type: ContentType.JSON
 		})
 	};
 }

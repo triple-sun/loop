@@ -92,3 +92,21 @@ export interface TeamsImportArguments extends TokenOverridable {
 	/** Source to import from */
 	importFrom: string;
 }
+
+/**
+ * Arguments for setting the team icon.
+ */
+export interface TeamsSetIconArguments extends TokenOverridable, TeamID {
+	/** The icon image */
+	image: File | Blob;
+}
+
+/**
+ * Arguments for removing the team icon.
+ */
+export interface TeamsRemoveIconArguments extends TokenOverridable, TeamID {}
+
+/**
+ * Arguments for getting the team icon.
+ */
+export interface TeamsGetIconArguments extends TeamID {}
