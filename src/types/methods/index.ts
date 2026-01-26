@@ -22,4 +22,5 @@ export * from "./schemes.methods";
 export * from "./system.methods";
 export * from "./team.methods";
 export * from "./terms-of-service.methods";
+export * from "./uploads.methods";
 export * from "./user.methods";

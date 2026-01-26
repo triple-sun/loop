@@ -25,7 +25,11 @@ import type {
 import type { ClientConfig } from "./types/config";
 import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
-import type { FileInfo, FileUploadResponse } from "./types/files";
+import type {
+	FileInfo,
+	FileUploadResponse,
+	UploadSession
+} from "./types/files";
 import type { Group, GroupStats, GroupSyncable } from "./types/groups";
 import type {
 	Command,
@@ -263,6 +267,11 @@ import type {
 	TermsOfServiceUpdateArguments
 } from "./types/methods/terms-of-service.methods";
 import type {
+	UploadsCreateArguments,
+	UploadsGetArguments,
+	UploadsUploadArguments
+} from "./types/methods/uploads.methods";
+import type {
 	UsersAutocompleteArguments,
 	UsersChannelsArguments,
 	UsersCustomStatusSetArguments,
@@ -419,6 +428,53 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "bots/:bot_user_id/icon",
 			type: ContentType.JSON
 		})
+	};
+
+	public readonly brand = {
+		image: {
+			get: bindApiCall<BrandGetImageArguments, Buffer | Stream>(this, {
+				method: "GET",
+				path: "brand/image",
+				type: ContentType.URLEncoded
+			}),
+			delete: bindApiCall<BrandDeleteImageArguments, StatusOK>(this, {
+				method: "DELETE",
+				path: "brand/image",
+				type: ContentType.URLEncoded
+			}),
+			upload: bindApiCall<BrandUploadImageArguments, StatusOK>(this, {
+				method: "POST",
+				path: "brand/image",
+				type: ContentType.FormData
+			})
+		}
+	};
+
+	public readonly compliance = {
+		createReport: bindApiCall<
+			ComplianceCreateReportArguments,
+			ComplianceReport
+		>(this, {
+			method: "POST",
+			path: "compliance/reports",
+			type: ContentType.JSON
+		}),
+		downloadReport: bindApiCall<
+			ComplianceDownloadReportArguments,
+			Buffer | Stream
+		>(this, {
+			method: "GET",
+			path: "compliance/reports/:report_id/download",
+			type: ContentType.URLEncoded
+		}),
+		getReports: bindApiCall<ComplianceGetReportsArguments, ComplianceReport[]>(
+			this,
+			{
+				method: "GET",
+				path: "compliance/reports",
+				type: ContentType.URLEncoded
+			}
+		)
 	};
 
 	public readonly channels = {
@@ -1710,66 +1766,39 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	};
 
-	public readonly brand = {
-		deleteImage: bindApiCall<BrandDeleteImageArguments, StatusOK>(this, {
-			method: "DELETE",
-			path: "brand/image",
-			type: ContentType.URLEncoded
-		}),
-		getImage: bindApiCall<BrandGetImageArguments, Buffer | Stream>(this, {
-			method: "GET",
-			path: "brand/image",
-			type: ContentType.URLEncoded
-		}),
-		uploadImage: bindApiCall<BrandUploadImageArguments, StatusOK>(this, {
-			method: "POST",
-			path: "brand/image",
-			type: ContentType.FormData
-		})
-	};
-
-	public readonly compliance = {
-		createReport: bindApiCall<
-			ComplianceCreateReportArguments,
-			ComplianceReport
-		>(this, {
-			method: "POST",
-			path: "compliance/reports",
-			type: ContentType.JSON
-		}),
-		downloadReport: bindApiCall<
-			ComplianceDownloadReportArguments,
-			Buffer | Stream
-		>(this, {
-			method: "GET",
-			path: "compliance/reports/:report_id/download",
-			type: ContentType.URLEncoded
-		}),
-		getReports: bindApiCall<ComplianceGetReportsArguments, ComplianceReport[]>(
-			this,
-			{
-			method: "GET",
-				path: "compliance/reports",
-				type: ContentType.URLEncoded
-			}
-		)
-	};
-
 	public readonly termsOfService = {
 		create: bindApiCall<TermsOfServiceCreateArguments, TermsOfService>(this, {
 			method: "POST",
 			path: "terms_of_service",
-			type: ContentType.JSON	
+			type: ContentType.JSON
 		}),
 		get: bindApiCall<TermsOfServiceGetArguments, TermsOfService>(this, {
 			method: "GET",
 			path: "terms_of_service",
 			type: ContentType.URLEncoded
 		}),
-		update: bindApiCall<TermsOfServiceUpdateArguments, 	TermsOfService>(this, {
-			method: "POST", // or PUT? Check if update is same 	as create or distinct.
-			path: "terms_of_service/:id", // Usually ID
+		update: bindApiCall<TermsOfServiceUpdateArguments, TermsOfService>(this, {
+			method: "POST", // or PUT? Check if update is same as create or distinct.
+			path: "terms_of_service/:term_id", // Usually ID
 			type: ContentType.JSON
+		})
+	};
+
+	public readonly uploads = {
+		create: bindApiCall<UploadsCreateArguments, UploadSession>(this, {
+			method: "POST",
+			path: "uploads",
+			type: ContentType.JSON
+		}),
+		get: bindApiCall<UploadsGetArguments, UploadSession>(this, {
+			method: "GET",
+			path: "uploads/:upload_id",
+			type: ContentType.URLEncoded
+		}),
+		upload: bindApiCall<UploadsUploadArguments, FileInfo>(this, {
+			method: "POST",
+			path: "uploads/:upload_id",
+			type: ContentType.FormData
 		})
 	};
 };
