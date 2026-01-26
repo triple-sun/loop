@@ -11,44 +11,29 @@ export const wait = (ms: number) => {
 };
 
 /**
- * Flattens and checks request data for binary data
+ * Checks request data for binary data
  */
-export const flattenRequestData = (
-	data: Record<string, unknown>
-): { hasBinaryData: boolean; flattened: ([string, unknown] | [])[] } => {
-	let hasBinaryData = false;
+export const checkForBinaryData = (data: unknown): boolean => {
+	if (!data || typeof data !== "object") return false;
 
-	const flattened = Object.entries(data).map<[string, unknown] | []>(
-		([key, value]) => {
-			if (value === undefined || value === null) return [];
-			if (Buffer.isBuffer(value) || isStream(value)) {
-				hasBinaryData = true;
-			} else if (
-				typeof value !== "string" &&
-				typeof value !== "number" &&
-				typeof value !== "boolean"
-			) {
-				// if value is anything other than string, number, boolean, binary data, a Stream, or a Buffer, then encode it
-				// as a JSON string.
-				return [key, JSON.stringify(value)];
-			}
+	for (const value of Object.values(data)) {
+		if (Buffer.isBuffer(value) || isStream(value)) return true;
+	}
 
-			return [key, value];
-		}
-	);
-
-	return { hasBinaryData, flattened };
+	return false;
 };
 
 export const getFormDataConfig = (
-	flattened: ([string, unknown] | [])[],
+	data: Record<string, unknown>,
 	headers: AxiosHeaders
 ): InternalAxiosRequestConfig => {
 	const config: InternalAxiosRequestConfig = {
 		headers
 	};
 
-	const form = flattened.reduce((frm, [key, value]) => {
+	const form = new FormData();
+
+	Object.entries(data).forEach(([key, value]) => {
 		if (Buffer.isBuffer(value) || isStream(value)) {
 			const opts: FormData.AppendOptions = {};
 			opts.filename = (() => {
@@ -64,14 +49,13 @@ export const getFormDataConfig = (
 				if (typeof streamOrBuffer.path === "string") {
 					return basename(streamOrBuffer.path);
 				}
-				return DEFAULT_FILE_NAME;
+				return `${DEFAULT_FILE_NAME}_${Date.now().toString()}`;
 			})();
-			frm.append(key as string, value, opts);
+			form.append(key as string, value, opts);
 		} else if (key !== undefined && value !== undefined) {
-			frm.append(key, value);
+			form.append(key, value);
 		}
-		return frm;
-	}, new FormData());
+	});
 
 	if (headers) {
 		// Copying FormData-generated headers into headers param
@@ -143,10 +127,11 @@ export const redact = (data: unknown): string => {
 export const warnIfFallbackIsMissing = (
 	path: string,
 	logger: Logger,
-	options?: Record<string, unknown>
+	options?: Record<string, unknown> | unknown[]
 ): void => {
+	if (!options || Array.isArray(options)) return;
+
 	if (
-		typeof options === "object" &&
 		Array.isArray(options["attachments"]) &&
 		options["attachments"].length > 0 &&
 		options["attachments"].some(

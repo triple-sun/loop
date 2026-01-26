@@ -1,5 +1,3 @@
-import type { IncomingHttpHeaders } from "node:http";
-
 /**
  * A dictionary of codes for errors produced by this package
  */

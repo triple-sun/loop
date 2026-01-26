@@ -1,6 +1,6 @@
-import { ILoopDialog, LoopActionType } from "fox-loop-sdk";
-import { Dialog } from "./dialog";
-import { AppContextProps } from "./apps";
+import type { AppContextProps } from "./apps";
+import type { Dialog } from "./dialog";
+import type { PostActionType } from "./posts/posts-action";
 
 export interface Context{
     app_id?: string;
@@ -15,7 +15,7 @@ export interface Context{
     user_agent?: string;
     track_as_submit?: boolean;
     acting_user?: {id: string};
-    type?: LoopActionType;
+    type?: PostActionType;
     service?: string;
     token?: string;
     general?: number;

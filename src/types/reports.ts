@@ -1,5 +1,5 @@
 
-import type { UserProfileResponse } from './users';
+import type { UserProfile } from './users';
 
 export enum UserReportSortColumns {
   username = 'Username',
@@ -73,7 +73,7 @@ export type UserReportOptions = UserReportFilter & {
   date_range?: ReportDuration;
 };
 
-export type UserReport = UserProfileResponse & {
+export type UserReport = UserProfile & {
   last_login_at: number;
   last_status_at?: number;
   last_post_date?: number;

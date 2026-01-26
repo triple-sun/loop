@@ -22,6 +22,9 @@ interface Username {
 	username: string;
 }
 
+/**
+ * Arguments for getting a user's channels.
+ */
 export interface UsersChannelsArguments
 	extends TokenOverridable,
 		Paginated,
@@ -40,15 +43,29 @@ export interface UsersChannelsArguments
 	user_id: string;
 }
 
+/**
+ * Arguments for finding a user by email.
+ */
 export interface UsersFindByEmailArguments extends Email, TokenOverridable {}
+
+/**
+ * Arguments for finding a user by username.
+ */
 export interface UsersFindByUsernameArguments
 	extends Username,
 		TokenOverridable {}
 
+/**
+ * Arguments for setting a user's profile image.
+ */
 export interface UsersSetImageArguments extends TokenOverridable, UserID {
 	/** @description Image file contents. */
 	image: Buffer | Stream;
 }
+
+/**
+ * Arguments for deleting a user's profile image.
+ */
 export interface UsersDeleteImageArguments extends TokenOverridable, UserID {}
 
 /**
@@ -105,7 +122,7 @@ export interface UsersListArguments
 }
 
 /**
- * @description Get a list of users based on search criteria provided in the request body. 
+ * @description Get a list of users based on search criteria provided in the request body.
  * Searches are typically done against username, full name, nickname and email unless otherwise configured by the server.
  * Requires an active session and read_channel and/or view_team permissions for any channels or teams specified in the request body.
  */
@@ -166,7 +183,13 @@ export interface UsersAutocompleteArguments
 	limit?: number;
 }
 
+/**
+ * Arguments for getting a user's profile.
+ */
 export interface UsersProfileGetArguments extends TokenOverridable, UserIDMe {}
+/**
+ * Arguments for updating a user's profile.
+ */
 export interface UsersProfileSetArguments
 	extends TokenOverridable,
 		UserIDMe,
@@ -185,21 +208,39 @@ export interface UsersProfileSetArguments
 			>
 		> {}
 
+/**
+ * Arguments for getting a user's status.
+ */
 export interface UsersStatusGetAruments extends TokenOverridable, UserIDMe {}
+
+/**
+ * Arguments for setting a user's status.
+ */
 export interface UsersStatusSetAruments extends TokenOverridable, UserID {
 	/**
 	 * @description User status to set
 	 */
 	status: UserStatusValue;
 }
+
+/**
+ * Arguments for setting a user's custom status.
+ */
 export interface UsersCustomStatusSetArguments
 	extends TokenOverridable,
 		UserIDMe,
 		UserCustomStatus {}
+
+/**
+ * Arguments for unsetting a user's custom status.
+ */
 export interface UsersCustomStatusUnsetArguments
 	extends TokenOverridable,
 		UserIDMe {}
 
+/**
+ * Arguments for updating a user's roles.
+ */
 export interface UsersUpdateRolesArguments extends UserID {
 	roles: string[];
 }

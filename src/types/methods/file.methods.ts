@@ -6,7 +6,7 @@ import type {
 } from "./common.methods";
 
 export interface FilesUploadArguments extends TokenOverridable, ChannelID {
-	filename: string;
+	filename?: string;
 	files: Buffer | Stream;
 	client_ids?: string;
 }

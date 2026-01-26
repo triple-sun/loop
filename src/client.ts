@@ -36,7 +36,7 @@ import {
 	type WebClientOptions
 } from "./types/web-api";
 import {
-	flattenRequestData,
+	checkForBinaryData,
 	getFormDataConfig,
 	redact,
 	warnIfFallbackIsMissing
@@ -47,6 +47,7 @@ export class WebClient extends Methods {
 	public url: string;
 	/** Authentication and authorization token for accessing Loop/Mattermost API */
 	public token: string | undefined;
+	public me: string;
 
 	/**
 	 * Configuration for retry operations. See {@link https://github.com/triplesunn/again-ts|Again} for more details.
@@ -103,6 +104,7 @@ export class WebClient extends Methods {
 		this.token = token;
 		this.url = url;
 		if (!this.url.endsWith("/")) this.url += "/";
+		this.me = "";
 		this.clusterId = "";
 		this.serverVersion = "";
 		this.retryConfig = retryConfig;
@@ -165,7 +167,28 @@ export class WebClient extends Methods {
 			null
 		);
 
+		/** set current user id */
+		this.setMe();
+
 		this.logger.debug("initialized");
+	}
+
+	public setMe() {
+		this.users.profile
+			.me()
+			.then(res => {
+				if (res.ok) {
+					this.me = res.data.id;
+				}
+				return res;
+			})
+			.then(res => {
+				if (res.ok) {
+					this.logger.debug(`set "userId" to ${res.data.id}`);
+				} else {
+					throw res.ctx?.errors[res.ctx.errors.length - 1];
+				}
+			});
 	}
 
 	/**
@@ -175,7 +198,7 @@ export class WebClient extends Methods {
 	 */
 	public async apiCall<T = unknown>(
 		config: WebApiCallConfig,
-		options: Record<string, unknown> = {}
+		options: Record<string, unknown> | unknown[] = {}
 	): Promise<WebApiCallResult<T>> {
 		this.logger.debug(`apiCall('${config.path}') start`);
 
@@ -185,16 +208,29 @@ export class WebClient extends Methods {
 			typeof options === "boolean"
 		) {
 			throw new TypeError(
-				`Expected an options argument but instead received a ${typeof options}`
+				`expected an options argument but instead received a ${typeof options}`
 			);
 		}
 
 		const headers: Record<string, string> = {};
 
 		/** handle TokenOverridable */
-		if (options["token"]) {
+		if (!Array.isArray(options) && "token" in options) {
 			headers["Authorization"] = `Bearer ${options["token"]}`;
 			options["token"] = undefined;
+		}
+
+		if (config.path === "channels/direct" && Array.isArray(options)) {
+			if (options.length > 2 || options.length === 0) {
+				throw new TypeError(
+					`to create a direct channel you should use one or two user_ids in a tuple`
+				);
+			}
+
+			if (options.length === 1) {
+				const me = await this.users.profile.me();
+				if (me.ok) options = [...options, me.data.id];
+			}
 		}
 
 		/** warn if no fallback */
@@ -223,19 +259,18 @@ export class WebClient extends Methods {
 	): InternalAxiosRequestConfig {
 		const { data, headers } = config;
 
-		// The following operation both flattens complex objects into a JSON-encoded strings and searches the values for
-		// binary content
-		const { flattened, hasBinaryData } = flattenRequestData(data);
+		const hasBinaryData = checkForBinaryData(data);
 
-		// A body with binary content should be serialized as multipart/form-data
+		/** Handling multipart form-data */
 		if (
 			hasBinaryData ||
 			config.headers["Content-Type"] === ContentType.FormData
 		) {
 			this.logger.debug("Request arguments contain binary data");
-			return getFormDataConfig(flattened, headers);
+			return getFormDataConfig(data, headers);
 		}
 
+		/** Use json for json oh wow ¯\_(ツ)_/¯ */
 		if (headers["Content-Type"] === ContentType.JSON) {
 			return { ...config, data };
 		}
@@ -245,7 +280,7 @@ export class WebClient extends Methods {
 		 */
 		return {
 			...config,
-			params: flattened.reduce(
+			params: Object.entries(data).reduce(
 				(accumulator, [key, value]) => {
 					if (key !== undefined && value !== undefined) {
 						accumulator[key] = value;
@@ -253,7 +288,7 @@ export class WebClient extends Methods {
 					return accumulator;
 				},
 				{} as Record<string, unknown>
-			) //qs.stringify()
+			)
 		};
 	}
 
@@ -369,7 +404,7 @@ export class WebClient extends Methods {
 	 */
 	private fillRequestUrl(
 		url: string,
-		options: Record<string, unknown>
+		options: Record<string, unknown> | unknown[]
 	): string {
 		/** fill request url */
 		if (url.match(/\$:[\d\D]*\//gm)) {

@@ -48,17 +48,12 @@ import type {
 	ChannelsRestoreArguments,
 	ChannelsSearchArguments,
 	ChannelsUpdateArguments,
-	ChannelsViewArguments,
+	ChannelsViewArguments
 } from "./types/methods/channel.methods";
 import type {
 	CloudConfirmCustomerPaymentArguments,
-	CloudGetInvoicesArguments,
-	CloudGetLimitsArguments,
-	CloudGetProductsArguments,
-	CloudGetSubscriptionArguments,
 	CloudUpdateAddressArguments,
 	CloudUpdateCustomerArguments,
-	CloudUpdateSubscriptionArguments,
 	CloudValidateBusinessEmailArguments
 } from "./types/methods/cloud.methods";
 import type { UserID } from "./types/methods/common.methods";
@@ -150,9 +145,7 @@ import type {
 import type {
 	PluginsDisableArguments,
 	PluginsEnableArguments,
-	PluginsGetArguments,
 	PluginsGetMarketplaceArguments,
-	PluginsGetStatusesArguments,
 	PluginsGetWebAppArguments,
 	PluginsInstallFromUrlArguments,
 	PluginsInstallMarketplaceArguments,
@@ -210,6 +203,7 @@ import type {
 	TeamsUpdateArguments
 } from "./types/methods/team.methods";
 import type {
+	UsersAutocompleteArguments,
 	UsersChannelsArguments,
 	UsersCustomStatusSetArguments,
 	UsersCustomStatusUnsetArguments,
@@ -245,10 +239,10 @@ import {
 function bindApiCall<ARGS, RESULT>(
 	self: Methods,
 	config: WebApiCallConfig
-): MethodWithRequiredArgument<ARGS, WebApiCallResult<RESULT>> {
+): MethodWithRequiredArgument<ARGS, RESULT> {
 	return self.apiCall.bind(self, config) as MethodWithRequiredArgument<
 		ARGS,
-		WebApiCallResult<RESULT>
+		RESULT
 	>;
 }
 
@@ -258,10 +252,10 @@ function bindApiCall<ARGS, RESULT>(
 function bindApiCallWithOptionalArg<ARGS, RESULT>(
 	self: Methods,
 	config: WebApiCallConfig
-): MethodWithOptionalArgument<ARGS, WebApiCallResult<RESULT>> {
+): MethodWithOptionalArgument<ARGS, RESULT> {
 	return self.apiCall.bind(self, config) as MethodWithOptionalArgument<
 		ARGS,
-		WebApiCallResult<RESULT>
+		RESULT
 	>;
 }
 
@@ -287,6 +281,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	): Promise<WebApiCallResult>;
 
 	public readonly channels = {
+		/**
+		 * @description Create a new channel.
+		 * If creating a public channel, create_public_channel permission is required.
+		 * If creating a private channel, create_private_channel permission is required.
+		 */
 		create: bindApiCall<ChannelsCreateArguments, Channel>(this, {
 			method: "POST",
 			path: "channels",
@@ -408,36 +407,33 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			})
 		},
 		invoices: {
-			get: bindApiCall<CloudGetInvoicesArguments, Invoice[]>(this, {
+			get: bindApiCallWithOptionalArg<never, Invoice[]>(this, {
 				method: "GET",
 				path: "cloud/invoices",
 				type: ContentType.URLEncoded
 			})
 		},
 		subscription: {
-			get: bindApiCall<CloudGetSubscriptionArguments, Subscription>(this, {
+			get: bindApiCallWithOptionalArg<never, Subscription>(this, {
 				method: "GET",
 				path: "cloud/subscription",
 				type: ContentType.URLEncoded
 			}),
-			update: bindApiCall<CloudUpdateSubscriptionArguments, Subscription>(
-				this,
-				{
-					method: "PUT",
-					path: "cloud/subscription",
-					type: ContentType.JSON
-				}
-			)
+			update: bindApiCallWithOptionalArg<never, Subscription>(this, {
+				method: "PUT",
+				path: "cloud/subscription",
+				type: ContentType.JSON
+			})
 		},
 		products: {
-			get: bindApiCall<CloudGetProductsArguments, Product[]>(this, {
+			get: bindApiCallWithOptionalArg<never, Product[]>(this, {
 				method: "GET",
 				path: "cloud/products",
 				type: ContentType.URLEncoded
 			})
 		},
 		limits: {
-			get: bindApiCall<CloudGetLimitsArguments, Limits>(this, {
+			get: bindApiCallWithOptionalArg<never, Limits>(this, {
 				method: "GET",
 				path: "cloud/limits",
 				type: ContentType.URLEncoded
@@ -621,7 +617,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "plugins/:plugin_id/disable",
 			type: ContentType.URLEncoded
 		}),
-		get: bindApiCall<PluginsGetArguments, PluginManifest[]>(this, {
+		get: bindApiCallWithOptionalArg<never, PluginManifest[]>(this, {
 			method: "GET",
 			path: "plugins",
 			type: ContentType.URLEncoded
@@ -634,10 +630,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "plugins/webapp",
 			type: ContentType.URLEncoded
 		}),
-		getStatuses: bindApiCallWithOptionalArg<
-			PluginsGetStatusesArguments,
-			PluginStatus[]
-		>(this, {
+		getStatuses: bindApiCallWithOptionalArg<never, PluginStatus[]>(this, {
 			method: "GET",
 			path: "plugins/statuses",
 			type: ContentType.URLEncoded
@@ -1205,7 +1198,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 */
 		channels: bindApiCall<UsersChannelsArguments, Channel[]>(this, {
 			method: "GET",
-			path: `/users/:user_id/teams/:team_id/channels`,
+			path: `users/:user_id/teams/:team_id/channels`,
 			type: ContentType.URLEncoded
 		}),
 		/**
@@ -1213,50 +1206,68 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 */
 		list: bindApiCall<UsersListArguments, UserProfile[]>(this, {
 			method: "GET",
-			path: `/users`,
+			path: `users`,
 			type: ContentType.URLEncoded
 		}),
 		/**
-		 * @description Search for users.
+		 * @description Get a list of users based on search criteria provided in the request body.
+		 * Searches are typically done against username, full name, nickname and email unless otherwise configured by the server.
+		 * Requires an active session and read_channel and/or view_team permissions for any channels or teams specified in the request body.
 		 */
 		search: bindApiCall<UsersListArguments, UserProfile[]>(this, {
 			method: "GET",
-			path: `/users/search`,
+			path: `users/search`,
 			type: ContentType.JSON
+		}),
+		autocomplete: bindApiCall<
+			UsersAutocompleteArguments,
+			{ users: UserProfile[]; out_of_channel: UserProfile[] }
+		>(this, {
+			method: "GET",
+			path: `users/autocomplete`,
+			type: ContentType.URLEncoded
 		}),
 		known: bindApiCall<undefined, UserProfile["id"][]>(this, {
 			method: "GET",
-			path: `/users/known`,
+			path: `users/known`,
 			type: ContentType.URLEncoded
 		}),
 		profile: {
 			/**
 			 * @description Retrieve a user's profile information, including their custom status.
-			 * @see {@link https://docs.slack.dev/reference/methods/users.profile.get `users.profile.get` API reference}.
 			 */
-			getById: bindApiCall<UsersProfileGetArguments, UserProfile>(this, {
+			me: bindApiCallWithOptionalArg<never, UserProfile>(this, {
 				method: "GET",
-				path: `/users/:user_id`,
+				path: `users/:user_id`,
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Retrieve a user's profile information, including their custom status.
+			 */
+			getById: bindApiCallWithOptionalArg<
+				UsersProfileGetArguments,
+				UserProfile
+			>(this, {
+				method: "GET",
+				path: `users/:user_id`,
 				type: ContentType.URLEncoded
 			}),
 			/**
 			 * @description Find a user with an email address.
-			 * @see {@link https://docs.slack.dev/reference/methods/users.lookupByEmail `users.lookupByEmail` API reference}.
 			 */
 			getByEmail: bindApiCall<UsersFindByEmailArguments, UserProfile[]>(this, {
 				method: "GET",
-				path: `/users/email`,
+				path: `users/email`,
 				type: ContentType.URLEncoded
 			}),
 			/**
 			 * @description Find a user with an email address.
-			 * @see {@link https://docs.slack.dev/reference/methods/users.lookupByEmail `users.lookupByEmail` API reference}.
 			 */
 			getByUsername: bindApiCall<UsersFindByUsernameArguments, UserProfile[]>(
 				this,
 				{
 					method: "GET",
-					path: `/users/username`,
+					path: `users/username`,
 					type: ContentType.URLEncoded
 				}
 			),
@@ -1266,7 +1277,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			 */
 			patch: bindApiCall<UsersProfileSetArguments, UserProfile>(this, {
 				method: "PUT",
-				path: `/users/:user_id`,
+				path: `users/:user_id`,
 				type: ContentType.JSON
 			}),
 			/**
@@ -1274,7 +1285,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			 */
 			setProfileImage: bindApiCall<UsersSetImageArguments, StatusOK>(this, {
 				method: "POST",
-				path: `/users/:user_id/image`,
+				path: `users/:user_id/image`,
 				type: ContentType.URLEncoded
 			}),
 			/**
@@ -1285,7 +1296,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				StatusOK
 			>(this, {
 				method: "DELETE",
-				path: `/users/:user_id/image`,
+				path: `users/:user_id/image`,
 				type: ContentType.URLEncoded
 			})
 		},
@@ -1295,7 +1306,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			 */
 			get: bindApiCall<UsersStatusGetAruments, UserStatus>(this, {
 				method: "GET",
-				path: `/users/:user_id/status`,
+				path: `users/:user_id/status`,
 				type: ContentType.URLEncoded
 			}),
 			/**
@@ -1304,14 +1315,14 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			 */
 			set: bindApiCall<UsersStatusSetAruments, UserStatus>(this, {
 				method: "PUT",
-				path: `/users/:user_id/status`,
+				path: `users/:user_id/status`,
 				type: ContentType.JSON
 			}),
 			setCustom: bindApiCall<UsersCustomStatusSetArguments, UserCustomStatus>(
 				this,
 				{
 					method: "PUT",
-					path: `/users/:user_id/status/custom`,
+					path: `users/:user_id/status/custom`,
 					type: ContentType.JSON
 				}
 			),
@@ -1319,7 +1330,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				this,
 				{
 					method: "DELETE",
-					path: `/users/:user_id/status/custom`,
+					path: `users/:user_id/status/custom`,
 					type: ContentType.URLEncoded
 				}
 			)
@@ -1343,18 +1354,18 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		},
 		promoteGuestToUser: bindApiCall<UserID, StatusOK>(this, {
 			method: "POST",
-			path: `/users/:user_id/promote`,
+			path: `users/:user_id/promote`,
 			type: ContentType.URLEncoded
 		}),
 
 		demoteUserToGuest: bindApiCall<UserID, StatusOK>(this, {
 			method: "post",
-			path: `/users/:user_id/demote`,
+			path: `users/:user_id/demote`,
 			type: ContentType.URLEncoded
 		}),
 		updateRoles: bindApiCall<UsersUpdateRolesArguments, StatusOK>(this, {
 			method: "PUT",
-			path: `/users/:user_id/roles`,
+			path: `users/:user_id/roles`,
 			type: ContentType.URLEncoded
 		})
 	};

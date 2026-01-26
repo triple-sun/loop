@@ -1,5 +1,3 @@
-import type { Role } from "../roles";
-
 export interface RolesGetArguments {
 	role_id: string;
 }

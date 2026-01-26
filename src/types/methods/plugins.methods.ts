@@ -10,11 +10,6 @@ export interface PluginsInstallFromUrlArguments {
 	force?: boolean;
 }
 
-// TODO: Review response types
-export type PluginsGetArguments = never;
-
-export type PluginsGetStatusesArguments = never;
-
 export interface PluginsRemoveArguments {
 	plugin_id: string;
 }

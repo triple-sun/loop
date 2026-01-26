@@ -1,4 +1,3 @@
-import type { PreferenceType } from "../preferences";
 import type { TokenOverridable, UserID } from "./common.methods";
 
 export interface Preference {

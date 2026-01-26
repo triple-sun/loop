@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "rimraf ./build && tsc -p tsconfig.json",
-    "lint": "npx @biomejs/biome lint --write \"{src,apps,libs,test}/**/*.ts\""
+    "lint": "npx @biomejs/biome lint --write \"{src,apps,libs,test}/**/*.ts\"",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
