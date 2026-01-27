@@ -55,7 +55,7 @@ export class WebAPIServerError implements WebClientCodedError, ServerError {
 	}
 }
 
-export class WebApiRateLimitedError extends WebAPIServerError {
+export class WebAPIRateLimitedError extends WebAPIServerError {
 	coee = ErrorCode.RateLimitedError;
 	constructor(error: ServerError) {
 		super(error);
@@ -94,9 +94,9 @@ export const isServerError = (error: unknown): boolean => {
 		"id" in error &&
 		"message" in error &&
 		"status_code" in error &&
-		typeof error['id'] === "string" &&
-		typeof error['message'] === "string" &&
-		typeof error['status_code'] === "number"
+		typeof error["id"] === "string" &&
+		typeof error["message"] === "string" &&
+		typeof error["status_code"] === "number"
 	) {
 		return true;
 	}

@@ -1,7 +1,8 @@
+/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
+import { PassThrough } from "node:stream";
 import type { Logger } from "@triplesunn/logger";
 import { AxiosHeaders } from "axios";
 import FormData from "form-data";
-import { PassThrough } from "stream";
 import {
 	checkForBinaryData,
 	getFormDataConfig,
@@ -60,6 +61,7 @@ describe("utils", () => {
 		it("should append Buffer with filename options if available (name property)", () => {
 			const headers = new AxiosHeaders();
 			const buffer = Buffer.from("test");
+			// biome-ignore lint/suspicious/noExplicitAny: <test>
 			(buffer as any).name = "test.png";
 			const config = getFormDataConfig({ file: buffer }, headers);
 			expect(config.data).toBeInstanceOf(FormData);
@@ -68,6 +70,7 @@ describe("utils", () => {
 		it("should append Stream with filename options if available (path property)", () => {
 			const headers = new AxiosHeaders();
 			const stream = new PassThrough();
+			// biome-ignore lint/suspicious/noExplicitAny: <test>
 			(stream as any).path = "/path/to/test.png";
 			const config = getFormDataConfig({ file: stream }, headers);
 			expect(config.data).toBeInstanceOf(FormData);
@@ -149,7 +152,7 @@ describe("utils", () => {
 				setLevel: jest.fn(),
 				getLevel: jest.fn(),
 				setName: jest.fn()
-			} as any as Logger;
+			} as Logger;
 			warnSpy = jest.spyOn(logger, "warn");
 		});
 

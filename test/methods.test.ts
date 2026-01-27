@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
+import { ChannelType } from "../src/types";
 import { WebClient } from "../src/web-client";
 
 // Mock dependencies
@@ -16,9 +18,7 @@ describe("Methods", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		// Mock apiCall on prototype before instantiation
-		jest
-			.spyOn(WebClient.prototype, "apiCall")
-			.mockResolvedValue({ ok: true } as any);
+		jest.spyOn(WebClient.prototype, "apiCall").mockResolvedValue({ data: {} });
 		client = new WebClient("https://example.com");
 	});
 
@@ -34,7 +34,11 @@ describe("Methods", () => {
 
 	describe("bots", () => {
 		it("create calls apiCall with correct params", async () => {
-			await client.bots.create({ username: "bot", display_name: "Bot" } as any);
+			await client.bots.create({
+				username: "bot",
+				display_name: "Bot",
+				description: "Bot"
+			});
 			expect(client.apiCall).toHaveBeenCalledWith(
 				expect.objectContaining({ path: "bots", method: "POST" }),
 				expect.objectContaining({ username: "bot" })
@@ -52,7 +56,12 @@ describe("Methods", () => {
 
 	describe("channels", () => {
 		it("create calls apiCall", async () => {
-			await client.channels.create({ name: "c1" } as any);
+			await client.channels.create({
+				name: "c1",
+				display_name: "c1",
+				type: ChannelType.Open,
+				team_id: ""
+			});
 			expect(client.apiCall).toHaveBeenCalledWith(
 				expect.objectContaining({ path: "channels", method: "POST" }),
 				expect.objectContaining({ name: "c1" })

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import { HEADER_AUTH, retryPolicies } from "../src/const";
 
 describe("const", () => {

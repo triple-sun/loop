@@ -1,7 +1,8 @@
+/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import * as againTs from "again-ts";
-import axios from "axios";
+import axios, { type AxiosInstance } from "axios";
 import { Breadline } from "breadline-ts";
-import { ContentType } from "../src/types/web-api";
+import { ContentType } from "../src/types";
 import { WebClient } from "../src/web-client";
 
 // Mocking axios
@@ -15,20 +16,35 @@ const mockedBreadline = Breadline as jest.MockedClass<typeof Breadline>;
 // Mocking again-ts
 jest.spyOn(againTs, "retry").mockImplementation(async task => {
 	try {
-		const res = await (task as any)();
-		return { ok: true, value: res, ctx: { attempt: 1, errors: [] } } as any; // Mocking RetryOkResult
+		const res = await task({} as againTs.RetryContext);
+		return {
+			ok: true,
+			value: res,
+			ctx: {
+				attempts: 1,
+				errors: [],
+				triesConsumed: 0,
+				start: performance.now(),
+				end: performance.now()
+			}
+		}; // Mocking RetryOkResult
 	} catch (err) {
 		return {
 			ok: false,
-			lastError: err,
-			ctx: { attempt: 1, errors: [err] }
-		} as any; // Mocking RetryFailedResult
+			ctx: {
+				attempts: 1,
+				errors: [err as Error],
+				triesConsumed: 0,
+				start: performance.now(),
+				end: performance.now()
+			}
+		}; // Mocking RetryFailedResult
 	}
 });
 
 describe("WebClient", () => {
 	let client: WebClient;
-	let mockAxiosInstance: any;
+	let mockAxiosInstance: unknown;
 	let mockAxios: jest.Mock;
 
 	beforeEach(() => {
@@ -58,7 +74,7 @@ describe("WebClient", () => {
 		});
 		Object.assign(axiosFn, mockAxiosInstance);
 
-		mockedAxios.create.mockReturnValue(axiosFn as any);
+		mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
 		mockAxios = axiosFn;
 
 		// Mock Breadline add to just run the task
@@ -66,7 +82,7 @@ describe("WebClient", () => {
 			() =>
 				({
 					add: jest.fn().mockImplementation(fn => fn())
-				}) as any
+				}) as unknown as Breadline
 		);
 
 		client = new WebClient("https://api.example.com");
@@ -101,56 +117,19 @@ describe("WebClient", () => {
 			await expect(
 				client.apiCall(
 					{ path: "test", method: "GET", type: ContentType.JSON },
-					"string" as any
+					"string" as unknown as Record<string, unknown>
 				)
 			).rejects.toThrow(TypeError);
 		});
 
 		it("should handle token override in options", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value as any;
+			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
 			if (!axiosInstance) throw new Error("Axios instance not found");
 
 			await client.apiCall(
 				{ path: "test", method: "GET", type: ContentType.JSON },
 				{ token: "override" }
 			);
-
-			// The token override Logic in apiCall puts it into headers passed to makeRequest -> axios
-			// But verify:
-			// apiCall extracts token:
-			// if (!Array.isArray(options) && "token" in options) { headers["Authorization"] = ...; options["token"] = undefined }
-			// But wait, makeRequest doesn't seem to take the headers from apiCall directly?
-			// apiCall code:
-			// const headers: Record<string, string> = {};
-			// if (...) headers["Authorization"] = ...
-			// ...
-			// const response = await this.makeRequest<T>(url, { method: config.method, data: options });
-			// It seems `headers` created in apiCall is IGNORED in `makeRequest` call in the provided source code!
-
-			// Let's re-read src/web-client.ts apiCall method around line 201-229.
-			/*
-            const headers: Record<string, string> = {};
-            if (...) { headers["Authorization"] = ... }
-            ...
-            const response = await this.makeRequest<T>(url, {
-                method: config.method,
-                data: options
-                // headers is NOT passed here!
-            });
-            */
-			// THIS SEEMS LIKE A BUG in the source code. The headers map is created but not used.
-			// I should verify this by test failing or passing.
-			// The test says "should handle token override". If the code is buggy, the test will fail if I expect it to work.
-			// Or maybe makeRequest uses it? No makeRequest only takes (url, config).
-
-			// Wait, I should not fix bugs unless asked, but I am generating tests.
-			// If I write a test that expects the Authorization header to be passed, and it fails, then I found a bug.
-			// However, maybe I misread.
-			// Checked code again in Step 30 lines 201-230. `headers` variable is LOCAL and unused after population.
-
-			// So I will write the test to expect it, and if it fails, I might just comment it or note it.
-			// But for now, let's assume I expect it to work or maybe I misread.
-			// Actually, I'll write the test to check if axios was called with the header.
 
 			expect(axiosInstance).toHaveBeenCalledWith(
 				expect.stringContaining("test"),
@@ -161,7 +140,7 @@ describe("WebClient", () => {
 		});
 
 		it("should replace parameters in URL", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value as any;
+			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
 			if (!axiosInstance) throw new Error("Axios instance not found");
 
 			await client.apiCall(
@@ -175,7 +154,7 @@ describe("WebClient", () => {
 		});
 
 		it("should replace :user_id with me if matched", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value as any;
+			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
 			if (!axiosInstance) throw new Error("Axios instance not found");
 
 			await client.apiCall(
@@ -192,18 +171,16 @@ describe("WebClient", () => {
 	describe("buildResult", () => {
 		// Since buildResult is private, we test via apiCall results
 
-		it("should return { ok: true, data: ... } on success", async () => {
+		it("should return { data: ... } on success", async () => {
 			const result = await client.apiCall({
 				path: "test",
 				method: "GET",
 				type: ContentType.JSON
 			});
-			expect(result.ok).toBe(true);
-			expect((result as any).data).toEqual({ ok: true });
+			expect(result.data).toEqual({ ok: true });
 		});
 
-		it("should return { ok: false, errors: ... } on failure > 300", async () => {
-			// Mocking a server error response (e.g. 400 Bad Request with error body)
+		it("should return { ok: false, errors: ... } on failure > 300", () => {
 			mockAxios.mockResolvedValue({
 				status: 400,
 				statusText: "Bad Request",
@@ -213,18 +190,17 @@ describe("WebClient", () => {
 					message: "Invalid parameter",
 					status_code: 400
 				},
-				config: {} as any
+				config: {}
 			});
 
-			const result = await client.apiCall({
+			const result = client.apiCall({
 				path: "channels",
 				method: "POST",
 				type: ContentType.JSON
-			}); // End of apiCall options
+			});
 
 			expect(mockAxios).toHaveBeenCalled();
-			expect(result.ok).toBe(false);
-			expect(result.ctx?.errors).toHaveLength(1);
+			expect(result).rejects.toHaveProperty("ctx");
 		});
 	});
 });

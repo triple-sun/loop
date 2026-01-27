@@ -4,16 +4,12 @@ import type { UserID } from "./common.methods";
 /**
  * Arguments for creating a bot.
  */
-export interface BotsCreateArguments {
-	bot: BotPatch;
-}
+export interface BotsCreateArguments extends BotPatch {}
 
 /**
  * Arguments for cleaning/updating a bot.
  */
-export interface BotsPatchArguments extends UserID {
-	bot: BotPatch;
-}
+export interface BotsPatchArguments extends UserID, Partial<BotPatch> {}
 
 /**
  * Arguments for getting a bot.

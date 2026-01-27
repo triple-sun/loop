@@ -9,7 +9,7 @@ import axios, {
 	type AxiosInstance,
 	type AxiosRequestConfig,
 	type AxiosResponse,
-	type InternalAxiosRequestConfig,
+	type InternalAxiosRequestConfig
 } from "axios";
 import { Breadline } from "breadline-ts";
 import {
@@ -20,7 +20,7 @@ import {
 import {
 	type ServerError,
 	WebAPICallFailedError,
-	WebApiRateLimitedError,
+	WebAPIRateLimitedError,
 	WebAPIServerError,
 	WebClientOptionsError
 } from "./errors";
@@ -266,6 +266,8 @@ export class WebClient extends Methods {
 		warnIfFallbackIsMissing(config.path, this.logger, options);
 
 		const url = this.fillRequestUrl(config, options);
+
+		console.log({ url });
 		const response = await this.makeRequest<T>(url, {
 			method: config.method,
 			/** format request data handling path specifics */
@@ -330,7 +332,7 @@ export class WebClient extends Methods {
 						typeof data["status_code"] === "number"
 					) {
 						if (response.status === 429 || data["status_code"] === 429) {
-							throw new WebApiRateLimitedError(response.data as ServerError);
+							throw new WebAPIRateLimitedError(response.data as ServerError);
 						}
 
 						throw new WebAPIServerError(response.data as ServerError);
@@ -401,7 +403,7 @@ export class WebClient extends Methods {
 			requestUrl = requestUrl.replace(":user_id", "me");
 		}
 
-		return this.axios.getUri({ url: requestUrl });
+		return `${this.axios.getUri()}${requestUrl}`;
 	}
 
 	/**

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import * as os from "node:os";
 import { addAppMetadata, getUserAgent } from "../src/instrument";
 
