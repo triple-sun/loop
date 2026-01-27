@@ -2,10 +2,12 @@ import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import type {
 	ComplianceReport,
+	TokenOverridable,
 	UserCustomStatus,
 	UserID,
 	UserProfile,
-	UserStatus
+	UserStatus,
+	WebAPICallResult
 } from "./types";
 import type { AnalyticsRow } from "./types/admin";
 import type { Bot } from "./types/bots";
@@ -299,10 +301,8 @@ import {
 	ContentType,
 	type StatusOK,
 	type WebApiCallConfig,
-	type WebApiCallResult,
 	type WebClientEvent
-} from "./types/web-api";
-import { WebClient } from "./web-client";
+} from "./types/web-client";
 
 /**
  *  Binds a certain `method` and its (required) arguments and result types to the `apiCall` method in `LoopClient`.
@@ -338,8 +338,8 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	protected constructor() {
 		super();
 
-		// Check that the class being created extends from `WebClient` rather than this class
-		if (!(new.target.prototype instanceof WebClient)) {
+		if (new.target.name !== "WebClient") {
+			// Check that the class being created extends from `WebClient` rather than this class
 			throw new Error(
 				"Attempt to inherit from WebClient methods without inheriting from WebClient"
 			);
@@ -349,7 +349,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	public abstract apiCall(
 		config: WebApiCallConfig,
 		options?: Record<string, unknown>
-	): Promise<WebApiCallResult>;
+	): Promise<WebAPICallResult>;
 
 	public readonly bots = {
 		/**
@@ -1575,7 +1575,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			/**
 			 * @description Retrieve a user's profile information, including their custom status.
 			 */
-			me: bindApiCallWithOptionalArg<never, UserProfile>(this, {
+			me: bindApiCallWithOptionalArg<TokenOverridable, UserProfile>(this, {
 				method: "GET",
 				path: `users/:user_id`,
 				type: ContentType.URLEncoded
@@ -1696,7 +1696,6 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: `users/:user_id/promote`,
 			type: ContentType.URLEncoded
 		}),
-
 		demoteUserToGuest: bindApiCall<UserID, StatusOK>(this, {
 			method: "post",
 			path: `users/:user_id/demote`,
@@ -1801,4 +1800,4 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			type: ContentType.FormData
 		})
 	};
-};
+}

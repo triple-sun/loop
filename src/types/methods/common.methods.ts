@@ -68,6 +68,8 @@ export interface OptionalUserID {
 	user_id?: string;
 }
 
+export type ChannelOrUserID = ChannelID | UserID;
+
 export interface UserIDMe {
 	/** @description Encoded user ID. @default me - return data for current token */
 	user_id?: string | "me";

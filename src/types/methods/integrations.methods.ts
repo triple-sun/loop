@@ -1,5 +1,5 @@
 import type { Command, OAuthApp } from "../integrations";
-import type { ContentType } from "../web-api";
+import type { ContentType } from "../web-client";
 import type {
 	ChannelID,
 	OptionalUserID,

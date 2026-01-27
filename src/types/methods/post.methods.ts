@@ -1,10 +1,12 @@
 import type { Post } from "../posts/posts";
-import type { ChannelID, Paginated, TokenOverridable } from "./common.methods";
+import type {
+	ChannelID,
+	Paginated,
+	TokenOverridable,
+	UserID
+} from "./common.methods";
 
-/**
- * Arguments for creating a new post.
- */
-export interface PostsCreateArguments extends TokenOverridable, ChannelID {
+interface PostArguments {
 	/** The message to be included in the post */
 	message: string;
 	/** The ID of the root post, if this is a reply */
@@ -13,13 +15,27 @@ export interface PostsCreateArguments extends TokenOverridable, ChannelID {
 	file_ids?: string[];
 	/** A general JSON property bag to attach to the post */
 	props?: Record<string, unknown>;
-	/** An optional JSON property bag to attach to the post metadata */
-	metadata?: Record<string, unknown>;
 	/**
 	 * @description Whether to set the user status as online or not.
 	 */
 	set_online?: boolean;
 }
+
+interface PostCreateWithUserIDArguments
+	extends TokenOverridable,
+		UserID,
+		PostArguments {}
+interface PostCreateWithChannelIDArguments
+	extends TokenOverridable,
+		ChannelID,
+		PostArguments {}
+
+/**
+ * Arguments for creating a new post.
+ */
+export type PostsCreateArguments =
+	| PostCreateWithChannelIDArguments
+	| PostCreateWithUserIDArguments;
 
 /**
  * Arguments for updating a post.

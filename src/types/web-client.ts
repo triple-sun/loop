@@ -6,7 +6,8 @@ import type {
 	AxiosAdapter,
 	InternalAxiosRequestConfig,
 	Method,
-	RawAxiosRequestHeaders
+	RawAxiosRequestHeaders,
+	RawAxiosResponseHeaders
 } from "axios";
 
 /*
@@ -23,17 +24,6 @@ export type StatusOK = {
 	status: "OK";
 };
 
-export type FetchPaginatedThreadOptions = {
-	fetchThreads?: boolean;
-	collapsedThreads?: boolean;
-	collapsedThreadsExtended?: boolean;
-	direction?: "up" | "down";
-	fetchAll?: boolean;
-	perPage?: number;
-	fromCreateAt?: number;
-	fromPost?: string;
-};
-
 export type FileUploadData = {
 	file: unknown;
 	channel_id: string;
@@ -41,8 +31,23 @@ export type FileUploadData = {
 };
 
 export type WebApiCallConfig = {
+	/**
+	 * @description http request method
+	 */
 	path: string;
+	/**
+	 * @description A path for api call
+	 * Params (:param) get filled from api call options
+	 * @example users/:user_id
+	 */
 	method: Method;
+	/**
+	 * @description Content type for options handling
+	 * Sets Content-Type header
+	 * FormData - creates new FormData() and fills it from options
+	 * URLEncoded options get passed to request config params instead of data
+	 * JSON passes options as request config data
+	 */
 	type: ContentType;
 };
 
@@ -66,40 +71,32 @@ export type RequestInterceptor = (
  * */
 export type AdapterConfig = AxiosAdapter;
 
-export interface WebApiCallContext extends RetryContext {
+export interface WebAPICallContext extends RetryContext {
 	errors: Error[];
-	data?: unknown;
-	headers?: RawAxiosRequestHeaders;
-	url: string
+	headers?: RawAxiosResponseHeaders;
+	url: string;
 }
 
-export interface WebApiCallOk<DATA_TYPE = unknown> {
-	ok: true;
+export interface WebAPICallResult<DATA_TYPE = unknown> {
 	data: DATA_TYPE;
-	ctx?: WebApiCallContext;
+	ctx?: WebAPICallContext;
 }
-
-export interface WebApiCallFailed {
-	ok: false;
-	ctx?: WebApiCallContext;
-}
-
-export type WebApiCallResult<DATA_TYPE = unknown> =
-	| WebApiCallOk<DATA_TYPE>
-	| WebApiCallFailed;
 
 export interface WebClientOptions {
-	token?: Readonly<string>;
-	logger?: Logger;
-	logLevel?: LogLevel;
-	maxRequestConcurrency?: number;
-	retryConfig?: RetryOptions;
-	agent?: Agent;
-	tls?: TLSOptions;
-	timeout?: number;
-	headers?: RawAxiosRequestHeaders;
-	requestInterceptor?: RequestInterceptor;
-	adapter?: AdapterConfig;
+	readonly token?: Readonly<string>;
+	readonly logger?: Logger;
+	readonly logLevel?: LogLevel;
+	readonly maxRequestConcurrency?: number;
+	readonly retryConfig?: RetryOptions;
+	readonly agent?: Agent;
+	readonly tls?: TLSOptions;
+	readonly timeout?: number;
+	readonly headers?: RawAxiosRequestHeaders;
+	readonly requestInterceptor?: RequestInterceptor;
+	readonly adapter?: AdapterConfig;
+	readonly userID?: string | undefined;
+	readonly useCurrentUserForDirectChannels?: boolean;
+	readonly useCurrentUserForPostCreation?: boolean;
 }
 
 export type TLSOptions = Pick<

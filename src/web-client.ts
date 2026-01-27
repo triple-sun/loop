@@ -10,7 +10,6 @@ import axios, {
 	type AxiosRequestConfig,
 	type AxiosResponse,
 	type InternalAxiosRequestConfig,
-	isAxiosError
 } from "axios";
 import { Breadline } from "breadline-ts";
 import {
@@ -19,22 +18,27 @@ import {
 	tenRetriesInAboutThirtyMinutes
 } from "./const";
 import {
-	isServerError,
 	type ServerError,
-	WebAPIRequestError,
-	WebAPIServerError
+	WebAPICallFailedError,
+	WebApiRateLimitedError,
+	WebAPIServerError,
+	WebClientOptionsError
 } from "./errors";
 import { getUserAgent } from "./instrument";
 import { getLogger } from "./logger";
 import { Methods } from "./methods";
+import type {
+	ChannelsCreateDirectArguments,
+	TokenOverridable,
+	WebAPICallResult
+} from "./types";
 import {
 	ContentType,
 	type TLSOptions,
+	type WebAPICallContext,
 	type WebApiCallConfig,
-	type WebApiCallContext,
-	type WebApiCallResult,
 	type WebClientOptions
-} from "./types/web-api";
+} from "./types/web-client";
 import {
 	checkForBinaryData,
 	getFormDataConfig,
@@ -57,34 +61,60 @@ export class WebClient extends Methods {
 
 	/**
 	 * Configuration for retry operations. See {@link https://github.com/triplesunn/again-ts|Again} for more details.
-	 * */
+	 */
 	private retryConfig: RetryOptions;
 
 	/**
 	 * Queue of requests in which a maximum of {@link WebClientOptions.maxRequestConcurrency} can concurrently be
 	 * in-flight.
-	 * */
+	 */
 	private breadline: Breadline;
 
 	/**
 	 * Axios HTTP client instance used by this client
-	 * */
+	 */
 	private axios: AxiosInstance;
 
 	/**
 	 * Configuration for custom TLS handling
-	 * */
+	 */
 	private tlsConfig: TLSOptions | undefined;
 
 	/**
 	 * The name used to prefix all logging generated from this object
-	 * */
-	private static loggerName = "WebClient";
+	 */
+	private static loggerName = "LoopWebClient";
 
 	/**
 	 * This object's logger instance
-	 * */
+	 */
 	private logger: Logger;
+
+	/**
+	 * @description Current userID
+	 * useCurrentUserForDirectChannels and useCurrentUserForPostCreation will
+	 * use it instead of fetching from server if not overriden by token
+	 */
+	public userID: string | undefined;
+
+	/**
+	 * @description Use current user_id if only one was provided for direct channel creation.
+	 * Will fetch current user ID from server if no userID was provided or overridden by token in options
+	 *
+	 * @default true
+	 */
+	readonly useCurrentUserForDirectChannels?: boolean;
+
+	/**
+	 * @description Use post.user_id in PostCreateArguments to fetch a channel_id for post
+	 * Will call channels.createDirect for current
+	 * Will fetch current user ID from server if no userID was provided or overridden by token in options
+	 *
+	 * @default true
+	 * @default false if userID is provided
+	 */
+	readonly useCurrentUserForPostCreation?: boolean;
+
 	private clusterId: string;
 	private serverVersion: string;
 
@@ -92,10 +122,13 @@ export class WebClient extends Methods {
 		url: Readonly<string>,
 		{
 			token = undefined,
+			userID = undefined,
 			logger = undefined,
 			logLevel = undefined,
 			maxRequestConcurrency = 100,
 			retryConfig = tenRetriesInAboutThirtyMinutes,
+			useCurrentUserForDirectChannels = true,
+			useCurrentUserForPostCreation = true,
 			agent = undefined,
 			tls = undefined,
 			timeout = 0,
@@ -109,7 +142,9 @@ export class WebClient extends Methods {
 		this.token = token;
 		this.url = url;
 		if (!this.url.endsWith("/")) this.url += "/";
-		if (!this.url.endsWith(`api/v4/`)) this.url += `api/v4/`
+		if (!this.url.endsWith(`api/v4/`)) this.url += `api/v4/`;
+
+		this.userID = userID;
 
 		this.clusterId = "";
 		this.serverVersion = "";
@@ -118,11 +153,13 @@ export class WebClient extends Methods {
 		this.breadline = new Breadline({ concurrency: maxRequestConcurrency });
 		// NOTE: may want to filter the keys to only those acceptable for TLS options
 		this.tlsConfig = tls;
+		this.useCurrentUserForDirectChannels = useCurrentUserForDirectChannels;
+		this.useCurrentUserForPostCreation = useCurrentUserForPostCreation;
 
-		if (typeof logger !== "undefined") {
-			// Logging
+		/** Set up logging */
+		if (logger !== undefined) {
 			this.logger = logger;
-			if (typeof logLevel !== "undefined") {
+			if (logLevel !== undefined) {
 				this.logger.debug(
 					"The logLevel given to WebClient was ignored as you also gave logger"
 				);
@@ -149,18 +186,19 @@ export class WebClient extends Methods {
 			maxRedirects: 0,
 			// disabling axios' automatic proxy support:
 			// axios would read from envvars to configure a proxy automatically, but it doesn't support TLS destinations.
-			// for compatibility with https://api.slack.com, and for a larger set of possible proxies (SOCKS or other
+			// for compatibility and for a larger set of possible proxies (SOCKS or other
 			// protocols), users of this package should use the `agent` option to configure a proxy.
 			proxy: false
 		});
-		// serializeApiCallData will always determine the appropriate content-type
+
+		/** config.type and serializeApiCallData will set ContentType automatically */
 		this.axios.defaults.headers.post["Content-Type"] = null;
 
 		if (requestInterceptor) {
 			/**
 			 * request interceptors have reversed execution order
 			 * see: {@link https://github.com/axios/axios/blob/v1.x/test/specs/interceptors.spec.js#L88}
-			 * */
+			 */
 			this.axios.interceptors.request.use(requestInterceptor, null);
 		}
 
@@ -169,10 +207,26 @@ export class WebClient extends Methods {
 				adapter({ ...config });
 		}
 
-		this.axios.interceptors.request.use(
-			this.serializeApiCallData.bind(this),
-			null
-		);
+		/**
+		 * Built-int interceptors
+		 */
+
+		/** set current user for direct channels interceptor */
+		if (this.useCurrentUserForDirectChannels) {
+			this.axios.interceptors.request.use(
+				this.setCurrentUserForDirectChannel.bind(this)
+			);
+		}
+
+		/** set current user for posts interceptor */
+		if (this.useCurrentUserForPostCreation) {
+			this.axios.interceptors.request.use(
+				this.setCurrentUserForPostCreation.bind(this)
+			);
+		}
+
+		/** main data serializer interceptor */
+		this.axios.interceptors.request.use(this.serializeApiCallData.bind(this));
 
 		this.logger.debug("initialized");
 	}
@@ -180,12 +234,14 @@ export class WebClient extends Methods {
 	/**
 	 * Generic method for calling a Web API method
 	 * @param path - the Web API path to call
-	 * @param options - options
+	 * @param options - method options
+	 *
+	 * @throws WebApiCallFailedError with detailed errors in ctx.errors
 	 */
 	public async apiCall<T = unknown>(
 		config: WebApiCallConfig,
-		options: Record<string, unknown> | unknown[] = {}
-	): Promise<WebApiCallResult<T>> {
+		options: Record<string, unknown> = {}
+	): Promise<WebAPICallResult<T>> {
 		this.logger.debug(`apiCall('${config.path}') start`);
 
 		if (
@@ -206,31 +262,241 @@ export class WebClient extends Methods {
 			options["token"] = undefined;
 		}
 
-		if (config.path === "channels/direct" && Array.isArray(options)) {
-			if (options.length > 2 || options.length === 0) {
-				throw new TypeError(
-					`to create a direct channel you should use one or two user_ids in a tuple`
-				);
-			}
-
-			if (options.length === 1) {
-				const me = await this.users.profile.me();
-				if (me.ok) options = [...options, me.data.id];
-			}
-		}
-
 		/** warn if no fallback */
 		warnIfFallbackIsMissing(config.path, this.logger, options);
 
-		const url = this.fillRequestUrl(config.path, options);
+		const url = this.fillRequestUrl(config, options);
 		const response = await this.makeRequest<T>(url, {
 			method: config.method,
+			/** format request data handling path specifics */
 			data: options
 		});
 		const result = this.buildResult<T>(url, response);
 		this.logger.debug(`http request result: ${JSON.stringify(result)}`);
 		this.logger.debug(`apiCall('${config.path}') end`);
 		return result;
+	}
+
+	/**
+	 * Low-level function to make a single API request. handles queuing, retries, and http-level errors
+	 */
+	private async makeRequest<T>(
+		url: string,
+		config: AxiosRequestConfig
+	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
+		const task = () =>
+			this.breadline.add(async () => {
+				const cfg: AxiosRequestConfig = {
+					...config,
+					...this.tlsConfig
+				};
+
+				this.logger.debug(`http request url: ${url}`);
+				this.logger.debug(`http request data: ${redact(config.data)}`);
+				this.logger.debug(
+					`http request headers: ${redact({
+						...this.axios.defaults.headers.common,
+						...config.headers
+					})}`
+				);
+
+				/** ApiCallData is serialized through interceptors */
+				const response = await this.axios<T>(url, cfg);
+
+				this.logger.debug("http response received");
+
+				const resServerVersion = response.headers[HEADER_X_VERSION_ID];
+				if (resServerVersion && this.serverVersion !== resServerVersion) {
+					this.serverVersion = resServerVersion;
+				}
+
+				const resClusterId = response.headers[HEADER_X_CLUSTER_ID];
+
+				if (resClusterId && this.clusterId !== resClusterId) {
+					this.clusterId = resClusterId;
+				}
+
+				/** handle error status code */
+				if (response.status > 300) {
+					const { data } = response;
+					if (
+						data &&
+						typeof data === "object" &&
+						"id" in data &&
+						"message" in data &&
+						"status_code" in data &&
+						typeof data["id"] === "string" &&
+						typeof data["message"] === "string" &&
+						typeof data["status_code"] === "number"
+					) {
+						if (response.status === 429 || data["status_code"] === 429) {
+							throw new WebApiRateLimitedError(response.data as ServerError);
+						}
+
+						throw new WebAPIServerError(response.data as ServerError);
+					}
+				}
+
+				return response;
+			});
+
+		return await retry<AxiosResponse<T>>(task, this.retryConfig);
+	}
+
+	/**
+	 * Processes an HTTP response into a WebAPICallResult by performing JSON parsing on the body and merging relevant
+	 * HTTP headers into the object.
+	 * @param response - an http response
+	 */
+	private buildResult<T>(
+		url: string,
+		result: RetryOkResult<AxiosResponse<T>> | RetryFailedResult
+	): WebAPICallResult<T> {
+		const ctx: WebAPICallContext = { ...result.ctx, url };
+		/** short-circuit if we have an error */
+		if (!result.ok) {
+			throw new WebAPICallFailedError(
+				`Web API Call failed, see ctx for errors`,
+				ctx
+			);
+		}
+
+		/**
+		 * handle string responses?
+		 * @todo check if it's actually needed
+		 */
+		if (typeof result.value.data === "string") {
+			try {
+				result.value.data = JSON.parse(result.value.data);
+			} catch (err) {
+				ctx.errors.push(
+					err instanceof Error ? err : new TypeError(`non-error type thrown`)
+				);
+				// failed to parse the string value as JSON data
+				throw new WebAPICallFailedError(
+					`Web API Call failed, see ctx for errors`,
+					ctx
+				);
+			}
+		}
+
+		return { data: result.value.data, ctx };
+	}
+
+	private fillRequestUrl(
+		config: WebApiCallConfig,
+		options: Record<string, unknown>
+	): string {
+		let requestUrl = `${config.path}`;
+
+		if (!Array.isArray(options)) {
+			Object.entries(options).forEach(([k, v]) => {
+				this.logger.debug(`Replacing :${k} with ${v} in ${requestUrl}`);
+				requestUrl = requestUrl.replace(new RegExp(`:${k}`, "g"), String(v));
+			});
+		}
+
+		/** if no user_id in options: get 'me' user_id by default */
+		if (requestUrl.includes("users/:user_id")) {
+			requestUrl = requestUrl.replace(":user_id", "me");
+		}
+
+		return this.axios.getUri({ url: requestUrl });
+	}
+
+	/**
+	 * @description Sets authenticated user id for channel creation
+	 */
+	private async setCurrentUserForDirectChannel(
+		config: InternalAxiosRequestConfig
+	): Promise<InternalAxiosRequestConfig> {
+		const { data } = config;
+		if (
+			config.url?.endsWith("/api/v4/channels/direct") &&
+			Array.isArray(data["user_ids"])
+		) {
+			const userIDs = data["user_ids"];
+
+			/** throw if no user_ids? shouldn't happen but anyways */
+			if (userIDs.length === 0) {
+				throw new WebClientOptionsError(
+					`To create a direct channel you should use at least one user_id in a tuple`
+				);
+			}
+
+			if (userIDs.length === 1) {
+				/** throw if not enough user_ids and can't fetch current from server */
+				if (!this.useCurrentUserForDirectChannels) {
+					throw new WebClientOptionsError(
+						`If useCurrentUserForDirectChannels is false you MUST use two user_ids in a tuple to create a direct channel`
+					);
+				}
+
+				const opts: TokenOverridable = {};
+
+				if (typeof data["token"] === "string") {
+					opts.token === data["token"];
+				}
+
+				/** if token overridable or no userID - fetch userID from server  */
+				if (opts.token || !this.userID) {
+					const me = await this.users.profile.me(opts);
+
+					config.data = [userIDs[0], me.data.id];
+				}
+			}
+		}
+
+		return config;
+	}
+
+	/**
+	 * @description Sets channel_id for user_id for post creation
+	 */
+	private async setCurrentUserForPostCreation(
+		config: InternalAxiosRequestConfig
+	): Promise<InternalAxiosRequestConfig> {
+		const { data } = config;
+
+		if (config.url?.endsWith("/api/v4/posts") && config.method === "get") {
+			/** throw if we dont have required params and we can't fetch them */
+			if (!this.useCurrentUserForPostCreation && !data["channel_id"]) {
+				throw new WebClientOptionsError(
+					"If useCurrentUserForPostCreation is false you MUST provide channel_id to send a post"
+				);
+			}
+			/** throw if we don't even have options required to fetch missing data */
+			if (!data["user_id"] && !data["channel_id"]) {
+				throw new WebClientOptionsError(
+					"To create a post you need to provide either a channel_id or user_id"
+				);
+			}
+
+			if (typeof data["user_id"] === "string" && !data["channel_id"]) {
+				const opts: ChannelsCreateDirectArguments = {
+					user_ids: [data["user_id"]]
+				};
+
+				if (typeof data["token"] === "string") {
+					opts.token === data["token"];
+				}
+
+				/** if overridden or no userID - fetch */
+				if (opts.token || !this.userID) {
+					const me = await this.users.profile.me(opts);
+					opts.user_ids.push(me.data.id);
+				} else {
+					opts.user_ids.push(this.userID);
+				}
+
+				/** if token overridable or no userID - fetch channel_id from server  */
+				const channel = await this.channels.createDirect(opts);
+
+				config.data["channel_id"] = channel.data.id;
+			}
+		}
+
+		return config;
 	}
 
 	/**
@@ -276,133 +542,5 @@ export class WebClient extends Methods {
 				{} as Record<string, unknown>
 			)
 		};
-	}
-
-	/**
-	 * Low-level function to make a single API request. handles queuing, retries, and http-level errors
-	 */
-	private async makeRequest<T>(
-		url: string,
-		config: AxiosRequestConfig
-	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
-		const task = () =>
-			this.breadline.add(async () => {
-				try {
-					const cfg: AxiosRequestConfig = {
-						...config,
-						...this.tlsConfig
-					};
-
-					this.logger.debug(`http request url: ${url}`);
-					this.logger.debug(`http request data: ${redact(config.data)}`);
-					this.logger.debug(
-						`http request headers: ${redact({
-							...this.axios.defaults.headers.common,
-							...config.headers
-						})}`
-					);
-
-					/** ApiCallData is serialized through interceptors */
-					const response = await this.axios<T>(url, cfg);
-
-					this.logger.debug("http response received");
-
-					const resServerVersion = response.headers[HEADER_X_VERSION_ID];
-					if (resServerVersion && this.serverVersion !== resServerVersion) {
-						this.serverVersion = resServerVersion;
-					}
-
-					const resClusterId = response.headers[HEADER_X_CLUSTER_ID];
-					if (resClusterId && this.clusterId !== resClusterId) {
-						this.clusterId = resClusterId;
-					}
-
-					if (isServerError(response.data)) {
-						throw new WebAPIServerError(response.data as ServerError);
-					}
-
-					return response;
-				} catch (error) {
-					if (isAxiosError(error)) {
-						if (error.response) return error.response;
-						if (error.request) throw new WebAPIRequestError(error);
-					}
-					throw error;
-				}
-			});
-
-		return await retry<AxiosResponse<T>>(task, this.retryConfig);
-	}
-
-	/**
-	 * Processes an HTTP response into a WebAPICallResult by performing JSON parsing on the body and merging relevant
-	 * HTTP headers into the object.
-	 * @param response - an http response
-	 */
-	private buildResult<T>(
-		url: string,
-		result: RetryOkResult<AxiosResponse<T>> | RetryFailedResult
-	): WebApiCallResult<T> {
-		const ctx: WebApiCallContext = { ...result.ctx, url };
-		/** short-circuit if we have an error */
-		if (!result.ok) {
-			return { ok: false, ctx };
-		}
-
-		/** nandle error status codes */
-		if (result.value.status > 300) {
-			ctx.headers = result.value.headers;
-			/** Push error if response data is an error object */
-			if (isServerError(result.value.data)) {
-				ctx.errors.push(
-					new WebAPIServerError(result.value.data as ServerError)
-				);
-			}
-			return { ok: false, ctx };
-		}
-
-		/**
-		 * handle string responses?
-		 * @todo: check if it's needed
-		 */
-		if (typeof result.value.data === "string") {
-			try {
-				result.value.data = JSON.parse(result.value.data);
-			} catch (err) {
-				ctx.errors.push(
-					err instanceof Error ? err : new TypeError(`non-error type thrown`)
-				);
-				// failed to parse the string value as JSON data
-				return {
-					ok: false,
-					ctx
-				};
-			}
-		}
-
-		return { ok: true, data: result.value.data, ctx };
-	}
-
-	/**
-	 * Get the complete request URL for the provided URL.
-	 * @param url - The resource to POST to. Either a Slack API method or absolute URL.
-	 */
-	private fillRequestUrl(
-		url: string,
-		options: Record<string, unknown> | unknown[]
-	): string {
-		/** fill request url */
-		if (url.match(/\$:[\d\D]*\//gm)) {
-			Object.entries(options).forEach(([k, v]) => {
-				url.replaceAll(`:${k}`, String(v));
-			});
-		}
-
-		/** get 'me' user_id by default */
-		if (url.match("/users/:user_id")) {
-			url.replaceAll(":user_id", "me");
-		}
-
-		return `${this.axios.getUri()}${url}`;
 	}
 }

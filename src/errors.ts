@@ -1,15 +1,17 @@
+import type { WebAPICallContext } from "./types";
+
 /**
  * A dictionary of codes for errors produced by this package
  */
 export enum ErrorCode {
-	// general error
-	RequestError = "request_error",
 	HTTPError = "http_error",
-	ServerError = "server_error",
-	RateLimitedError = "rate_limited_error"
+	OptionsError = "options_error",
+	RateLimitedError = "rate_limited_error",
+	RequestError = "request_error",
+	ServerError = "server_error"
 }
 
-export interface ServerError {
+export interface ServerError extends Error {
 	/**
 	 * @description Error id
 	 * @example app.user.missing_account.const
@@ -23,6 +25,16 @@ export interface ServerError {
 
 export interface WebClientCodedError extends Error {
 	code: ErrorCode;
+}
+
+export class WebClientOptionsError implements WebClientCodedError {
+	name = WebClientOptionsError.name;
+	code = ErrorCode.RequestError;
+	message: string;
+
+	constructor(message: string) {
+		this.message = message;
+	}
 }
 
 export class WebAPIServerError implements WebClientCodedError, ServerError {
@@ -43,18 +55,37 @@ export class WebAPIServerError implements WebClientCodedError, ServerError {
 	}
 }
 
+export class WebApiRateLimitedError extends WebAPIServerError {
+	coee = ErrorCode.RateLimitedError;
+	constructor(error: ServerError) {
+		super(error);
+		this.message = `Rate limited: ${error.message}`;
+	}
+}
+
 export class WebAPIRequestError implements WebClientCodedError {
 	name = WebAPIRequestError.name;
 	code = ErrorCode.RequestError;
-	original: Error;
+	original: unknown;
 	message: string;
 
-	constructor(original: Error) {
-		this.message = `A request error occurred: ${original.message}`;
+	constructor(original: unknown) {
+		this.message = `A request error occurred: ${JSON.stringify(original)}`;
 		this.original = original;
 	}
 }
 
+export class WebAPICallFailedError implements WebClientCodedError {
+	name = WebAPICallFailedError.name;
+	code = ErrorCode.HTTPError;
+	message: string;
+	ctx: WebAPICallContext;
+
+	constructor(message: string, ctx: WebAPICallContext) {
+		this.message = message;
+		this.ctx = ctx;
+	}
+}
 
 export const isServerError = (error: unknown): boolean => {
 	if (
@@ -63,9 +94,9 @@ export const isServerError = (error: unknown): boolean => {
 		"id" in error &&
 		"message" in error &&
 		"status_code" in error &&
-		typeof error.id === "string" &&
-		typeof error.message === "string" &&
-		typeof error.status_code === "number"
+		typeof error['id'] === "string" &&
+		typeof error['message'] === "string" &&
+		typeof error['status_code'] === "number"
 	) {
 		return true;
 	}
