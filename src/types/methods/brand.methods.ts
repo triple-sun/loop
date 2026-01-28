@@ -13,8 +13,3 @@ export interface BrandUploadImageArguments {
 	/** The image data */
 	image: File | Blob;
 }
-
-/**
- * Arguments for deleting the brand image.
- */
-export type BrandDeleteImageArguments = {};

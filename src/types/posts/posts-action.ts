@@ -19,23 +19,22 @@ export declare enum PostActionDataSource {
 }
 
 export interface PostActionOption {
-    text: string;
-    value: string;
+	text: string;
+	value: string;
 }
 export interface PostActionIntegration {
-    url: string;
-    context?: Context;
+	url: string;
+	context?: Context;
 }
 export interface PostAction {
-    id: string;
-    name: string;
-    integration: PostActionIntegration;
-    type: PostActionType;
-    options?: PostActionOption[];
-    style?: PostActionStyle;
-    data_source?: PostActionDataSource;
+	id: string;
+	name: string;
+	integration: PostActionIntegration;
+	type: PostActionType;
+	options?: PostActionOption[];
+	style?: PostActionStyle;
+	data_source?: PostActionDataSource;
 }
-
 
 /** Тип поля формы приложений mattermost */
 export enum LoopFormFieldType {

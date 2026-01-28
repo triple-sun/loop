@@ -1,7 +1,8 @@
 /** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import * as againTs from "again-ts";
-import axios, { type AxiosInstance } from "axios";
+import axios, { type AxiosInstance, type RawAxiosRequestHeaders } from "axios";
 import { Breadline } from "breadline-ts";
+import { WebAPIServerError } from "../src/errors";
 import { ContentType } from "../src/types";
 import { WebClient } from "../src/web-client";
 
@@ -42,6 +43,7 @@ jest.spyOn(againTs, "retry").mockImplementation(async task => {
 	}
 });
 
+// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("WebClient", () => {
 	let client: WebClient;
 	let mockAxiosInstance: unknown;
@@ -168,39 +170,236 @@ describe("WebClient", () => {
 		});
 	});
 
-	describe("buildResult", () => {
-		// Since buildResult is private, we test via apiCall results
+	// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
+	describe("Interceptors", () => {
+		let client: WebClient;
+		// biome-ignore lint/suspicious/noExplicitAny: <test>
+		let mockAxiosInstance: any;
 
-		it("should return { data: ... } on success", async () => {
-			const result = await client.apiCall({
-				path: "test",
-				method: "GET",
-				type: ContentType.JSON
+		beforeEach(() => {
+			jest.clearAllMocks();
+			mockAxiosInstance = {
+				defaults: { headers: { common: {}, post: {} } },
+				interceptors: { request: { use: jest.fn() } },
+				getUri: jest.fn().mockReturnValue("https://api.example.com/api/v4/"),
+				request: jest.fn()
+			};
+			const axiosFn = jest.fn().mockResolvedValue({
+				status: 200,
+				headers: {},
+				data: { ok: true }
 			});
-			expect(result.data).toEqual({ ok: true });
+			Object.assign(axiosFn, mockAxiosInstance);
+			mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
+			mockAxios = axiosFn;
+
+			// Mock Breadline
+			mockedBreadline.mockImplementation(
+				() =>
+					({
+						add: jest.fn().mockImplementation(fn => fn())
+					}) as unknown as Breadline
+			);
+
+			client = new WebClient("https://api.example.com");
 		});
 
-		it("should return { ok: false, errors: ... } on failure > 300", () => {
-			mockAxios.mockResolvedValue({
-				status: 400,
-				statusText: "Bad Request",
-				headers: {},
-				data: {
-					id: "api.context.invalid_param.app_error",
-					message: "Invalid parameter",
-					status_code: 400
-				},
-				config: {}
+		describe("setCurrentUserForDirectChannel", () => {
+			it("should throw if user_ids length is 0", async () => {
+				client = new WebClient("https://api.example.com");
+
+				const config = {
+					url: "https://api.example.com/api/v4/channels/direct",
+					headers: {} as RawAxiosRequestHeaders,
+					data: { user_ids: [] }
+				};
+
+				try {
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+					await (client as any).setCurrentUserForDirectChannel(config);
+					throw new Error("Should have thrown");
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+				} catch (e: any) {
+					expect(e.message).toContain("at least one user_id");
+				}
 			});
 
-			const result = client.apiCall({
-				path: "channels",
-				method: "POST",
-				type: ContentType.JSON
+			it("should throw if user_ids is 1 and useCurrentUserForDirectChannels is false", async () => {
+				client = new WebClient("https://api.example.com", {
+					useCurrentUserForDirectChannels: false
+				});
+				const config = {
+					url: "https://api.example.com/api/v4/channels/direct",
+					headers: {} as RawAxiosRequestHeaders,
+					data: { user_ids: ["other_user"] }
+				};
+				try {
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+					await (client as any).setCurrentUserForDirectChannel(config);
+					throw new Error("Should have thrown");
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+				} catch (e: any) {
+					expect(e.message).toContain(
+						"If useCurrentUserForDirectChannels is false"
+					);
+				}
 			});
 
-			expect(mockAxios).toHaveBeenCalled();
-			expect(result).rejects.toHaveProperty("ctx");
+			it("should fetch me ID if user_ids is 1 and useCurrentUserForDirectChannels is true", async () => {
+				client = new WebClient("https://api.example.com");
+				// Mock users.profile.me
+				const meMock = jest
+					.fn()
+					.mockResolvedValue({ ok: true, data: { id: "my_id" } });
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				(client as any).users = { profile: { me: meMock } };
+
+				const config = {
+					url: "https://api.example.com/api/v4/channels/direct",
+					headers: {} as RawAxiosRequestHeaders,
+					data: { user_ids: ["other_user"] }
+				};
+
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				const newConfig = await (client as any).setCurrentUserForDirectChannel(
+					config
+				);
+
+				expect(meMock).toHaveBeenCalled();
+				expect(newConfig.data).toEqual(["other_user", "my_id"]);
+			});
+
+			it("should use userID property if set", async () => {
+				client = new WebClient("https://api.example.com", {
+					userID: "cached_id"
+				});
+				// Ensure users.profile.me is NOT called
+				const meMock = jest.fn();
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				(client as any).users = { profile: { me: meMock } };
+
+				const config = {
+					url: "https://api.example.com/api/v4/channels/direct",
+					headers: {} as RawAxiosRequestHeaders,
+					data: { user_ids: ["other_user"] }
+				};
+
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				const newConfig = await (client as any).setCurrentUserForDirectChannel(
+					config
+				);
+
+				expect(meMock).not.toHaveBeenCalled();
+				expect(newConfig.data).toEqual(["other_user", "cached_id"]);
+			});
+		});
+
+		describe("setCurrentUserForPostCreation", () => {
+			it("should throw if useCurrentUserForPostCreation is false and channel_id missing", async () => {
+				client = new WebClient("https://api.example.com", {
+					useCurrentUserForPostCreation: false
+				});
+				const config = {
+					url: "https://api.example.com/api/v4/posts",
+					headers: {} as RawAxiosRequestHeaders,
+					method: "post",
+					data: { user_id: "u1" }
+				};
+				try {
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+					await (client as any).setCurrentUserForPostCreation(config);
+					throw new Error("Should have thrown");
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+				} catch (e: any) {
+					expect(e.message).toContain(
+						"If useCurrentUserForPostCreation is false"
+					);
+				}
+			});
+
+			it("should throw if neither user_id nor channel_id provided", async () => {
+				client = new WebClient("https://api.example.com");
+				const config = {
+					url: "https://api.example.com/api/v4/posts",
+					headers: {} as RawAxiosRequestHeaders,
+					method: "post",
+					data: {}
+				};
+				try {
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+					await (client as any).setCurrentUserForPostCreation(config);
+					throw new Error("Should have thrown");
+					// biome-ignore lint/suspicious/noExplicitAny: <test>
+				} catch (e: any) {
+					expect(e.message).toContain(
+						"To create a post you need to provide either a channel_id or user_id"
+					);
+				}
+			});
+
+			it("should create direct channel if user_id provided", async () => {
+				client = new WebClient("https://api.example.com", { userID: "me" });
+				const createDirectMock = jest
+					.fn()
+					.mockResolvedValue({ ok: true, data: { id: "direct_channel_id" } });
+
+				// Mock the getter for channels
+				Object.defineProperty(client, "channels", {
+					get: jest.fn(() => ({ createDirect: createDirectMock }))
+				});
+
+				const config = {
+					url: "https://api.example.com/api/v4/posts",
+					headers: {} as RawAxiosRequestHeaders,
+					method: "post",
+					data: { user_id: "other" }
+				};
+
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				const newConfig = await (client as any).setCurrentUserForPostCreation(
+					config
+				);
+
+				expect(createDirectMock).toHaveBeenCalledWith(
+					expect.objectContaining({ user_ids: ["other", "me"] })
+				);
+				expect(newConfig.data.channel_id).toBe("direct_channel_id");
+			});
+		});
+
+		describe("buildResult tests", () => {
+			it("should return { data: ... } on success", async () => {
+				const result = await client.apiCall({
+					path: "test",
+					method: "GET",
+					type: ContentType.JSON
+				});
+				expect(result.data).toEqual({ ok: true });
+			});
+
+			it("should reject with { ctx: ... } on failure > 300", async () => {
+				mockAxios.mockResolvedValue({
+					status: 400,
+					statusText: "Bad Request",
+					headers: {},
+					data: {
+						id: "api.context.invalid_param.app_error",
+						message: "Invalid parameter",
+						status_code: 400
+					},
+					config: {}
+				});
+
+				await expect(
+					client.apiCall({
+						path: "channels",
+						method: "POST",
+						type: ContentType.JSON
+					})
+				).rejects.toThrow(WebAPIServerError);
+
+				expect(mockAxios).toHaveBeenCalled();
+			});
 		});
 	});
 });

@@ -1,3 +1,4 @@
+pnpm exec biome format --write ./src
 tsc --noEmit
-npx lint-staged --allow-empty
-npm run test
+pnpm exec lint-staged --allow-empty
+pnpm run test

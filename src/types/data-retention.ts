@@ -1,37 +1,36 @@
-
 export type DataRetentionCustomPolicy = {
-  id: string;
-  display_name: string;
-  post_duration: number;
-  team_count: number;
-  channel_count: number;
+	id: string;
+	display_name: string;
+	post_duration: number;
+	team_count: number;
+	channel_count: number;
 };
 
 export type CreateDataRetentionCustomPolicy = {
-  display_name: string;
-  post_duration: number;
-  channel_ids: string[];
-  team_ids: string[];
+	display_name: string;
+	post_duration: number;
+	channel_ids: string[];
+	team_ids: string[];
 };
 
 export type PatchDataRetentionCustomPolicy = {
-  display_name: string;
-  post_duration: number;
+	display_name: string;
+	post_duration: number;
 };
 
 export type PatchDataRetentionCustomPolicyTeams = {
-  team_ids: string[];
+	team_ids: string[];
 };
 
 export type PatchDataRetentionCustomPolicyChannels = {
-  channel_ids: string[];
+	channel_ids: string[];
 };
 
 export type DataRetentionCustomPolicies = {
-  [x: string]: DataRetentionCustomPolicy;
+	[x: string]: DataRetentionCustomPolicy;
 };
 
 export type GetDataRetentionCustomPoliciesRequest = {
-  policies: DataRetentionCustomPolicy[];
-  total_count: number;
+	policies: DataRetentionCustomPolicy[];
+	total_count: number;
 };

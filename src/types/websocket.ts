@@ -1,4 +1,4 @@
-import type { Logger } from "@triplesunn/logger";
+import type { Logger } from "@triple-sun/logger";
 
 export type MessageListener = (msg: WebSocketMessage) => void;
 export type FirstConnectListener = () => void;
@@ -8,17 +8,17 @@ export type ErrorListener = (event: Event) => void;
 export type CloseListener = (connectFailCount: number) => void;
 
 export type WebSocketClientOptions = {
-		url: string;
-		token: string;
-		logger?: Logger;
-		postedAck?: boolean | undefined;
-		/** Сброс счетчика при переподключении */
-		resetCount?: boolean | undefined;
-		jitterRange?: number| undefined;
-		maxFails?: number | undefined;
-		minRetryTime?: number | undefined;
-		maxRetryTime?: number | undefined;
-	};
+	url: string;
+	token: string;
+	logger?: Logger;
+	postedAck?: boolean | undefined;
+	/** Сброс счетчика при переподключении */
+	resetCount?: boolean | undefined;
+	jitterRange?: number | undefined;
+	maxFails?: number | undefined;
+	minRetryTime?: number | undefined;
+	maxRetryTime?: number | undefined;
+};
 
 export type WebSocketClientInitArguments = {
 	url?: string | null | undefined;
@@ -40,4 +40,11 @@ export type WebSocketMessage<T = unknown> = {
 	data: T;
 	broadcast: WebSocketBroadcast;
 	seq: number;
+	seq_reply?: number;
+	error?: unknown;
+};
+
+export type WebSocketHelloMessageData = {
+	connection_id: string;
+	event: unknown;
 };

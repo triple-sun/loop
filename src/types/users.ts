@@ -43,10 +43,10 @@ export enum PushStatus {
 }
 
 export enum UserStatusValue {
-	Onlines = 'online',
-	Away = 'away',
-	Offline = 'offline',
-	DnD = 'dnd'
+	Onlines = "online",
+	Away = "away",
+	Offline = "offline",
+	DnD = "dnd"
 }
 
 export enum CustomStatusDuration {

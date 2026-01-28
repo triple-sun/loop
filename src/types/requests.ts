@@ -1,71 +1,70 @@
-
 export type RequestStatusOption =
-  | 'not_started'
-  | 'started'
-  | 'success'
-  | 'failure'
-  | 'cancelled';
+	| "not_started"
+	| "started"
+	| "success"
+	| "failure"
+	| "cancelled";
 export type RequestStatusType = {
-  status: RequestStatusOption;
-  error: null | Record<string, unknown>;
+	status: RequestStatusOption;
+	error: null | Record<string, unknown>;
 };
 
 export type ChannelsRequestsStatuses = {
-  getChannels: RequestStatusType;
-  getAllChannels: RequestStatusType;
-  myChannels: RequestStatusType;
-  createChannel: RequestStatusType;
+	getChannels: RequestStatusType;
+	getAllChannels: RequestStatusType;
+	myChannels: RequestStatusType;
+	createChannel: RequestStatusType;
 };
 
 export type GeneralRequestsStatuses = {
-  websocket: RequestStatusType;
+	websocket: RequestStatusType;
 };
 
 export type PostsRequestsStatuses = {
-  createPost: RequestStatusType;
-  editPost: RequestStatusType;
-  getPostThread: RequestStatusType;
+	createPost: RequestStatusType;
+	editPost: RequestStatusType;
+	getPostThread: RequestStatusType;
 };
 
 export type ThreadsRequestStatuses = {
-  getThreads: RequestStatusType;
+	getThreads: RequestStatusType;
 };
 
 export type TeamsRequestsStatuses = {
-  getMyTeams: RequestStatusType;
-  getTeams: RequestStatusType;
+	getMyTeams: RequestStatusType;
+	getTeams: RequestStatusType;
 };
 
 export type UsersRequestsStatuses = {
-  login: RequestStatusType;
-  logout: RequestStatusType;
-  autocompleteUsers: RequestStatusType;
-  updateMe: RequestStatusType;
+	login: RequestStatusType;
+	logout: RequestStatusType;
+	autocompleteUsers: RequestStatusType;
+	updateMe: RequestStatusType;
 };
 
 export type AdminRequestsStatuses = {
-  createCompliance: RequestStatusType;
+	createCompliance: RequestStatusType;
 };
 
 export type EmojisRequestsStatuses = {
-  createCustomEmoji: RequestStatusType;
-  getCustomEmojis: RequestStatusType;
-  deleteCustomEmoji: RequestStatusType;
-  getCustomEmoji: RequestStatusType;
+	createCustomEmoji: RequestStatusType;
+	getCustomEmojis: RequestStatusType;
+	deleteCustomEmoji: RequestStatusType;
+	getCustomEmoji: RequestStatusType;
 };
 
 export type FilesRequestsStatuses = {
-  uploadFiles: RequestStatusType;
+	uploadFiles: RequestStatusType;
 };
 
 export type RolesRequestsStatuses = {
-  getRolesByNames: RequestStatusType;
-  getRoleByName: RequestStatusType;
-  getRole: RequestStatusType;
-  editRole: RequestStatusType;
+	getRolesByNames: RequestStatusType;
+	getRoleByName: RequestStatusType;
+	getRole: RequestStatusType;
+	editRole: RequestStatusType;
 };
 
 export type SearchRequestsStatuses = {
-  flaggedPosts: RequestStatusType;
-  pinnedPosts: RequestStatusType;
+	flaggedPosts: RequestStatusType;
+	pinnedPosts: RequestStatusType;
 };

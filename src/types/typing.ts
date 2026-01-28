@@ -1,6 +1,5 @@
-
 export type Typing = {
-  [x: string]: {
-    [x: string]: number;
-  };
+	[x: string]: {
+		[x: string]: number;
+	};
 };

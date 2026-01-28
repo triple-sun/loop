@@ -1,6 +1,6 @@
 import type { Agent } from "node:http";
 import type { SecureContextOptions } from "node:tls";
-import type { Logger, LogLevel } from "@triplesunn/logger";
+import type { Logger, LogLevel } from "@triple-sun/logger";
 import type { RetryContext, RetryOptions } from "again-ts";
 import type {
 	AxiosAdapter,
@@ -97,6 +97,7 @@ export interface WebClientOptions {
 	readonly userID?: string | undefined;
 	readonly useCurrentUserForDirectChannels?: boolean;
 	readonly useCurrentUserForPostCreation?: boolean;
+	readonly saveFetchedUserID?: boolean;
 }
 
 export type TLSOptions = Pick<

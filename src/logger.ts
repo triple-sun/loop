@@ -1,4 +1,4 @@
-import { ConsoleLogger, type Logger, type LogLevel } from "@triplesunn/logger";
+import { ConsoleLogger, type Logger, type LogLevel } from "@triple-sun/logger";
 
 let instanceCount = 0;
 

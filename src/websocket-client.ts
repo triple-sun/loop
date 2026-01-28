@@ -1,10 +1,9 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import { ConsoleLogger, type Logger } from "@triplesunn/logger";
+import { ConsoleLogger, type Logger } from "@triple-sun/logger";
 import WebSocket from "ws";
 import {
-	WEBSOCKET_HELLO,
 	WEBSOCKET_JITTER_RANGE,
 	WEBSOCKET_MAX_FAILS,
 	WEBSOCKET_MAX_RETRY_TIME,
@@ -18,8 +17,11 @@ import type {
 	MissedMessageListener,
 	ReconnectListener,
 	WebSocketClientInitArguments,
-	WebSocketClientOptions
+	WebSocketClientOptions,
+	WebSocketHelloMessageData,
+	WebSocketMessage
 } from "./types";
+import { isLoopWebSocketMessage, isWebSocketHelloMessage } from "./utils";
 
 export default class WebSocketClient {
 	/**
@@ -137,13 +139,10 @@ export default class WebSocketClient {
 
 			if (this.connFailCount > 0) {
 				this.logger.info("websocket re-established connection");
-				this.reconnectListeners.forEach(listener => {
-					listener();
-				});
+
+				for (const listener of this.reconnectListeners) listener();
 			} else if (this.firstConnectListeners.size > 0) {
-				this.firstConnectListeners.forEach(listener => {
-					listener();
-				});
+				for (const listener of this.firstConnectListeners) listener();
 			}
 
 			this.connFailCount = 0;
@@ -158,103 +157,53 @@ export default class WebSocketClient {
 				this.connectionId = null;
 			}
 
-			if (this.connFailCount === 0) this.logger.info("websocket closed");
+			if (this.connFailCount === 0) {
+				this.logger.warn("websocket closed");
+			}
 
 			this.connFailCount++;
 
-			this.closeListeners.forEach(listener => {
-				listener(this.connFailCount);
-			});
+			/** call close listeners */
+			for (const listener of this.closeListeners) listener(this.connFailCount);
 
-			let retryTime = WEBSOCKET_MIN_RETRY_TIME;
-
-			// If we've failed a bunch of connections then start backing off
-			if (this.connFailCount > this.maxFails) {
-				retryTime = this.minRetryTime * this.connFailCount * this.connFailCount;
-
-				if (retryTime > this.maxRetryTime) retryTime = this.maxRetryTime;
-			}
-
-			// Applying jitter to avoid thundering herd problems.
-			retryTime += Math.random() * this.jitterRange;
+			/** retry */
+			const retryTime = this.getRetryTime();
 
 			setTimeout(() => {
 				this.initialize({ url, token, postedAck });
 			}, retryTime);
 		};
 
+		/**
+		 * @description on message action
+		 */
 		this.conn.onmessage = evt => {
-			const msg =
-				typeof evt.data === "string" ? JSON.parse(evt.data) : evt.data;
+			const msg = this.parseMessage(evt);
 
+			if (!msg) return;
+
+			/** Handle socket reply */
 			if (msg.seq_reply) {
-				// This indicates a reply to a websocket request.
-				// We ignore sequence number validation of message responses
-				// and only focus on the purely server side event stream.
-				if (msg.error) {
-					this.logger.info(msg);
-				}
+				return this.handleSocketReply(msg, msg.seq_reply);
+			}
 
-				if (this.responseCallbacks[msg.seq_reply]) {
-					this.responseCallbacks[msg.seq_reply]?.(msg);
-					Reflect.deleteProperty(this.responseCallbacks, msg.seq_reply);
-				}
-			} else if (this.messageListeners.size > 0) {
+			/** Handle other messages */
+			if (this.messageListeners.size > 0) {
 				// We check the hello packet, which is always the first packet in a stream.
 				if (
-					msg.event === WEBSOCKET_HELLO &&
-					this.missedMessageListeners.size > 0
+					this.missedMessageListeners.size > 0 &&
+					isWebSocketHelloMessage(msg.event, msg.data)
 				) {
-					this.logger.info("got connection id ", msg.data.connection_id);
-					// If we already have a connectionId present, and server sends a different one,
-					// that means it's either a long timeout, or server restart, or sequence number is not found.
-					// Then we do the sync calls, and reset sequence number to 0.
-					if (
-						this.connectionId !== "" &&
-						this.connectionId !== msg.data.connection_id
-					) {
-						this.logger.info(
-							"long timeout, or server restart, or sequence number is not found."
-						);
-
-						for (const listener of this.missedMessageListeners) {
-							try {
-								listener();
-							} catch (e) {
-								this.logger.info(
-									`missed message listener "${listener.name}" failed: ${e}`
-								); // eslint-disable-line no-console
-							}
-						}
-
-						this.sSequence = 0;
-					}
-
-					// If it's a fresh connection, we have to set the connectionId regardless.
-					// And if it's an existing connection, setting it again is harmless, and keeps the code simple.
-					this.connectionId = msg.data.connection_id;
+					this.handleHelloMessage(msg.data);
 				}
 
 				// Now we check for sequence number, and if it does not match,
 				// we just disconnect and reconnect.
-				if (msg.seq !== this.sSequence) {
-					this.logger.info(
-						"missed websocket event, act_seq=" +
-							msg.seq +
-							" exp_seq=" +
-							this.sSequence
-					);
-					// We are not calling this.close() because we need to auto-restart.
-					this.connFailCount = 0;
-					this.rSequence = 1;
-					this.conn?.close(); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
-					return;
-				}
+				if (msg.seq !== this.sSequence) return this.handleMissedEvent(msg);
+
 				this.sSequence = msg.seq + 1;
 
-				this.messageListeners.forEach(listener => {
-					listener(msg);
-				});
+				for (const listener of this.messageListeners) listener(msg);
 			}
 		};
 	}
@@ -335,7 +284,7 @@ export default class WebSocketClient {
 		this.connFailCount = 0;
 		this.rSequence = 1;
 		if (this.conn && this.conn.readyState === WebSocket.OPEN) {
-			this.conn.onclose = () => {};
+			this.conn.onclose = () => null;
 			this.conn.close();
 			this.conn = null;
 			this.logger.info("websocket closed");
@@ -453,5 +402,118 @@ export default class WebSocketClient {
 			},
 			callback
 		);
+	}
+
+	private handleHelloMessage(data: WebSocketHelloMessageData): void {
+		this.logger.info("got connection id ", data.connection_id);
+		if (this.connectionId !== "" && this.connectionId !== data.connection_id) {
+			// If we already have a connectionId present, and server sends a different one,
+			// that means it's either a long timeout, or server restart, or sequence number is not found.
+			// Then we do the sync calls, and reset sequence number to 0.
+			this.logger.info(
+				"long timeout, or server restart, or sequence number is not found."
+			);
+
+			for (const listener of this.missedMessageListeners) {
+				try {
+					listener();
+				} catch (e) {
+					this.logger.warn(
+						`missed message listener "${listener.name}" failed: ${e}`
+					);
+				}
+			}
+
+			this.sSequence = 0;
+		}
+
+		// If it's a fresh connection, we have to set the connectionId regardless.
+		// And if it's an existing connection, setting it again is harmless, and keeps the code simple.
+		this.connectionId = data.connection_id;
+	}
+
+	private handleMissedEvent(msg: WebSocketMessage): void {
+		this.logger.warn(
+			"missed websocket event, act_seq=" +
+				msg.seq +
+				" exp_seq=" +
+				this.sSequence
+		);
+		// We are not calling this.close() because we need to auto-restart.
+		this.connFailCount = 0;
+		this.rSequence = 1;
+		this.conn?.close(); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
+	}
+
+	private handleSocketReply(msg: WebSocketMessage, seq_reply: number): void {
+		/**
+		 * This indicates a reply to a websocket request.
+		 * We ignore sequence number validation of message responses
+		 * and only focus on the purely server side event stream.
+		 */
+		if (msg.error) this.logger.error(msg);
+		if (this.responseCallbacks[seq_reply]) {
+			this.responseCallbacks[seq_reply]?.(msg);
+			Reflect.deleteProperty(this.responseCallbacks, seq_reply);
+		}
+	}
+
+	private getRetryTime(): number {
+		let retryTime = WEBSOCKET_MIN_RETRY_TIME;
+		if (this.connFailCount > this.maxFails) {
+			// If we've failed a bunch of connections then start backing off
+			retryTime = this.minRetryTime * this.connFailCount * this.connFailCount;
+
+			if (retryTime > this.maxRetryTime) retryTime = this.maxRetryTime;
+		}
+
+		// Applying jitter to avoid thundering herd problems.
+		retryTime += Math.random() * this.jitterRange;
+
+		return retryTime;
+	}
+
+	/**
+	 * Safely parses websocket event or returns undefined
+	 * @param evt websocket event
+	 */
+	private parseMessage(
+		evt: WebSocket.MessageEvent
+	): WebSocketMessage | undefined {
+		if (!evt.data) return undefined;
+		if (typeof evt.data === "string") {
+			evt.data = JSON.parse(evt.data);
+		}
+
+		try {
+			switch (typeof evt.data) {
+				case "object":
+					switch (true) {
+						case Array.isArray(evt.data):
+						case Buffer.isBuffer(evt.data):
+						case evt.data instanceof ArrayBuffer:
+							this.logger.error(
+								"received unxpected data type: Array, Buffer or ArrayBuffer, expected string or {}"
+							);
+							return undefined;
+						default:
+							if (isLoopWebSocketMessage(evt["data"])) {
+								return evt.data;
+							}
+							this.logger.error(
+								`received unexpected message type: ${JSON.stringify(evt.data)}`
+							);
+							return undefined;
+					}
+				default:
+					this.logger.error(
+						`received unexpected data type: ${typeof evt.data}, expected string or {}`
+					);
+					return undefined;
+			}
+		} catch (e) {
+			this.logger.error(`failed to parse websocket message: ${e}`);
+			return undefined;
+		}
 	}
 }

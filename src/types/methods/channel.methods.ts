@@ -26,8 +26,8 @@ export interface ChannelsCreateArguments extends TokenOverridable, TeamID {
  * Use single user_id to use currently authorized user
  */
 export interface ChannelsCreateDirectArguments extends TokenOverridable {
-	user_ids:  [string, string] | [string]
-};
+	user_ids: [string, string] | [string];
+}
 
 /**
  * Arguments for creating a group message channel.
@@ -170,7 +170,9 @@ export interface ChannelsSearchArchivedArguments
 /**
  * Arguments for autocompleting channels.
  */
-export interface ChannelsAutocompleteArguments extends TokenOverridable, TeamID {
+export interface ChannelsAutocompleteArguments
+	extends TokenOverridable,
+		TeamID {
 	/**
 	 * @description name or display name
 	 */

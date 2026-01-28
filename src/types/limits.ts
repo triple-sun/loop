@@ -1,9 +1,8 @@
-
 export type LimitsState = {
-  serverLimits: ServerLimits;
+	serverLimits: ServerLimits;
 };
 
 export type ServerLimits = {
-  activeUserCount: number;
-  maxUsersLimit: number;
+	activeUserCount: number;
+	maxUsersLimit: number;
 };

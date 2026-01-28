@@ -1,42 +1,41 @@
-
-import type { IDMappedObjects } from './utilities';
+import type { IDMappedObjects } from "./utilities";
 
 export type JobType =
-  | 'data_retention'
-  | 'elasticsearch_post_indexing'
-  | 'bleve_post_indexing'
-  | 'ldap_sync'
-  | 'message_export';
+	| "data_retention"
+	| "elasticsearch_post_indexing"
+	| "bleve_post_indexing"
+	| "ldap_sync"
+	| "message_export";
 
 export type JobStatus =
-  | 'pending'
-  | 'in_progress'
-  | 'success'
-  | 'error'
-  | 'cancel_requested'
-  | 'canceled'
-  | 'warning';
+	| "pending"
+	| "in_progress"
+	| "success"
+	| "error"
+	| "cancel_requested"
+	| "canceled"
+	| "warning";
 
 export type Job = JobTypeBase & {
-  id: string;
-  priority: number;
-  create_at: number;
-  start_at: number;
-  last_activity_at: number;
-  status: JobStatus;
-  progress: number;
-  data: unknown;
+	id: string;
+	priority: number;
+	create_at: number;
+	start_at: number;
+	last_activity_at: number;
+	status: JobStatus;
+	progress: number;
+	data: unknown;
 };
 
 export type JobsByType = {
-  [x in JobType]?: Job[];
+	[x in JobType]?: Job[];
 };
 
 export type JobsState = {
-  jobs: IDMappedObjects<Job>;
-  jobsByTypeList: JobsByType;
+	jobs: IDMappedObjects<Job>;
+	jobsByTypeList: JobsByType;
 };
 
 export type JobTypeBase = {
-  type: JobType;
+	type: JobType;
 };

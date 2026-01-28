@@ -38,12 +38,6 @@ export type UserThreadSynthetic = Omit<UserThread, SyntheticMissingKeys> & {
 	type: UserThreadType.Synthetic;
 };
 
-export function threadIsSynthetic(
-	thread: UserThread | UserThreadSynthetic
-): thread is UserThreadSynthetic {
-	return thread.type === UserThreadType.Synthetic;
-}
-
 export type UserThreadWithPost = UserThread & { post: Post };
 
 export type UserThreadList = {

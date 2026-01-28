@@ -1,4 +1,4 @@
-import { type Logger, LogLevel } from "@triplesunn/logger";
+import { type Logger, LogLevel } from "@triple-sun/logger";
 import {
 	type RetryFailedResult,
 	type RetryOkResult,
@@ -9,7 +9,8 @@ import axios, {
 	type AxiosInstance,
 	type AxiosRequestConfig,
 	type AxiosResponse,
-	type InternalAxiosRequestConfig
+	type InternalAxiosRequestConfig,
+	type RawAxiosRequestHeaders
 } from "axios";
 import { Breadline } from "breadline-ts";
 import {
@@ -18,9 +19,9 @@ import {
 	tenRetriesInAboutThirtyMinutes
 } from "./const";
 import {
-	type ServerError,
-	WebAPICallFailedError,
+	isServerError,
 	WebAPIRateLimitedError,
+	WebAPIRequestError,
 	WebAPIServerError,
 	WebClientOptionsError
 } from "./errors";
@@ -115,6 +116,15 @@ export class WebClient extends Methods {
 	 */
 	readonly useCurrentUserForPostCreation?: boolean;
 
+	/**
+	 * @description If true the client will set its userID if it was fetched while
+	 * useCurrentUserForDirectChannels=true, useCurrentUserForPostCreation=true
+	 * or via users.profile.me()
+	 *
+	 * @default false
+	 */
+	readonly saveFetchedUserID?: boolean;
+
 	private clusterId: string;
 	private serverVersion: string;
 
@@ -129,6 +139,7 @@ export class WebClient extends Methods {
 			retryConfig = tenRetriesInAboutThirtyMinutes,
 			useCurrentUserForDirectChannels = true,
 			useCurrentUserForPostCreation = true,
+			saveFetchedUserID = false,
 			agent = undefined,
 			tls = undefined,
 			timeout = 0,
@@ -155,10 +166,12 @@ export class WebClient extends Methods {
 		this.tlsConfig = tls;
 		this.useCurrentUserForDirectChannels = useCurrentUserForDirectChannels;
 		this.useCurrentUserForPostCreation = useCurrentUserForPostCreation;
+		this.saveFetchedUserID = saveFetchedUserID;
 
 		/** Set up logging */
 		if (logger !== undefined) {
 			this.logger = logger;
+
 			if (logLevel !== undefined) {
 				this.logger.debug(
 					"The logLevel given to WebClient was ignored as you also gave logger"
@@ -242,7 +255,7 @@ export class WebClient extends Methods {
 		config: WebApiCallConfig,
 		options: Record<string, unknown> = {}
 	): Promise<WebAPICallResult<T>> {
-		this.logger.debug(`apiCall('${config.path}') start`);
+		this.logger.debug(`apiCall [${config.method} ${config.path}] start`);
 
 		if (
 			typeof options === "string" ||
@@ -254,12 +267,16 @@ export class WebClient extends Methods {
 			);
 		}
 
-		const headers: Record<string, string> = {};
+		const headers: RawAxiosRequestHeaders = {
+			"Content-Type": config.type
+		};
 
 		/** handle TokenOverridable */
-		if (!Array.isArray(options) && "token" in options) {
-			headers["Authorization"] = `Bearer ${options["token"]}`;
+		if (typeof options["token"] === "string") {
+			headers["Authorization"] = `Bearer ${options[""]}`;
 			options["token"] = undefined;
+
+			this.logger.debug(`token has been overridden from options`);
 		}
 
 		/** warn if no fallback */
@@ -267,15 +284,14 @@ export class WebClient extends Methods {
 
 		const url = this.fillRequestUrl(config, options);
 
-		console.log({ url });
 		const response = await this.makeRequest<T>(url, {
 			method: config.method,
-			/** format request data handling path specifics */
+			headers,
 			data: options
 		});
 		const result = this.buildResult<T>(url, response);
 		this.logger.debug(`http request result: ${JSON.stringify(result)}`);
-		this.logger.debug(`apiCall('${config.path}') end`);
+		this.logger.debug(`apiCall [${config.method} ${config.path}] end`);
 		return result;
 	}
 
@@ -306,6 +322,7 @@ export class WebClient extends Methods {
 				const response = await this.axios<T>(url, cfg);
 
 				this.logger.debug("http response received");
+				this.logger.debug(`http response status: ${response.status}`);
 
 				const resServerVersion = response.headers[HEADER_X_VERSION_ID];
 				if (resServerVersion && this.serverVersion !== resServerVersion) {
@@ -317,26 +334,20 @@ export class WebClient extends Methods {
 				if (resClusterId && this.clusterId !== resClusterId) {
 					this.clusterId = resClusterId;
 				}
-
 				/** handle error status code */
 				if (response.status > 300) {
+					this.logger.debug(`http error: ${JSON.stringify(response.data)}`);
+
 					const { data } = response;
-					if (
-						data &&
-						typeof data === "object" &&
-						"id" in data &&
-						"message" in data &&
-						"status_code" in data &&
-						typeof data["id"] === "string" &&
-						typeof data["message"] === "string" &&
-						typeof data["status_code"] === "number"
-					) {
-						if (response.status === 429 || data["status_code"] === 429) {
-							throw new WebAPIRateLimitedError(response.data as ServerError);
+					if (isServerError(data)) {
+						if (response.status === 429) {
+							throw new WebAPIRateLimitedError(data);
 						}
 
-						throw new WebAPIServerError(response.data as ServerError);
+						throw new WebAPIServerError(data);
 					}
+
+					throw new WebAPIRequestError(data);
 				}
 
 				return response;
@@ -356,12 +367,7 @@ export class WebClient extends Methods {
 	): WebAPICallResult<T> {
 		const ctx: WebAPICallContext = { ...result.ctx, url };
 		/** short-circuit if we have an error */
-		if (!result.ok) {
-			throw new WebAPICallFailedError(
-				`Web API Call failed, see ctx for errors`,
-				ctx
-			);
-		}
+		if (!result.ok) throw result.ctx.errors[result.ctx.errors.length - 1];
 
 		/**
 		 * handle string responses?
@@ -371,14 +377,10 @@ export class WebClient extends Methods {
 			try {
 				result.value.data = JSON.parse(result.value.data);
 			} catch (err) {
-				ctx.errors.push(
-					err instanceof Error ? err : new TypeError(`non-error type thrown`)
-				);
 				// failed to parse the string value as JSON data
-				throw new WebAPICallFailedError(
-					`Web API Call failed, see ctx for errors`,
-					ctx
-				);
+				throw err instanceof Error
+					? err
+					: new TypeError(`non-error type thrown: ${err}`);
 			}
 		}
 
@@ -391,11 +393,11 @@ export class WebClient extends Methods {
 	): string {
 		let requestUrl = `${config.path}`;
 
-		if (!Array.isArray(options)) {
-			Object.entries(options).forEach(([k, v]) => {
+		if (requestUrl.match(new RegExp(/\/:\D*/))) {
+			for (const [k, v] of Object.entries(options)) {
 				this.logger.debug(`Replacing :${k} with ${v} in ${requestUrl}`);
 				requestUrl = requestUrl.replace(new RegExp(`:${k}`, "g"), String(v));
-			});
+			}
 		}
 
 		/** if no user_id in options: get 'me' user_id by default */
@@ -413,13 +415,13 @@ export class WebClient extends Methods {
 		config: InternalAxiosRequestConfig
 	): Promise<InternalAxiosRequestConfig> {
 		const { data } = config;
-		if (
-			config.url?.endsWith("/api/v4/channels/direct") &&
-			Array.isArray(data["user_ids"])
-		) {
-			const userIDs = data["user_ids"];
 
-			/** throw if no user_ids? shouldn't happen but anyways */
+		if (config.url?.endsWith("/api/v4/channels/direct")) {
+			const userIDs = data.user_ids;
+			if (!Array.isArray(userIDs)) {
+				throw new WebClientOptionsError(`Expected user_ids to be an array`);
+			}
+
 			if (userIDs.length === 0) {
 				throw new WebClientOptionsError(
 					`To create a direct channel you should use at least one user_id in a tuple`
@@ -434,18 +436,7 @@ export class WebClient extends Methods {
 					);
 				}
 
-				const opts: TokenOverridable = {};
-
-				if (typeof data["token"] === "string") {
-					opts.token === data["token"];
-				}
-
-				/** if token overridable or no userID - fetch userID from server  */
-				if (opts.token || !this.userID) {
-					const me = await this.users.profile.me(opts);
-
-					config.data = [userIDs[0], me.data.id];
-				}
+				config.data = [data.user_ids[0], await this.getCurrentUserID(data)];
 			}
 		}
 
@@ -458,47 +449,65 @@ export class WebClient extends Methods {
 	private async setCurrentUserForPostCreation(
 		config: InternalAxiosRequestConfig
 	): Promise<InternalAxiosRequestConfig> {
-		const { data } = config;
+		if (config.url?.endsWith("/api/v4/posts") && config.method === "post") {
+			const { data } = config;
 
-		if (config.url?.endsWith("/api/v4/posts") && config.method === "get") {
 			/** throw if we dont have required params and we can't fetch them */
-			if (!this.useCurrentUserForPostCreation && !data["channel_id"]) {
+			if (!this.useCurrentUserForPostCreation && !data.channel_id) {
 				throw new WebClientOptionsError(
 					"If useCurrentUserForPostCreation is false you MUST provide channel_id to send a post"
 				);
 			}
 			/** throw if we don't even have options required to fetch missing data */
-			if (!data["user_id"] && !data["channel_id"]) {
+			if (!data.user_id && !data.channel_id) {
 				throw new WebClientOptionsError(
 					"To create a post you need to provide either a channel_id or user_id"
 				);
 			}
 
-			if (typeof data["user_id"] === "string" && !data["channel_id"]) {
+			if (typeof data.user_id === "string" && !data.channel_id) {
 				const opts: ChannelsCreateDirectArguments = {
-					user_ids: [data["user_id"]]
+					token: data["token"],
+					user_ids: [data.user_id, await this.getCurrentUserID(data)]
 				};
-
-				if (typeof data["token"] === "string") {
-					opts.token === data["token"];
-				}
-
-				/** if overridden or no userID - fetch */
-				if (opts.token || !this.userID) {
-					const me = await this.users.profile.me(opts);
-					opts.user_ids.push(me.data.id);
-				} else {
-					opts.user_ids.push(this.userID);
-				}
 
 				/** if token overridable or no userID - fetch channel_id from server  */
 				const channel = await this.channels.createDirect(opts);
 
-				config.data["channel_id"] = channel.data.id;
+				config.data.channel_id = channel.data.id;
 			}
 		}
 
 		return config;
+	}
+
+	/**
+	 * Gets or fetches current user ID using
+	 * @param data Axios config.data
+	 * @returns
+	 */
+	private async getCurrentUserID(
+		data: Record<string, unknown>
+	): Promise<string> {
+		const opts: TokenOverridable = {};
+
+		if (typeof data["token"] === "string") {
+			opts.token = data["token"];
+		}
+
+		if (opts.token || !this.userID) {
+			/** if token overridable or no userID - fetch userID from server  */
+			const me = await this.users.profile.me(opts);
+
+			/** save if needed */
+			if (this.saveFetchedUserID) {
+				this.userID = me.data.id;
+			}
+
+			return me.data.id;
+		} else {
+			return this.userID;
+		}
 	}
 
 	/**
@@ -529,9 +538,7 @@ export class WebClient extends Methods {
 			return { ...config, data };
 		}
 
-		/**
-		 * Otherwise it's a query
-		 */
+		/** Otherwise it's a query */
 		return {
 			...config,
 			params: Object.entries(data).reduce(

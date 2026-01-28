@@ -1,5 +1,4 @@
-
 export type CompleteOnboardingRequest = {
-  organization: string;
-  install_plugins: string[];
+	organization: string;
+	install_plugins: string[];
 };

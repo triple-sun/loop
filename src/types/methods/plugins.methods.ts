@@ -22,7 +22,7 @@ export interface PluginsDisableArguments {
 	plugin_id: string;
 }
 
-export type PluginsGetWebAppArguments = never
+export type PluginsGetWebAppArguments = never;
 
 export interface PluginsGetMarketplaceArguments {
 	page?: number;

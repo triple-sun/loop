@@ -1,5 +1,3 @@
-import type { WebAPICallContext } from "./types";
-
 /**
  * A dictionary of codes for errors produced by this package
  */
@@ -11,20 +9,35 @@ export enum ErrorCode {
 	ServerError = "server_error"
 }
 
-export interface ServerError extends Error {
+export class ServerError extends Error {
 	/**
 	 * @description Error id
 	 * @example app.user.missing_account.const
 	 */
 	id: ServerErrorID;
-	request_id?: string;
-	message: string;
-	status_code: number;
+	override message: string;
+	request_id: string;
 	detailed_error?: string;
+	status_code: number;
+
+	constructor(
+		id: ServerErrorID,
+		message: string,
+		status_code: number,
+		request_id: string,
+		detailed_error = ""
+	) {
+		super();
+		this.id = id;
+		this.message = message;
+		this.status_code = Number(status_code);
+		this.request_id = request_id;
+		this.detailed_error = detailed_error;
+	}
 }
 
-export interface WebClientCodedError extends Error {
-	code: ErrorCode;
+export class WebClientCodedError extends Error {
+	code!: ErrorCode;
 }
 
 export class WebClientOptionsError implements WebClientCodedError {
@@ -37,66 +50,45 @@ export class WebClientOptionsError implements WebClientCodedError {
 	}
 }
 
-export class WebAPIServerError implements WebClientCodedError, ServerError {
-	code = ErrorCode.ServerError;
-	name = WebAPIServerError.name;
-	id: ServerErrorID;
-	status_code: number;
-	message: string;
-	request_id?: string;
-	detailed_error?: string;
+export class WebAPIServerError extends WebClientCodedError {
+	override name = WebAPIServerError.name;
+	override code = ErrorCode.ServerError;
+	original: ServerError;
 
 	constructor(error: ServerError) {
-		this.id = error.id;
-		this.status_code = error.status_code;
-		this.request_id = error.request_id;
-		this.detailed_error = error.detailed_error;
-		this.message = error.message;
+		super(error.message);
+		this.original = error;
 	}
 }
 
 export class WebAPIRateLimitedError extends WebAPIServerError {
-	coee = ErrorCode.RateLimitedError;
+	override name = WebAPIRateLimitedError.name;
+	override code = ErrorCode.RateLimitedError;
+
 	constructor(error: ServerError) {
 		super(error);
 		this.message = `Rate limited: ${error.message}`;
 	}
 }
 
-export class WebAPIRequestError implements WebClientCodedError {
-	name = WebAPIRequestError.name;
-	code = ErrorCode.RequestError;
+export class WebAPIRequestError extends WebClientCodedError {
+	override name = WebAPIRequestError.name;
+	override code = ErrorCode.RequestError;
 	original: unknown;
-	message: string;
 
 	constructor(original: unknown) {
-		this.message = `A request error occurred: ${JSON.stringify(original)}`;
+		super(`A request error occurred: ${JSON.stringify(original)}`);
 		this.original = original;
 	}
 }
 
-export class WebAPICallFailedError implements WebClientCodedError {
-	name = WebAPICallFailedError.name;
-	code = ErrorCode.HTTPError;
-	message: string;
-	ctx: WebAPICallContext;
-
-	constructor(message: string, ctx: WebAPICallContext) {
-		this.message = message;
-		this.ctx = ctx;
-	}
-}
-
-export const isServerError = (error: unknown): boolean => {
+export const isServerError = (error: unknown): error is ServerError => {
+	if (!error) return false;
 	if (
-		error &&
 		typeof error === "object" &&
 		"id" in error &&
 		"message" in error &&
-		"status_code" in error &&
-		typeof error["id"] === "string" &&
-		typeof error["message"] === "string" &&
-		typeof error["status_code"] === "number"
+		"status_code" in error
 	) {
 		return true;
 	}

@@ -1,4 +1,3 @@
-
 import type { Audit } from "./audits";
 import type { ComplianceReport } from "./compliance";
 import type { AdminConfig, ClientLicense, EnvironmentConfig } from "./config";

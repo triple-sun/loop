@@ -1,10 +1,18 @@
 /** biome-ignore-all lint/complexity/useLiteralKeys: <ts4111> */
 import { basename } from "node:path";
-import type { Logger } from "@triplesunn/logger";
+import type { Logger } from "@triple-sun/logger";
 import type { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import { isStream } from "is-stream";
-import { DEFAULT_FILE_NAME } from "./const";
+import { DEFAULT_FILE_NAME, WEBSOCKET_HELLO } from "./const";
+import {
+	type Address,
+	type UserThread,
+	type UserThreadSynthetic,
+	UserThreadType,
+	type WebSocketHelloMessageData,
+	type WebSocketMessage
+} from "./types";
 
 export const wait = (ms: number) => {
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -33,7 +41,7 @@ export const getFormDataConfig = (
 
 	const form = new FormData();
 
-	Object.entries(data).forEach(([key, value]) => {
+	for (const [key, value] of Object.entries(data)) {
 		if (Buffer.isBuffer(value) || isStream(value)) {
 			const opts: FormData.AppendOptions = {};
 			opts.filename = (() => {
@@ -55,7 +63,7 @@ export const getFormDataConfig = (
 		} else if (key !== undefined && value !== undefined) {
 			form.append(key, value);
 		}
-	});
+	}
 
 	if (headers) {
 		// Copying FormData-generated headers into headers param
@@ -142,4 +150,61 @@ export const warnIfFallbackIsMissing = (
 			`The attachment-level \`fallback\` argument is missing in the request payload for a ${path} call - To avoid this warning, it is recommended to always provide a top-level \`text\` argument when posting a message. Alternatively, you can provide an attachment-level \`fallback\` argument, though this is now considered a legacy field (see https://docs.slack.dev/legacy/legacy-messaging/legacy-secondary-message-attachments for more details).`
 		);
 	}
+};
+
+export const areShippingDetailsValid = (
+	address: Address | null | undefined
+): boolean => {
+	if (!address) return false;
+
+	return Boolean(
+		address.city &&
+			address.country &&
+			address.line1 &&
+			address.postal_code &&
+			address.state
+	);
+};
+
+export const threadIsSynthetic = (
+	thread: UserThread | UserThreadSynthetic
+): thread is UserThreadSynthetic => thread.type === UserThreadType.Synthetic;
+
+/**
+ * Checks that evt.data is WebSocketMessage
+ * @param data evt.data
+ */
+export const isLoopWebSocketMessage = (
+	data: Record<string, unknown>
+): data is WebSocketMessage => {
+	if (
+		"seq" in data &&
+		"event" in data &&
+		"broadcast" in data &&
+		"data" in data
+	) {
+		return true;
+	}
+
+	return false;
+};
+
+/**
+ * Checks that WebSocketMessage.data is WebSocketHelloMessageData
+ * @param data msg.data
+ */
+export const isWebSocketHelloMessage = (
+	event: string,
+	data: unknown
+): data is WebSocketHelloMessageData => {
+	if (
+		data &&
+		typeof data === "object" &&
+		"connection_id" in data &&
+		typeof data.connection_id === "string" &&
+		event === WEBSOCKET_HELLO
+	) {
+		return true;
+	}
+	return false;
 };

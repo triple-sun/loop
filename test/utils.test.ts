@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import { PassThrough } from "node:stream";
-import type { Logger } from "@triplesunn/logger";
+import type { Logger } from "@triple-sun/logger";
 import { AxiosHeaders } from "axios";
 import FormData from "form-data";
 import {
@@ -11,6 +11,7 @@ import {
 	warnIfFallbackIsMissing
 } from "../src/utils";
 
+// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("utils", () => {
 	describe("wait", () => {
 		it("should resolve after specified time", async () => {

@@ -22,7 +22,7 @@ export * from "./integrations";
 export * from "./jobs";
 export * from "./limits";
 export * from "./marketplace";
-export * from "./methods"
+export * from "./methods";
 export * from "./mfa";
 export * from "./plugins";
 export * from "./posts/posts";

@@ -1,9 +1,8 @@
-
-import type { Product } from './cloud';
+import type { Product } from "./cloud";
 
 export type HostedCustomerState = {
-  products: {
-    products: Record<string, Product>;
-    productsLoaded: boolean;
-  };
+	products: {
+		products: Record<string, Product>;
+		productsLoaded: boolean;
+	};
 };

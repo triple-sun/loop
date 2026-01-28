@@ -13,7 +13,8 @@ const config: Config = {
 	},
 	transformIgnorePatterns: [
 		"node_modules/(?!(is-stream|again-ts|p-limit|yocto-queue)/)"
-	]
+	],
+	coveragePathIgnorePatterns: ["index.ts"]
 };
 
 export default config;

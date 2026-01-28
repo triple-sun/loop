@@ -55,7 +55,6 @@ import type {
 	BotsSetIconArguments
 } from "./types/methods/bots.methods";
 import type {
-	BrandDeleteImageArguments,
 	BrandGetImageArguments,
 	BrandUploadImageArguments
 } from "./types/methods/brand.methods";
@@ -437,7 +436,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				path: "brand/image",
 				type: ContentType.URLEncoded
 			}),
-			delete: bindApiCall<BrandDeleteImageArguments, StatusOK>(this, {
+			delete: bindApiCallWithOptionalArg<never, StatusOK>(this, {
 				method: "DELETE",
 				path: "brand/image",
 				type: ContentType.URLEncoded
