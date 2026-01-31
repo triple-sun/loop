@@ -86,8 +86,7 @@ export const redact = (data: unknown): string => {
 	if (typeof data !== "object" || data === null) {
 		return "Data is not an object!";
 	}
-	// biome-ignore lint/suspicious/noExplicitAny: objects can be anything
-	const flattened = Object.entries(data).map<[string, any] | []>(
+	const flattened = Object.entries(data).map<[string, unknown] | []>(
 		([key, value]) => {
 			// no value provided
 			if (value === undefined || value === null) return [];
@@ -107,7 +106,7 @@ export const redact = (data: unknown): string => {
 				typeof value !== "number" &&
 				typeof value !== "boolean"
 			) {
-				serializedValue = JSON.stringify(value);
+				serializedValue = JSON.stringify(value, null, 2);
 			}
 			return [key, serializedValue];
 		}

@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
+import { describe, expect } from "@jest/globals";
 import { HEADER_AUTH, retryPolicies } from "../src/const";
 
 describe("const", () => {
@@ -9,7 +9,7 @@ describe("const", () => {
 	it("should have correct retryPolicies", () => {
 		expect(retryPolicies.tenRetriesInAboutThirtyMinutes).toBeDefined();
 		expect(retryPolicies.fiveRetriesInFiveMinutes).toBeDefined();
-		expect(retryPolicies.tenRetriesInAboutThirtyMinutes.tries).toBe(10);
-		expect(retryPolicies.fiveRetriesInFiveMinutes.tries).toBe(5);
+		expect(retryPolicies.tenRetriesInAboutThirtyMinutes.retries).toBe(10);
+		expect(retryPolicies.fiveRetriesInFiveMinutes.retries).toBe(5);
 	});
 });

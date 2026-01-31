@@ -40,7 +40,37 @@ export interface ChannelsCreateGroupArguments extends TokenOverridable {
 /**
  * Arguments for listing channels in a team.
  */
-export interface ChannelsListArguments
+export interface ChannelsListAllArguments extends TokenOverridable, Paginated {
+	/**
+	 * @description A group id to exclude channels that are associated with that group via GroupChannel records.
+	 * This can also be left blank with not_associated_to_group=.
+	 * */
+	not_associated_to_group?: string;
+
+	/**
+	 * @description Whether to exclude default channels
+	 * (ex Town Square, Off-Topic) from the results.
+	 */
+	exclude_default_channels?: boolean;
+
+	/**
+	 * @description Include channels that have been archived.
+	 * This correlates to the DeleteAt flag being set in the database.
+	 */
+	include_deleted?: boolean;
+
+	/**
+	 * @description If set to true, channels which are part of a data retention policy will be excluded.
+	 * The sysconsole_read_compliance permission is required to use this parameter.
+	 * @version 5.35+
+	 */
+	exclude_policy_constrained?: boolean;
+}
+
+/**
+ * Arguments for listing channels in a team.
+ */
+export interface ChannelsListInTeamArguments
 	extends TokenOverridable,
 		Paginated,
 		TeamID {
@@ -58,6 +88,21 @@ export interface ChannelsListArguments
  * Arguments for getting a channel by ID.
  */
 export interface ChannelsGetByIdArguments extends TokenOverridable, ChannelID {}
+
+/**
+ * Arguments for getting a channel by display_name.
+ */
+export interface ChannelsGetByNameArguments extends TokenOverridable, TeamID {
+	/**
+	 * @description channel display name
+	 */
+	channel_name: string;
+	/**
+	 * @description Defines if deleted channels should be returned or not
+	 * @version 5.26.0+
+	 */
+	include_deleted?: boolean;
+}
 
 /**
  * Arguments for updating a channel.
@@ -184,4 +229,82 @@ export interface ChannelsAutocompleteArguments
  */
 export interface ChannelsGetByIdsArguments extends TokenOverridable, TeamID {
 	channel_ids: string[];
+}
+
+// ============================================================================
+// Channel Member Operations
+// ============================================================================
+
+/**
+ * Arguments for adding a user to a channel.
+ * @see https://developers.loop.ru/API/4.0.0/add-channel-member
+ */
+export interface ChannelsMemberAddArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** The user ID to add to the channel */
+	user_id: string;
+	/** Optional post root ID for context */
+	post_root_id?: string;
+}
+
+/**
+ * Arguments for removing a user from a channel.
+ * @see https://developers.loop.ru/API/4.0.0/remove-user-from-channel
+ */
+export interface ChannelsMemberRemoveArguments
+	extends TokenOverridable,
+		ChannelID,
+		UserID {}
+
+/**
+ * Arguments for getting channel members by user IDs.
+ * @see https://developers.loop.ru/API/4.0.0/get-channel-members-by-ids
+ */
+export interface ChannelsMembersGetByIdsArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** Array of user IDs to look up */
+	user_ids: string[];
+}
+
+/**
+ * Arguments for updating channel member roles.
+ * @see https://developers.loop.ru/API/4.0.0/update-channel-roles
+ */
+export interface ChannelsMemberUpdateRolesArguments
+	extends TokenOverridable,
+		ChannelID,
+		UserID {
+	/** Space-separated list of roles to assign */
+	roles: string;
+}
+
+/**
+ * Arguments for updating channel member scheme roles.
+ * @see https://developers.loop.ru/API/4.0.0/update-channel-member-scheme-roles
+ */
+export interface ChannelsMemberUpdateSchemeRolesArguments
+	extends TokenOverridable,
+		ChannelID,
+		UserID {
+	/** Whether user is a scheme admin */
+	scheme_admin: boolean;
+	/** Whether user is a scheme user */
+	scheme_user: boolean;
+}
+
+/**
+ * Arguments for updating channel member notification properties.
+ * @see https://developers.loop.ru/API/4.0.0/update-channel-notify-props
+ */
+export interface ChannelsMemberUpdateNotifyPropsArguments
+	extends TokenOverridable,
+		ChannelID,
+		UserID {
+	/** Notification properties to update */
+	desktop?: string;
+	email?: string;
+	push?: string;
+	mark_unread?: string;
 }

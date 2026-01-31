@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
+import { expect, jest } from "@jest/globals";
 import { ChannelType } from "../src/types";
 import { WebClient } from "../src/web-client";
 
@@ -56,7 +56,7 @@ describe("Methods", () => {
 
 	describe("channels", () => {
 		it("create calls apiCall", async () => {
-			await client.channels.create({
+			await client.channels.create.regular({
 				name: "c1",
 				display_name: "c1",
 				type: ChannelType.Open,
@@ -69,7 +69,7 @@ describe("Methods", () => {
 		});
 
 		it("getById calls apiCall", async () => {
-			await client.channels.getById({ channel_id: "C1" });
+			await client.channels.get.byId({ channel_id: "C1" });
 			expect(client.apiCall).toHaveBeenCalledWith(
 				expect.objectContaining({
 					path: "channels/:channel_id",
@@ -80,7 +80,7 @@ describe("Methods", () => {
 		});
 
 		it("search calls apiCall", async () => {
-			await client.channels.search({ team_id: "T1", term: "foo" });
+			await client.channels.search.team({ team_id: "T1", term: "foo" });
 			expect(client.apiCall).toHaveBeenCalledWith(
 				expect.objectContaining({
 					path: "teams/:team_id/channels/search",

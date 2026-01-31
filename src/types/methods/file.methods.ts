@@ -19,9 +19,7 @@ export interface FilesGetThumbnailArguments extends TokenOverridable, FileID {}
 
 export interface FilesGetPreviewArguments extends TokenOverridable, FileID {}
 
-export interface FilesGetPublicArguments extends TokenOverridable, FileID {
-	h: string;
-}
+export interface FilesGetPublicArguments extends TokenOverridable, FileID {}
 
 export interface FilesSearchArguments extends TokenOverridable {
 	team_id: string;

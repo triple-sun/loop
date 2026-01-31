@@ -6,21 +6,10 @@ import type {
 	OptionalTeamID,
 	OptionalUserID,
 	Paginated,
-	TeamID,
 	TokenOverridable,
 	UserID,
 	UserIDMe
 } from "./common.methods";
-
-interface Email {
-	/** @description An email address belonging to a user in the workspace */
-	email: string;
-}
-
-interface Username {
-	/** @description An username belonging to a user in the workspace */
-	username: string;
-}
 
 /**
  * Arguments for getting a user's channels.
@@ -44,16 +33,31 @@ export interface UsersChannelsArguments
 }
 
 /**
- * Arguments for finding a user by email.
+ * @description Get a user object by providing a user email.
+ * Sensitive information will be sanitized out.
+ *
+ * Requires an active session and for the current session to be able to
+ * view another user's email based on the server's privacy settings.
  */
-export interface UsersFindByEmailArguments extends Email, TokenOverridable {}
+export interface UsersGetByEmailArguments extends TokenOverridable {
+	/**
+	 * @description User email
+	 */
+	email: string;
+}
 
 /**
- * Arguments for finding a user by username.
+ * @description Get a user object by providing a username.
+ * Sensitive information will be sanitized out.
+ *
+ * Requires an active session but no other permissions.
  */
-export interface UsersFindByUsernameArguments
-	extends Username,
-		TokenOverridable {}
+export interface UsersGetByUsernameArguments extends TokenOverridable {
+	/**
+	 * @description Username
+	 */
+	username: string;
+}
 
 /**
  * Arguments for setting a user's profile image.
@@ -73,10 +77,7 @@ export interface UsersDeleteImageArguments extends TokenOverridable, UserID {}
  * Since server version 4.0, some basic sorting is available using the sort query parameter. Sorting is currently only supported when selecting users on a team.
  * Permissions: Requires an active session and (if specified) membership to the channel or team being selected from.
  */
-export interface UsersListArguments
-	extends TokenOverridable,
-		Paginated,
-		TeamID {
+export interface UsersListArguments extends TokenOverridable, Paginated {
 	/**
 	 * @description The ID of the team to get users for.
 	 */
@@ -179,6 +180,59 @@ export interface UsersAutocompleteArguments
 	 * @description The maximum number of users to return in each subresult
 	 * Available as of server @version 5.6. Defaults to 100 if not provided or on an earlier server version.
 	 * @default 100
+	 */
+	limit?: number;
+}
+
+/**
+ * @description Get a list of users based on search criteria provided in the request body.
+ * Searches are typically done against username, full name, nickname and email unless otherwise configured by the server.
+ * Requires an active session and read_channel and/or view_team permissions for any channels or teams specified in the request body.
+ */
+export interface UsersSearchArguments extends TokenOverridable {
+	/**
+	 * @description The term to match against username, full name, nickname and email
+	 */
+	term: string;
+	/**
+	 * @description If provided, only search users on this team
+	 */
+	team_id?: string;
+	/**
+	 * @description If provided, only search users not on this team
+	 */
+	not_in_team_id?: string;
+	/**
+	 * @description If provided, only search users in this channel
+	 */
+	in_channel_id?: string;
+	/**
+	 * @description If provided, only search users not in this channel.
+	 * Must specifiy team_id when using this option
+	 */
+	not_in_channel_id?: string;
+	/**
+	 * @description If provided, only search users in this group.
+	 * Must have manage_system permission.
+	 */
+	in_group_id?: string;
+	/**
+	 * @description When used with not_in_channel_id or not_in_team_id, returns only the users
+	 * that are allowed to join the channel or team based on its group constrains.
+	 */
+	group_constrained?: boolean;
+	/**
+	 * @description When true, include deactivated users in the results
+	 */
+	allow_inactive?: boolean;
+	/**
+	 * @description Set this to true if you would like to search for users that are not on a team.
+	 * This option takes precendence over team_id, in_channel_id, and not_in_channel_id.
+	 */
+	without_team?: boolean;
+	/**
+	 * @description The maximum number of users to return in the results
+	 * @version 5.6+ Defaults to 100 if not provided or on an earlier server version.
 	 */
 	limit?: number;
 }

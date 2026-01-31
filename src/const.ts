@@ -28,7 +28,7 @@ export const WEBSOCKET_HELLO = "hello";
  * a request at the exact same intervals, they are more likely to cause failures for each other).
  */
 export const tenRetriesInAboutThirtyMinutes: RetryOptions = {
-	tries: 10,
+	retries: 10,
 	factor: 1.96821,
 	random: true
 };
@@ -37,7 +37,7 @@ export const tenRetriesInAboutThirtyMinutes: RetryOptions = {
  * Short & sweet, five retries in five minutes and then bail.
  */
 export const fiveRetriesInFiveMinutes: RetryOptions = {
-	tries: 5,
+	retries: 5,
 	factor: 3.86
 };
 

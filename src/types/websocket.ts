@@ -1,4 +1,4 @@
-import type { Logger } from "@triple-sun/logger";
+import type { Logger, LogLevel } from "@triple-sun/logger";
 
 export type MessageListener = (msg: WebSocketMessage) => void;
 export type FirstConnectListener = () => void;
@@ -11,6 +11,7 @@ export type WebSocketClientOptions = {
 	url: string;
 	token: string;
 	logger?: Logger;
+	logLevel?: LogLevel;
 	postedAck?: boolean | undefined;
 	/** Сброс счетчика при переподключении */
 	resetCount?: boolean | undefined;

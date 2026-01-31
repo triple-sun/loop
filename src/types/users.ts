@@ -72,59 +72,187 @@ export enum MarkUnread {
 }
 
 export interface NotifyProps {
+	channel: StringBool;
+	comments: NotifyComments;
 	desktop: Notify;
 	desktop_sound: StringBool;
-	calls_desktop_sound: StringBool;
+	desktop_threads?: Notify;
 	email: StringBool;
+	email_threads?: Notify;
+	first_name: StringBool;
+	/** @version Loop only */
+	loop_mobile_push_reactions?: Notify;
+	/** @version Loop only */
+	loop_mobile_push_reactions_sound?: StringBool;
+	/** @version Loop only */
+	loop_push_reactions?: Notify;
+	/** @version Loop only */
+	loop_push_reactions_sound?: StringBool;
+	mention_keys: string;
 	push: Notify;
 	push_status: PushStatus;
-	comments: NotifyComments;
-	first_name: StringBool;
-	channel: StringBool;
-	mention_keys: string;
-
-	//highlight_keys: string;
-	//mark_unread: ENotifyMarkUnread;
-
-	desktop_notification_sound?: NotifyDesktopSound;
-	calls_notification_sound?: CallSound;
-	desktop_threads?: Notify;
-	email_threads?: Notify;
 	push_threads?: Notify;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
+	calls_desktop_sound?: StringBool;
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
+	desktop_notification_sound?: NotifyDesktopSound;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
+	calls_notification_sound?: CallSound;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
 	auto_responder_active?: StringBool;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
 	auto_responder_message?: string;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
 	calls_mobile_sound?: StringBool | "";
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */
 	calls_mobile_notification_sound?: CallSound;
 }
 
 export interface UserProfile {
 	id: string;
+
+	/** @description unix format */
 	create_at: number;
+
+	/** @description unix format */
 	update_at: number;
+
+	/** @description unix format */
 	delete_at: number;
+
+	/** @default '' */
 	username: string;
-	password?: string;
+
+	/** @default '' */
+	auth_data: string;
+
+	/** @default '' */
 	auth_service: string;
+
 	email: string;
+
+	/** @version Loop only */
+	email_verified?: boolean;
+
+	/** @default '' */
 	nickname: string;
+
+	/** @default '' */
 	first_name: string;
+
+	/** @default '' */
 	last_name: string;
+
+	/** @default '' */
 	position: string;
+
+	/** @description excluded from responses */
+	password?: string;
+
+	/**
+	 * @description User roles in string format
+	 * @example "system_admin system_user"
+	 */
 	roles: string;
-	props?: Record<string, string>;
+
+	/** @todo verify possible props */
+	props?: {
+		[key: string]: unknown;
+		customStatus?: UserCustomStatus;
+	};
+
 	notify_props: NotifyProps;
+
 	last_password_update: number;
-	last_picture_update: number;
+
+	/**
+	 * @description Will be undefined if no picture was set
+	 */
+	last_picture_update?: number;
+
+	/**
+	 * @version Loop @default 'ru'
+	 * @version Mattermost @default 'en'
+	 */
 	locale: string;
+
 	timezone?: UserTimezone;
-	//mfa_active: boolean;
-	//last_activity_at: number;
-	//is_bot: boolean;
-	//bot_description: string;
-	//terms_of_service_id: string;
-	//terms_of_service_create_at: number;
+
+	/** @default '' */
 	remote_id?: string;
-	status?: string;
+
+	/** @version Loop only */
+	disable_welcome_email?: boolean;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 * @todo verify
+	 */ status?: string;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ mfa_active?: boolean;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ last_activity_at?: number;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ is_bot?: boolean;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ bot_description?: string;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ terms_of_service_id?: string;
+
+	/**
+	 * @deprecated
+	 * @version Mattermost only
+	 */ terms_of_service_create_at?: number;
 }
 
 export interface UserProfileWithLastViewAt extends UserProfile {
@@ -153,7 +281,7 @@ export interface UsersState {
 }
 
 export interface UserTimezone {
-	useAutomaticTimezone: boolean | string;
+	useAutomaticTimezone: boolean | StringBool;
 	automaticTimezone: string;
 	manualTimezone: string;
 }

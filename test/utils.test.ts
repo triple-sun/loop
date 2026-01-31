@@ -1,12 +1,22 @@
-/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
 import { PassThrough } from "node:stream";
+import { expect, jest } from "@jest/globals";
 import type { Logger } from "@triple-sun/logger";
 import { AxiosHeaders } from "axios";
 import FormData from "form-data";
 import {
+	type UserThread,
+	type UserThreadSynthetic,
+	UserThreadType,
+	type WebSocketHelloMessageData
+} from "../src/types";
+import {
+	areShippingDetailsValid,
 	checkForBinaryData,
 	getFormDataConfig,
+	isLoopWebSocketMessage,
+	isWebSocketHelloMessage,
 	redact,
+	threadIsSynthetic,
 	wait,
 	warnIfFallbackIsMissing
 } from "../src/utils";
@@ -123,8 +133,8 @@ describe("utils", () => {
 				arr: [1, 2]
 			};
 			const result = JSON.parse(redact(data));
-			expect(result.obj).toBe(JSON.stringify({ a: 1 }));
-			expect(result.arr).toBe(JSON.stringify([1, 2]));
+			expect(result.obj).toBe(JSON.stringify({ a: 1 }, null, 2));
+			expect(result.arr).toBe(JSON.stringify([1, 2], null, 2));
 		});
 
 		it("should return empty object for null/undefined values in object", () => {
@@ -142,7 +152,7 @@ describe("utils", () => {
 
 	describe("warnIfFallbackIsMissing", () => {
 		let logger: Logger;
-		let warnSpy: jest.SpyInstance;
+		let warnSpy: jest.SpiedFunction<typeof logger.warn>;
 
 		beforeEach(() => {
 			logger = {
@@ -174,7 +184,7 @@ describe("utils", () => {
 				attachments: [{ text: "foo", fallback: "" }]
 			});
 			expect(warnSpy).toHaveBeenCalled();
-			expect(warnSpy.mock.calls[0][0]).toContain(
+			expect(warnSpy.mock.calls[0]?.[0]).toContain(
 				"fallback` argument is missing"
 			);
 		});
@@ -184,6 +194,119 @@ describe("utils", () => {
 				attachments: [{ text: "foo", fallback: "fallback" }]
 			});
 			expect(warnSpy).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("areShippingDetailsValid", () => {
+		it("should return true for valid address", () => {
+			expect(
+				areShippingDetailsValid({
+					city: "New York",
+					country: "US",
+					line1: "123 Main St",
+					line2: "",
+					postal_code: "10001",
+					state: "NY"
+				})
+			).toBe(true);
+		});
+
+		it("should return false when any required field is missing or empty", () => {
+			expect(
+				areShippingDetailsValid({
+					city: "",
+					country: "US",
+					line1: "123 Main St",
+					line2: "",
+					postal_code: "10001",
+					state: "NY"
+				})
+			).toBe(false);
+			expect(
+				areShippingDetailsValid({
+					city: "New York",
+					country: "",
+					line1: "123 Main St",
+					line2: "",
+					postal_code: "10001",
+					state: "NY"
+				})
+			).toBe(false);
+		});
+
+		it("should return false for null or undefined", () => {
+			expect(areShippingDetailsValid(null)).toBe(false);
+			expect(areShippingDetailsValid(undefined)).toBe(false);
+		});
+	});
+
+	describe("threadIsSynthetic", () => {
+		it("should return true for synthetic thread", () => {
+			const thread: UserThreadSynthetic = {
+				type: UserThreadType.Synthetic,
+				id: "thread-id"
+			} as UserThreadSynthetic;
+			expect(threadIsSynthetic(thread)).toBe(true);
+		});
+
+		it("should return false for non-synthetic thread", () => {
+			const thread: UserThread = {
+				type: "" as UserThreadType,
+				id: "thread-id"
+			} as UserThread;
+			expect(threadIsSynthetic(thread)).toBe(false);
+		});
+	});
+
+	describe("isLoopWebSocketMessage", () => {
+		it("should return true for valid WebSocket message", () => {
+			const data = {
+				seq: 1,
+				event: "posted",
+				broadcast: {},
+				data: {}
+			};
+			expect(isLoopWebSocketMessage(data)).toBe(true);
+		});
+
+		it("should return false when required fields are missing", () => {
+			expect(
+				isLoopWebSocketMessage({ event: "posted", broadcast: {}, data: {} })
+			).toBe(false);
+			expect(isLoopWebSocketMessage({ seq: 1, broadcast: {}, data: {} })).toBe(
+				false
+			);
+			expect(
+				isLoopWebSocketMessage({ seq: 1, event: "posted", data: {} })
+			).toBe(false);
+			expect(
+				isLoopWebSocketMessage({ seq: 1, event: "posted", broadcast: {} })
+			).toBe(false);
+		});
+	});
+
+	describe("isWebSocketHelloMessage", () => {
+		it("should return true for valid hello message", () => {
+			const data = {
+				connection_id: "conn-123"
+			} as WebSocketHelloMessageData;
+			expect(isWebSocketHelloMessage("hello", data)).toBe(true);
+		});
+
+		it("should return false for wrong event type", () => {
+			const data = {
+				connection_id: "conn-123"
+			} as WebSocketHelloMessageData;
+			expect(isWebSocketHelloMessage("posted", data)).toBe(false);
+		});
+
+		it("should return false when connection_id is missing or invalid", () => {
+			expect(isWebSocketHelloMessage("hello", {})).toBe(false);
+			expect(isWebSocketHelloMessage("hello", { connection_id: 123 })).toBe(
+				false
+			);
+			expect(isWebSocketHelloMessage("hello", null)).toBe(false);
+			expect(isWebSocketHelloMessage("hello", undefined)).toBe(false);
 		});
 	});
 });

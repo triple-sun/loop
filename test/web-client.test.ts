@@ -1,7 +1,11 @@
-/** biome-ignore-all lint/correctness/noUndeclaredVariables: <jest> */
+import { jest } from "@jest/globals";
 import * as againTs from "again-ts";
-import axios, { type AxiosInstance, type RawAxiosRequestHeaders } from "axios";
-import { Breadline } from "breadline-ts";
+import axios, {
+	type AxiosInstance,
+	type AxiosStatic,
+	type RawAxiosRequestHeaders
+} from "axios";
+
 import { WebAPIServerError } from "../src/errors";
 import { ContentType } from "../src/types";
 import { WebClient } from "../src/web-client";
@@ -10,12 +14,8 @@ import { WebClient } from "../src/web-client";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// Mocking breadline-ts
-jest.mock("breadline-ts");
-const mockedBreadline = Breadline as jest.MockedClass<typeof Breadline>;
-
 // Mocking again-ts
-jest.spyOn(againTs, "retry").mockImplementation(async task => {
+jest.spyOn(againTs, "retry").mockImplementation(async (_, task) => {
 	try {
 		const res = await task({} as againTs.RetryContext);
 		return {
@@ -43,11 +43,11 @@ jest.spyOn(againTs, "retry").mockImplementation(async task => {
 	}
 });
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
+// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <vitest>
 describe("WebClient", () => {
 	let client: WebClient;
 	let mockAxiosInstance: unknown;
-	let mockAxios: jest.Mock;
+	let mockAxios: jest.Mock<AxiosStatic>;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
@@ -69,7 +69,7 @@ describe("WebClient", () => {
 		};
 		// The client expects axios(url, config) or similar.
 		// It's a callable object.
-		const axiosFn = jest.fn().mockResolvedValue({
+		const axiosFn = jest.fn(axios).mockResolvedValue({
 			status: 200,
 			headers: {},
 			data: { ok: true }
@@ -78,14 +78,6 @@ describe("WebClient", () => {
 
 		mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
 		mockAxios = axiosFn;
-
-		// Mock Breadline add to just run the task
-		mockedBreadline.mockImplementation(
-			() =>
-				({
-					add: jest.fn().mockImplementation(fn => fn())
-				}) as unknown as Breadline
-		);
 
 		client = new WebClient("https://api.example.com");
 	});
@@ -170,7 +162,7 @@ describe("WebClient", () => {
 		});
 	});
 
-	// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
+	// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <vitest>
 	describe("Interceptors", () => {
 		let client: WebClient;
 		// biome-ignore lint/suspicious/noExplicitAny: <test>
@@ -184,34 +176,33 @@ describe("WebClient", () => {
 				getUri: jest.fn().mockReturnValue("https://api.example.com/api/v4/"),
 				request: jest.fn()
 			};
-			const axiosFn = jest.fn().mockResolvedValue({
-				status: 200,
-				headers: {},
-				data: { ok: true }
-			});
+			const axiosFn = jest
+				.fn(async () => ({
+					status: 200,
+					headers: {},
+					data: { ok: true }
+				}))
+				.mockResolvedValue({
+					status: 200,
+					headers: {},
+					data: { ok: true }
+				});
 			Object.assign(axiosFn, mockAxiosInstance);
 			mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
-			mockAxios = axiosFn;
-
-			// Mock Breadline
-			mockedBreadline.mockImplementation(
-				() =>
-					({
-						add: jest.fn().mockImplementation(fn => fn())
-					}) as unknown as Breadline
-			);
+			// biome-ignore lint/suspicious/noExplicitAny: <jesting>
+			mockAxios = axiosFn as any;
 
 			client = new WebClient("https://api.example.com");
 		});
 
 		describe("setCurrentUserForDirectChannel", () => {
-			it("should throw if user_ids length is 0", async () => {
+			it("should throw if data length is 0", async () => {
 				client = new WebClient("https://api.example.com");
 
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
 					headers: {} as RawAxiosRequestHeaders,
-					data: { user_ids: [] }
+					data: []
 				};
 
 				try {
@@ -224,14 +215,14 @@ describe("WebClient", () => {
 				}
 			});
 
-			it("should throw if user_ids is 1 and useCurrentUserForDirectChannels is false", async () => {
+			it("should throw if data.length is 1 and useCurrentUserForDirectChannels is false", async () => {
 				client = new WebClient("https://api.example.com", {
 					useCurrentUserForDirectChannels: false
 				});
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
 					headers: {} as RawAxiosRequestHeaders,
-					data: { user_ids: ["other_user"] }
+					data: ["other_user"]
 				};
 				try {
 					// biome-ignore lint/suspicious/noExplicitAny: <test>
@@ -245,11 +236,11 @@ describe("WebClient", () => {
 				}
 			});
 
-			it("should fetch me ID if user_ids is 1 and useCurrentUserForDirectChannels is true", async () => {
+			it("should fetch my ID if data.length is 1 and useCurrentUserForDirectChannels is true", async () => {
 				client = new WebClient("https://api.example.com");
 				// Mock users.profile.me
 				const meMock = jest
-					.fn()
+					.fn(async () => ({ ok: true, data: { id: "my_id" } }))
 					.mockResolvedValue({ ok: true, data: { id: "my_id" } });
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
 				(client as any).users = { profile: { me: meMock } };
@@ -257,7 +248,7 @@ describe("WebClient", () => {
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
 					headers: {} as RawAxiosRequestHeaders,
-					data: { user_ids: ["other_user"] }
+					data: ["other_user"]
 				};
 
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
@@ -281,7 +272,7 @@ describe("WebClient", () => {
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
 					headers: {} as RawAxiosRequestHeaders,
-					data: { user_ids: ["other_user"] }
+					data: ["other_user"]
 				};
 
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
@@ -340,12 +331,12 @@ describe("WebClient", () => {
 			it("should create direct channel if user_id provided", async () => {
 				client = new WebClient("https://api.example.com", { userID: "me" });
 				const createDirectMock = jest
-					.fn()
+					.fn(async () => ({ ok: true, data: { id: "direct_channel_id" } }))
 					.mockResolvedValue({ ok: true, data: { id: "direct_channel_id" } });
 
 				// Mock the getter for channels
 				Object.defineProperty(client, "channels", {
-					get: jest.fn(() => ({ createDirect: createDirectMock }))
+					get: jest.fn(() => ({ create: { direct: createDirectMock } }))
 				});
 
 				const config = {
@@ -355,7 +346,7 @@ describe("WebClient", () => {
 					data: { user_id: "other" }
 				};
 
-				// biome-ignore lint/suspicious/noExplicitAny: <test>
+				// biome-ignore lint/suspicious/noExplicitAny: <jesting>
 				const newConfig = await (client as any).setCurrentUserForPostCreation(
 					config
 				);

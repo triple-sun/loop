@@ -32,7 +32,7 @@ export interface PluginsGetMarketplaceArguments {
 	local_only?: boolean;
 }
 
-export interface PluginsInstallMarketplaceArguments {
+export interface PluginsInstallFromMarketplaceArguments {
 	id: string;
 	version: string;
 }

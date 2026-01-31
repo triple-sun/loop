@@ -1,5 +1,5 @@
 import type { BotPatch } from "../bots";
-import type { UserID } from "./common.methods";
+import type { TokenOverridable, UserID } from "./common.methods";
 
 /**
  * Arguments for creating a bot.
@@ -19,7 +19,7 @@ export interface BotsGetArguments extends UserID {}
 /**
  * Arguments for listing bots.
  */
-export interface BotsListArguments {
+export interface BotsListArguments extends TokenOverridable {
 	page?: number;
 	per_page?: number;
 	include_deleted?: boolean;

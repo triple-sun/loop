@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import { ConsoleLogger, type Logger } from "@triple-sun/logger";
+import { ConsoleLogger, type Logger, LogLevel } from "@triple-sun/logger";
 import WebSocket from "ws";
 import {
 	WEBSOCKET_JITTER_RANGE,
@@ -10,6 +10,7 @@ import {
 	WEBSOCKET_MIN_RETRY_TIME
 } from "./const";
 import { getUserAgent } from "./instrument";
+import { getLogger } from "./logger";
 import type {
 	CloseListener,
 	FirstConnectListener,
@@ -73,12 +74,18 @@ export default class WebSocketClient {
 	private minRetryTime: number;
 	private maxRetryTime: number;
 
+	/**
+	 * The name used to prefix all logging generated from this object
+	 */
+	private static loggerName = "LoopWebSocketClient";
+
 	constructor({
 		url,
 		token,
 		resetCount = true,
 		postedAck = false,
 		logger = new ConsoleLogger(),
+		logLevel = undefined,
 		jitterRange = WEBSOCKET_JITTER_RANGE,
 		maxFails = WEBSOCKET_MAX_FAILS,
 		minRetryTime = WEBSOCKET_MIN_RETRY_TIME,
@@ -94,11 +101,27 @@ export default class WebSocketClient {
 		this.connectionId = "";
 		this.postedAck = postedAck;
 		this.resetCount = resetCount;
-		this.logger = logger;
 		this.jitterRange = jitterRange;
 		this.maxFails = maxFails;
 		this.minRetryTime = minRetryTime;
 		this.maxRetryTime = maxRetryTime;
+
+		/** Set up logging */
+		if (logger !== undefined) {
+			this.logger = logger;
+
+			if (logLevel !== undefined) {
+				this.logger.debug(
+					"The logLevel given to WebClient was ignored as you also gave logger"
+				);
+			}
+		} else {
+			this.logger = getLogger(
+				WebSocketClient.loggerName,
+				logLevel ?? LogLevel.INFO,
+				logger
+			);
+		}
 	}
 
 	// on connect, only send auth cookie and blank state.
@@ -115,12 +138,12 @@ export default class WebSocketClient {
 		if (this.conn) return;
 
 		if (url == null) {
-			this.logger.info("websocket must have connection url");
+			this.logger.error("Websocket must have connection url");
 			return;
 		}
 
 		if (this.connFailCount === 0) {
-			this.logger.info(`websocket connecting to ${url}`);
+			this.logger.info(`Websocket connecting to ${url}`);
 		}
 
 		if (typeof postedAck !== "undefined") this.postedAck = postedAck;
@@ -138,7 +161,7 @@ export default class WebSocketClient {
 			if (token) this.sendMessage("authentication_challenge", { token });
 
 			if (this.connFailCount > 0) {
-				this.logger.info("websocket re-established connection");
+				this.logger.info("Websocket re-established connection");
 
 				for (const listener of this.reconnectListeners) listener();
 			} else if (this.firstConnectListeners.size > 0) {
@@ -157,9 +180,7 @@ export default class WebSocketClient {
 				this.connectionId = null;
 			}
 
-			if (this.connFailCount === 0) {
-				this.logger.warn("websocket closed");
-			}
+			if (this.connFailCount === 0) this.logger.warn("Websocket closed");
 
 			this.connFailCount++;
 
@@ -190,10 +211,7 @@ export default class WebSocketClient {
 			/** Handle other messages */
 			if (this.messageListeners.size > 0) {
 				// We check the hello packet, which is always the first packet in a stream.
-				if (
-					this.missedMessageListeners.size > 0 &&
-					isWebSocketHelloMessage(msg.event, msg.data)
-				) {
+				if (isWebSocketHelloMessage(msg.event, msg.data)) {
 					this.handleHelloMessage(msg.data);
 				}
 
@@ -287,7 +305,7 @@ export default class WebSocketClient {
 			this.conn.onclose = () => null;
 			this.conn.close();
 			this.conn = null;
-			this.logger.info("websocket closed");
+			this.logger.debug("Websocket closed");
 		}
 	}
 
@@ -405,13 +423,13 @@ export default class WebSocketClient {
 	}
 
 	private handleHelloMessage(data: WebSocketHelloMessageData): void {
-		this.logger.info("got connection id ", data.connection_id);
+		this.logger.debug("got connection id ", data.connection_id);
 		if (this.connectionId !== "" && this.connectionId !== data.connection_id) {
 			// If we already have a connectionId present, and server sends a different one,
 			// that means it's either a long timeout, or server restart, or sequence number is not found.
 			// Then we do the sync calls, and reset sequence number to 0.
-			this.logger.info(
-				"long timeout, or server restart, or sequence number is not found."
+			this.logger.debug(
+				"Long timeout, or server restart, or sequence number is not found."
 			);
 
 			for (const listener of this.missedMessageListeners) {
@@ -419,7 +437,7 @@ export default class WebSocketClient {
 					listener();
 				} catch (e) {
 					this.logger.warn(
-						`missed message listener "${listener.name}" failed: ${e}`
+						`Missed message listener "${listener.name}" failed: ${e}`
 					);
 				}
 			}
@@ -434,7 +452,7 @@ export default class WebSocketClient {
 
 	private handleMissedEvent(msg: WebSocketMessage): void {
 		this.logger.warn(
-			"missed websocket event, act_seq=" +
+			"Missed websocket event, act_seq=" +
 				msg.seq +
 				" exp_seq=" +
 				this.sSequence
@@ -459,7 +477,7 @@ export default class WebSocketClient {
 	}
 
 	private getRetryTime(): number {
-		let retryTime = WEBSOCKET_MIN_RETRY_TIME;
+		let retryTime = this.minRetryTime;
 		if (this.connFailCount > this.maxFails) {
 			// If we've failed a bunch of connections then start backing off
 			retryTime = this.minRetryTime * this.connFailCount * this.connFailCount;
@@ -481,11 +499,11 @@ export default class WebSocketClient {
 		evt: WebSocket.MessageEvent
 	): WebSocketMessage | undefined {
 		if (!evt.data) return undefined;
-		if (typeof evt.data === "string") {
-			evt.data = JSON.parse(evt.data);
-		}
-
 		try {
+			if (typeof evt.data === "string") {
+				evt.data = JSON.parse(evt.data);
+			}
+
 			switch (typeof evt.data) {
 				case "object":
 					switch (true) {
@@ -493,26 +511,29 @@ export default class WebSocketClient {
 						case Buffer.isBuffer(evt.data):
 						case evt.data instanceof ArrayBuffer:
 							this.logger.error(
-								"received unxpected data type: Array, Buffer or ArrayBuffer, expected string or {}"
+								"Received unxpected data type: Array, Buffer or ArrayBuffer, expected string or {}"
 							);
 							return undefined;
 						default:
-							if (isLoopWebSocketMessage(evt["data"])) {
-								return evt.data;
+							if (
+								isLoopWebSocketMessage(evt["data"]) ||
+								("seq_reply" in evt.data && "status" in evt.data)
+							) {
+								return evt.data as WebSocketMessage;
 							}
 							this.logger.error(
-								`received unexpected message type: ${JSON.stringify(evt.data)}`
+								`Received unexpected message type: ${JSON.stringify(evt.data)}`
 							);
 							return undefined;
 					}
 				default:
 					this.logger.error(
-						`received unexpected data type: ${typeof evt.data}, expected string or {}`
+						`Received unexpected data type: ${typeof evt.data}, expected string or {}`
 					);
 					return undefined;
 			}
 		} catch (e) {
-			this.logger.error(`failed to parse websocket message: ${e}`);
+			this.logger.error(`Failed to parse websocket message: ${e}`);
 			return undefined;
 		}
 	}

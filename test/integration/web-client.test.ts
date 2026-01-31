@@ -1,4 +1,6 @@
-import { LogLevel } from "@triple-sun/logger";
+/** biome-ignore-all lint/complexity/noExcessiveLinesPerFunction: <testing> */
+
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import nock from "nock";
 import {
 	WebAPIRateLimitedError,
@@ -6,37 +8,31 @@ import {
 	WebAPIServerError
 } from "../../src/errors";
 import { ChannelType } from "../../src/types";
-import { WebClient } from "../../src/web-client";
+import type { WebClient } from "../../src/web-client";
+import { cleanupTestClient, mockApi, setupTestClient } from "./utils";
 
 const TEST_URL = "https://loop.example.com";
 const TEST_TOKEN = "test-token";
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("WebClient Integration Tests", () => {
 	let client: WebClient;
 
 	beforeEach(() => {
-		if (!nock.isActive()) nock.activate();
-
-		client = new WebClient(TEST_URL, {
-			token: TEST_TOKEN,
-			logLevel: LogLevel.DEBUG,
-			// Disable retries for most tests to speed them up, unless specifically testing retries
-			retryConfig: { retries: 1 }
-		});
+		client = setupTestClient({ retryConfig: { retries: 1 } });
 	});
 
 	afterEach(() => {
-		nock.cleanAll();
-		nock.restore();
+		cleanupTestClient();
 	});
 
 	describe("Basic API Calls", () => {
 		it("should make a successful GET request", async () => {
-			const scope = nock(TEST_URL)
-				.get("/api/v4/users/me")
-				.matchHeader("Authorization", `Bearer ${TEST_TOKEN}`)
-				.reply(200, { id: "user_id_123", username: "testuser" });
+			const scope = mockApi(
+				"/users/me",
+				"get",
+				{ id: "user_id_123", username: "testuser" },
+				200
+			).matchHeader("Authorization", `Bearer ${TEST_TOKEN}`);
 
 			const result = await client.users.profile.me();
 
@@ -53,11 +49,14 @@ describe("WebClient Integration Tests", () => {
 				type: ChannelType.Open
 			};
 
+			// Explicitly match body for JSON POST (use true to match any body)
 			const scope = nock(TEST_URL)
-				.post(`/api/v4/channels`, channelData)
+				.post("/api/v4/channels", () => true)
 				.matchHeader("Authorization", `Bearer ${TEST_TOKEN}`)
-				.reply(201, { id: "channel_id_123", ...channelData });
-
+				.reply(201, {
+					id: "channel_id_123",
+					...channelData
+				});
 			const result = await client.channels.create.regular(channelData);
 			expect(result.data.id).toBe("channel_id_123");
 			expect(result.data.name).toBe("new-channel");
@@ -71,6 +70,7 @@ describe("WebClient Integration Tests", () => {
 				team_id: "team_id_123"
 			};
 
+			// Test that the client properly sends query params for GET requests
 			const scope = nock(TEST_URL)
 				.get("/api/v4/users")
 				.query(query)
@@ -84,11 +84,15 @@ describe("WebClient Integration Tests", () => {
 
 	describe("Error Handling", () => {
 		it("should throw WebAPIServerError on 500", async () => {
-			const scope = nock(TEST_URL).get("/api/v4/users/me").reply(500, {
-				id: "api.context.server_err",
-				message: "Internal Server Error",
-				status_code: 500
-			});
+			const scope = nock(TEST_URL)
+				.get("/api/v4/users/me")
+				.query(true)
+				.times(2)
+				.reply(500, {
+					id: "api.context.server_err",
+					message: "Internal Server Error",
+					status_code: 500
+				});
 
 			await expect(client.users.profile.me()).rejects.toThrow(
 				WebAPIServerError
@@ -100,6 +104,7 @@ describe("WebClient Integration Tests", () => {
 		it("should throw WebAPIRequestError on 400 with non-server-error body", async () => {
 			const scope = nock(TEST_URL)
 				.get("/api/v4/users/me")
+				.query(true)
 				.reply(400, { name: Error, message: "http_error" });
 
 			await expect(client.users.profile.me()).rejects.toThrow(
@@ -110,11 +115,15 @@ describe("WebClient Integration Tests", () => {
 		});
 
 		it("should throw WebAPIRateLimitedError on 429", async () => {
-			const scope = nock(TEST_URL).get("/api/v4/users/me").reply(429, {
-				id: "api.context.rate_limit",
-				message: "Rate Limited",
-				status_code: 429
-			});
+			const scope = nock(TEST_URL)
+				.get("/api/v4/users/me")
+				.query(true)
+				.times(2)
+				.reply(429, {
+					id: "api.context.rate_limit",
+					message: "Rate Limited",
+					status_code: 429
+				});
 
 			await expect(client.users.profile.me()).rejects.toThrow(
 				WebAPIRateLimitedError
@@ -129,13 +138,11 @@ describe("WebClient Integration Tests", () => {
 			const myId = "me_id";
 			const otherId = "other_id";
 
-			// 1. Mock the 'me' call that the interceptor will trigger
 			const meScope = nock(TEST_URL)
 				.get("/api/v4/users/me")
+				.query(true)
 				.reply(200, { id: myId });
 
-			// 2. Mock the actual direct channel creation call
-			// It should now include BOTH IDs
 			const createScope = nock(TEST_URL)
 				.post("/api/v4/channels/direct", body => {
 					return (
@@ -144,7 +151,6 @@ describe("WebClient Integration Tests", () => {
 				})
 				.reply(201, { id: "dc_id" });
 
-			// Call with only one ID, enabling the interceptor logic
 			await client.channels.create.direct({
 				user_ids: [otherId]
 			});
@@ -157,10 +163,8 @@ describe("WebClient Integration Tests", () => {
 			const myId = "cached_me_id";
 			const otherId = "other_id";
 
-			// Set the ID manually
 			client.userID = myId;
 
-			// Should mock ONLY the create call, no 'me' call
 			const createScope = nock(TEST_URL)
 				.post("/api/v4/channels/direct", [otherId, myId])
 				.reply(201, { id: "dc_id" });

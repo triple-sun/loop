@@ -85,7 +85,3 @@ export interface DataRetentionGetUserChannelPoliciesArguments {
 	page?: number;
 	per_page?: number;
 }
-
-export type DataRetentionGetGlobalPolicyArguments = {};
-
-export type DataRetentionGetPolicyCountArguments = {};

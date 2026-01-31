@@ -238,6 +238,10 @@ export class WebClient extends Methods {
 			);
 		}
 
+		/** path specific transformations */
+		this.axios.interceptors.request.use(
+			this.transformPathSpecificParams.bind(this)
+		);
 		/** main data serializer interceptor */
 		this.axios.interceptors.request.use(this.serializeApiCallData.bind(this));
 
@@ -290,7 +294,9 @@ export class WebClient extends Methods {
 			data: options
 		});
 		const result = this.buildResult<T>(url, response);
-		this.logger.debug(`http request result: ${JSON.stringify(result)}`);
+		this.logger.debug(
+			`http request result: ${JSON.stringify(result, null, 2)}`
+		);
 		this.logger.debug(`apiCall [${config.method} ${config.path}] end`);
 		return result;
 	}
@@ -303,22 +309,26 @@ export class WebClient extends Methods {
 		config: AxiosRequestConfig
 	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
 		const task = () =>
+			// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <jesting>
 			this.breadline.add(async () => {
 				const cfg: AxiosRequestConfig = {
 					...config,
 					...this.tlsConfig
 				};
 
-				this.logger.debug(`http request url: ${url}`);
-				this.logger.debug(`http request data: ${redact(config.data)}`);
-				this.logger.debug(
-					`http request headers: ${redact({
-						...this.axios.defaults.headers.common,
-						...config.headers
-					})}`
-				);
+				if (this.logger.getLevel() === LogLevel.DEBUG) {
+					this.logger.debug(`http request url: ${url}`);
+					this.logger.debug(`http request data: ${redact(config.data)}`);
+					this.logger.debug(
+						`http request headers: ${redact({
+							...this.axios.defaults.headers.common,
+							...config.headers
+						})}`
+					);
+				}
 
 				/** ApiCallData is serialized through interceptors */
+
 				const response = await this.axios<T>(url, cfg);
 
 				this.logger.debug("http response received");
@@ -336,7 +346,9 @@ export class WebClient extends Methods {
 				}
 				/** handle error status code */
 				if (response.status > 300) {
-					this.logger.debug(`http error: ${JSON.stringify(response.data)}`);
+					this.logger.debug(
+						`http error: ${JSON.stringify(response.data, null, 2)}`
+					);
 
 					const { data } = response;
 					if (isServerError(data)) {
@@ -353,7 +365,7 @@ export class WebClient extends Methods {
 				return response;
 			});
 
-		return await retry<AxiosResponse<T>>(task, this.retryConfig);
+		return await retry<AxiosResponse<T>>("safe", task, this.retryConfig);
 	}
 
 	/**
@@ -368,6 +380,10 @@ export class WebClient extends Methods {
 		const ctx: WebAPICallContext = { ...result.ctx, url };
 		/** short-circuit if we have an error */
 		if (!result.ok) throw result.ctx.errors[result.ctx.errors.length - 1];
+
+		this.logger.debug(
+			`http response header: ${JSON.stringify(result.value.headers, null, 2)}`
+		);
 
 		/**
 		 * handle string responses?
@@ -417,7 +433,7 @@ export class WebClient extends Methods {
 		const { data } = config;
 
 		if (config.url?.endsWith("/api/v4/channels/direct")) {
-			const userIDs = data.user_ids;
+			const userIDs = data;
 			if (!Array.isArray(userIDs)) {
 				throw new WebClientOptionsError(`Expected user_ids to be an array`);
 			}
@@ -436,7 +452,7 @@ export class WebClient extends Methods {
 					);
 				}
 
-				config.data = [data.user_ids[0], await this.getCurrentUserID(data)];
+				config.data = [userIDs[0], await this.getCurrentUserID(data)];
 			}
 		}
 
@@ -472,7 +488,7 @@ export class WebClient extends Methods {
 				};
 
 				/** if token overridable or no userID - fetch channel_id from server  */
-				const channel = await this.channels.createDirect(opts);
+				const channel = await this.channels.create.direct(opts);
 
 				config.data.channel_id = channel.data.id;
 			}
@@ -508,6 +524,39 @@ export class WebClient extends Methods {
 		} else {
 			return this.userID;
 		}
+	}
+
+	private transformPathSpecificParams(
+		config: InternalAxiosRequestConfig
+	): InternalAxiosRequestConfig {
+		const { data } = config;
+
+		/** transform to array */
+		if (config.url?.endsWith("/api/v4/channels/direct")) {
+			const userIDs = data.user_ids;
+
+			if (!Array.isArray(userIDs)) {
+				throw new WebClientOptionsError(
+					`Expected data.user_ids to be an array`
+				);
+			}
+
+			config.data = userIDs;
+		}
+
+		if (config.url?.endsWith("/channels/ids")) {
+			const channelIDs = data.channel_ids;
+
+			if (!Array.isArray(channelIDs)) {
+				throw new WebClientOptionsError(
+					`Expected data.channel_ids to be an array`
+				);
+			}
+
+			config.data = channelIDs;
+		}
+
+		return config;
 	}
 
 	/**
