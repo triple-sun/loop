@@ -95,7 +95,7 @@ export const createRealApiClient = (): WebClient => {
 	});
 };
 
-interface MethodTestResults {
+interface MethodTestResultCounts {
 	success: number;
 	permissionDenied: number;
 	notFound: number;
@@ -111,7 +111,7 @@ export class TestReport {
 	timestamp: string = new Date().toISOString();
 	apiUrl: string = TEST_LOOP_URL;
 	totalMethods: number = 0;
-	results: MethodTestResults = {
+	testResultCounts: MethodTestResultCounts = {
 		success: 0,
 		permissionDenied: 0,
 		notFound: 0,
@@ -122,7 +122,7 @@ export class TestReport {
 		unknownError: 0
 	};
 
-	methods: MethodTestResults[] = [];
+	methodResults: MethodTestResult[] = [];
 
 	constructor(name: string) {
 		this.name = name;
@@ -131,34 +131,34 @@ export class TestReport {
 	/**
 	 * Records a test result
 	 */
-	saveResult(result: MethodTestResults): void {
-		this.methods.push(result);
+	saveResult(result: MethodTestResult): void {
+		this.methodResults.push(result);
 		this.totalMethods++;
 
 		switch (result.category) {
 			case TestResultCategory.SUCCESS:
-				this.results.success++;
+				this.testResultCounts.success++;
 				break;
 			case TestResultCategory.PERMISSION_DENIED:
-				this.results.permissionDenied++;
+				this.testResultCounts.permissionDenied++;
 				break;
 			case TestResultCategory.NOT_FOUND:
-				this.results.notFound++;
+				this.testResultCounts.notFound++;
 				break;
 			case TestResultCategory.INVALID_REQUEST:
-				this.results.invalidRequest++;
+				this.testResultCounts.invalidRequest++;
 				break;
 			case TestResultCategory.SERVER_ERROR:
-				this.results.serverError++;
+				this.testResultCounts.serverError++;
 				break;
 			case TestResultCategory.NOT_IMPLEMENTED:
-				this.results.notImplemented++;
+				this.testResultCounts.notImplemented++;
 				break;
 			case TestResultCategory.TYPE_MISMATCH:
-				this.results.typeMismatch++;
+				this.testResultCounts.typeMismatch++;
 				break;
 			default:
-				this.results.unknownError++;
+				this.testResultCounts.unknownError++;
 		}
 	}
 
@@ -214,7 +214,7 @@ export class TestReport {
 		endpoint: string,
 		testFn: () => Promise<{ data: T }>,
 		schema: z.ZodType
-	): Promise<MethodTestResults> {
+	): Promise<MethodTestResult> {
 		const startTime = Date.now();
 
 		try {
@@ -223,7 +223,7 @@ export class TestReport {
 
 			const validation = validateType(data, schema);
 
-			const result: MethodTestResults = {
+			const result: MethodTestResult = {
 				methodPath,
 				endpoint,
 				category: validation.matches
@@ -245,7 +245,7 @@ export class TestReport {
 			const durationMs = Date.now() - startTime;
 			const category = this.categorizeError(error);
 
-			const result: MethodTestResults = {
+			const result: MethodTestResult = {
 				methodPath,
 				endpoint,
 				category,
@@ -281,7 +281,7 @@ export class TestReport {
 	 */
 	summarize(): void {
 		// Calculate type validation stats
-		const methodsWithValidation = this.methods.filter(
+		const methodsWithValidation = this.methodResults.filter(
 			m => m.typeValidation !== undefined
 		);
 		const typeValidationPassed = methodsWithValidation.filter(
@@ -299,14 +299,14 @@ export class TestReport {
 			`Total Methods Tested: ${this.totalMethods}`,
 			"",
 			"Results:",
-			`  ✅ Success: ${this.results.success}`,
-			`  🔒 Permission Denied: ${this.results.permissionDenied}`,
-			`  🔍 Not Found: ${this.results.notFound}`,
-			`  ⚠️  Invalid Request: ${this.results.invalidRequest}`,
-			`  ❌ Server Error: ${this.results.serverError}`,
-			`  🚫 Not Implemented: ${this.results.notImplemented}`,
-			`  📝 Type Mismatch: ${this.results.typeMismatch}`,
-			`  ❓ Unknown Error: ${this.results.unknownError}`,
+			`  ✅ Success: ${this.testResultCounts.success}`,
+			`  🔒 Permission Denied: ${this.testResultCounts.permissionDenied}`,
+			`  🔍 Not Found: ${this.testResultCounts.notFound}`,
+			`  ⚠️  Invalid Request: ${this.testResultCounts.invalidRequest}`,
+			`  ❌ Server Error: ${this.testResultCounts.serverError}`,
+			`  🚫 Not Implemented: ${this.testResultCounts.notImplemented}`,
+			`  📝 Type Mismatch: ${this.testResultCounts.typeMismatch}`,
+			`  ❓ Unknown Error: ${this.testResultCounts.unknownError}`,
 			""
 		];
 
