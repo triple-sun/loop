@@ -22,7 +22,7 @@ export enum AppRequestedLocation {
 	EMBEDDED = "/embedded"
 }
 
-export type AppManifest = {
+export interface AppManifest {
 	app_id: string;
 	version?: string;
 	homepage_url?: string;
@@ -31,7 +31,7 @@ export type AppManifest = {
 	description?: string;
 	requested_permissions?: AppPermission[];
 	requested_locations?: AppRequestedLocation[];
-};
+}
 
 /**
  * =======================================
@@ -49,11 +49,11 @@ export enum AppExpandLevel {
 	ID = "id"
 }
 
-export type AppContextProps = {
+export interface AppContextProps {
 	[name: string]: string;
-};
+}
 
-export type AppContext = {
+export interface AppContext {
 	app_id: string;
 	location?: string;
 	acting_user_id?: string;
@@ -65,9 +65,9 @@ export type AppContext = {
 	props?: AppContextProps;
 	user_agent?: string;
 	track_as_submit?: boolean;
-};
+}
 
-export type AppExpand = {
+export interface AppExpand {
 	app?: AppExpandLevel;
 	acting_user?: AppExpandLevel;
 	acting_user_access_token?: AppExpandLevel;
@@ -80,35 +80,33 @@ export type AppExpand = {
 	team?: AppExpandLevel;
 	user?: AppExpandLevel;
 	locale?: AppExpandLevel;
-};
+}
 
-export type AppCallValues = {
+export interface AppCallValues {
 	[name: string]: unknown;
-};
+}
 
-export type AppCallMetadataForClient = {
+export interface AppCallMetadataForClient {
 	bot_user_id: string;
 	bot_username: string;
-};
+}
 
-export type AppCall = {
+export interface AppCall {
 	path: string;
 	expand?: AppExpand;
 	state?: unknown;
-};
+}
 
-export type AppCallRequest = AppCall & {
+export interface AppCallRequest extends AppCall {
 	context: AppContext;
 	values?: AppCallValues;
 	raw_command?: string;
 	selected_field?: string;
 	query?: string;
-};
+}
 
-export type AppCallResponseType = string;
-
-export type AppCallResponse<Res = unknown> = {
-	type: AppCallResponseType;
+export interface AppCallResponse<Res = unknown> {
+	type: string;
 	text?: string;
 	data?: Res;
 	navigate_to_url?: string;
@@ -116,7 +114,7 @@ export type AppCallResponse<Res = unknown> = {
 	call?: AppCall;
 	form?: AppForm;
 	app_metadata?: AppCallMetadataForClient;
-};
+}
 
 /**
  * =======================================
@@ -131,7 +129,7 @@ export enum AppLocation {
 	EMBEDDED = "embedded"
 }
 
-export type AppCommandFormMap = { [location in AppLocation]: AppForm };
+export interface AppCommandFormMap extends Record<AppLocation, AppForm> {}
 
 export interface BindingsInfo {
 	bindings: AppBinding[];
@@ -201,6 +199,7 @@ export enum AppFormFieldSubType {
 }
 
 export type AppFormValue = string | AppFormSelectOption | boolean | null;
+
 export interface AppFormValues {
 	[name: string]: string | AppFormSelectOption | boolean | null;
 }

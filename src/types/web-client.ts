@@ -94,6 +94,7 @@ export interface WebClientOptions {
 	readonly useCurrentUserForDirectChannels?: boolean;
 	readonly useCurrentUserForPostCreation?: boolean;
 	readonly saveFetchedUserID?: boolean;
+	readonly testConnectionOnInit?: boolean;
 }
 
 export type TLSOptions = Pick<

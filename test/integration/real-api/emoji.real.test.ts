@@ -6,27 +6,25 @@
 import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
 import { customEmojiSchema, emojiSchema } from "./schemas/emojis.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Emoji API - Real API Tests", () => {
 	let client: WebClient;
 	let foundEmojiId: string | undefined;
+
+	const report = new TestReport("Emoji");
 
 	beforeAll(() => {
 		client = createRealApiClient();
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("emoji.list", () => {
 		it("should return list of custom emoji", async () => {
-			await testMethod(
+			await report.testMethod(
 				"emoji.list",
 				"GET /emoji",
 				() => client.emojis.list({ page: 0, per_page: 10 }),
@@ -42,7 +40,7 @@ describe("Emoji API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"emoji.get.byId",
 				"GET /emoji/:emoji_id",
 				() => client.emojis.get.byId({ emoji_id: foundEmojiId }),
@@ -55,7 +53,7 @@ describe("Emoji API - Real API Tests", () => {
 	// We'll skip strict failure if it returns 404 for 'smile'
 	describe("emoji.getByName", () => {
 		it("should return custom emoji by name", async () => {
-			await testMethod(
+			await report.testMethod(
 				"emoji.get.byName",
 				"GET /emoji/name/:name",
 				() => client.emojis.get.byName({ name: "smile" }),

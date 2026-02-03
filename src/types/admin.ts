@@ -12,57 +12,52 @@ export enum AnalyticsVisualizationType {
 	DOUGHNUT_CHART = "doughnut_chart"
 }
 
-export type LogServerNames = string[];
-export type LogLevels = LogLevel[];
-export type LogDateFrom = string; // epoch
-export type LogDateTo = string; // epoch
-
-export type LogObject = {
+export interface LogObject {
 	caller: string;
 	job_id: string;
 	level: LogLevel;
 	msg: string;
 	timestamp: string;
 	worker: string;
-};
+}
 
-export type LogFilter = {
-	serverNames: LogServerNames;
-	logLevels: LogLevels;
-	dateFrom: LogDateFrom;
-	dateTo: LogDateTo;
-};
+export interface LogFilter {
+	serverNames: string[];
+	logLevels: LogLevel[];
+	dateFrom: string; // epoch
+	dateTo: string;
+}
 
-export type LogFilterQuery = {
-	server_names: LogServerNames;
-	log_levels: LogLevels;
-	date_from: LogDateFrom;
-	date_to: LogDateTo;
-};
+export interface LogFilterQuery {
+	server_names: string[];
+	log_levels: LogLevel[];
+	date_from: string;
+	date_to: string; // epoch
+}
 
-export type ClusterInfo = {
+export interface ClusterInfo {
 	id: string;
 	version: string;
 	config_hash: string;
 	ipaddress: string;
 	hostname: string;
 	schema_version: string;
-};
+}
 
-export type AnalyticsRow = {
+export interface AnalyticsRow {
 	name: string;
 	value: number;
-};
+}
 
-export type SchemaMigration = {
+export interface SchemaMigration {
 	version: number;
 	name: string;
-};
+}
 
-export type SupportPacketContent = {
+export interface SupportPacketContent {
 	id: string;
 	translation_id?: string;
 	label: string;
 	selected: boolean;
 	mandatory: boolean;
-};
+}

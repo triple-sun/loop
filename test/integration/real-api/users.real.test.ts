@@ -6,17 +6,13 @@
 
 import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
-import {
-	channelSchema,
-	preferenceTypeSchema,
-	userProfileSchema,
-	userStatusSchema
-} from "./response-schemas";
+import { channelSchema } from "./schemas/channels.zod";
+import { preferenceTypeSchema } from "./schemas/preferences.zod";
+import { userProfileSchema, userStatusSchema } from "./schemas/users.zod";
 import {
 	createRealApiClient,
-	printReportSummary,
-	TestResultCategory,
-	testMethod
+	TestReport,
+	TestResultCategory
 } from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
@@ -24,6 +20,8 @@ describe("Users API - Real API Tests", () => {
 	let client: WebClient;
 	let currentUserId: string | undefined;
 	let foundTeamId: string | undefined;
+
+	const report = new TestReport("Users");
 
 	beforeAll(async () => {
 		client = createRealApiClient();
@@ -50,12 +48,12 @@ describe("Users API - Real API Tests", () => {
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("users.profile.get.me", () => {
 		it("should return current user profile", async () => {
-			const result = await testMethod(
+			const result = await report.testMethod(
 				"users.profile.get.me",
 				"GET /users/me",
 				() => client.users.profile.get.me(),
@@ -75,7 +73,7 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"users.profile.getById",
 				"GET /users/:user_id",
 				() => client.users.profile.get.byId({ user_id: currentUserId! }),
@@ -86,7 +84,7 @@ describe("Users API - Real API Tests", () => {
 
 	describe("users.list", () => {
 		it("should return list of users", async () => {
-			const result = await testMethod(
+			const result = await report.testMethod(
 				"users.list",
 				"GET /users",
 				() => client.users.list({ page: 0, per_page: 10 }),
@@ -104,7 +102,7 @@ describe("Users API - Real API Tests", () => {
 
 	describe("users.autocomplete", () => {
 		it("should return user autocomplete results", async () => {
-			await testMethod(
+			await report.testMethod(
 				"users.autocomplete",
 				"GET /users/autocomplete",
 				() => client.users.autocomplete({ name: "a" }),
@@ -123,7 +121,7 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"users.status.get",
 				"GET /users/:user_id/status",
 				() => client.users.status.get({ user_id: currentUserId! }),
@@ -139,7 +137,7 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"users.channels",
 				"GET /users/:user_id/channels",
 				() => client.users.channels.list.all({ user_id: currentUserId! }),
@@ -155,7 +153,7 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"users.preferences.get",
 				"GET /users/:user_id/preferences",
 				() => client.users.preferences.get({ user_id: currentUserId! }),
@@ -166,7 +164,7 @@ describe("Users API - Real API Tests", () => {
 
 	describe("users.profile.getByEmail", () => {
 		it("should find user by email (may require specific email)", async () => {
-			await testMethod(
+			await report.testMethod(
 				"users.profile.getByEmail",
 				"GET /users/email",
 				() =>
@@ -180,7 +178,7 @@ describe("Users API - Real API Tests", () => {
 
 	describe("users.profile.getByUsername", () => {
 		it("should find user by username", async () => {
-			await testMethod(
+			await report.testMethod(
 				"users.profile.getByUsername",
 				"GET /users/username",
 				() => client.users.profile.get.byUsername({ username: "triplesun" }),

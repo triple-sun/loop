@@ -1,5 +1,3 @@
-import type { ServerError } from "./errors";
-
 export enum TeamType {
 	O = "O",
 	I = "I"
@@ -22,7 +20,7 @@ export interface TeamMembership extends TeamUnread {
 export interface TeamMemberWithError {
 	member: TeamMembership;
 	user_id: string;
-	error: ServerError;
+	error: Error;
 }
 
 export interface Team {

@@ -1,4 +1,4 @@
-import {} from "./files";
+import type { FileInfo } from "./files";
 
 /**
  * ===============================================
@@ -176,7 +176,7 @@ export interface ChannelBookmarkPatch {
 }
 
 export interface ChannelBookmarkWithFileInfo extends ChannelBookmark {
-	file: FileInfo;
+	file?: FileInfo;
 }
 
 /**

@@ -7,6 +7,18 @@ export interface Paginated {
 	page?: number;
 }
 
+export interface Directionable {
+	/**
+	 * @description Field to sort the returned list by.
+	 */
+	sort?: string;
+
+	/**
+	 * @description Direction (ascending or descending) followed by the sorting returned list
+	 */
+	direction?: "desc" | "asc";
+}
+
 /**
  * Some API methods allow for overriding the auth token used with a method at runtime.
  */

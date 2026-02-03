@@ -9,11 +9,7 @@ import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
 import { statusOkSchema } from "./schemas/common.zod";
 import { reactionSchema } from "./schemas/reactions.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Reactions API - Real API Tests", () => {
 	let client: WebClient;
@@ -21,6 +17,8 @@ describe("Reactions API - Real API Tests", () => {
 	let foundChannelId: string = "";
 	let currentUserId: string = "";
 	let createdPostId: string = "";
+
+	const report = new TestReport("Reactions");
 
 	beforeAll(async () => {
 		client = createRealApiClient();
@@ -81,7 +79,7 @@ describe("Reactions API - Real API Tests", () => {
 				console.error("Failed to cleanup post:", error);
 			}
 		}
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("reactions.create", () => {
@@ -91,7 +89,7 @@ describe("Reactions API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"reactions.create",
 				"POST /reactions",
 				async () => {
@@ -115,7 +113,7 @@ describe("Reactions API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"reactions.getForPost",
 				"GET /posts/:post_id/reactions",
 				() => client.reactions.getForPost({ post_id: createdPostId }),
@@ -131,7 +129,7 @@ describe("Reactions API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"reactions.delete",
 				"POST /users/:user_id/posts/:post_id/reactions/:emoji_name",
 				() =>

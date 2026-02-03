@@ -14,8 +14,8 @@
 		"lint": "biome lint ./src",
 		"prepare": "husky",
 		"prepublishOnly": "rimraf build && tsc && husky && jest",
-		"test:real:base": "pnpm run test --testPathIgnorePatterns=null",
-		"test:real:only": "pnpm run test --testPathIgnorePatterns=null --testMatch=\"**/test/integration/real-api/*.test.ts\""
+		"test:real:base": "jest --testPathIgnorePatterns=null",
+		"test:real:only": "jest --testPathIgnorePatterns=null --testMatch=\"**/test/integration/real-api/*.test.ts\""
 	},
 	"repository": {
 		"type": "git",

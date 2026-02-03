@@ -8,25 +8,26 @@ import type { WebClient } from "../../../src/web-client";
 import { statusOkSchema } from "./schemas/common.zod";
 import {
 	createRealApiClient,
-	printReportSummary,
-	TestResultCategory,
-	testMethod
+	TestReport,
+	TestResultCategory
 } from "./utils.ts/real-api.utils";
 
 describe("System API - Real API Tests", () => {
 	let client: WebClient;
+
+	const report = new TestReport("System");
 
 	beforeAll(() => {
 		client = createRealApiClient();
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("system.getPing", () => {
 		it("should return server ping status", async () => {
-			const result = await testMethod(
+			const result = await report.testMethod(
 				"system.getPing",
 				"GET /system/ping",
 				() => client.system.getPing({}),
@@ -41,7 +42,7 @@ describe("System API - Real API Tests", () => {
 
 	describe("system.getLogs", () => {
 		it("should return server logs (may require admin)", async () => {
-			await testMethod(
+			await report.testMethod(
 				"system.getLogs",
 				"GET /logs",
 				() =>
@@ -60,7 +61,7 @@ describe("System API - Real API Tests", () => {
 
 	describe("system.getAnalytics", () => {
 		it("should return analytics data (may require admin)", async () => {
-			await testMethod(
+			await report.testMethod(
 				"system.getAnalytics",
 				"GET /analytics/old",
 				() => client.system.getAnalytics({ name: "standard" }),

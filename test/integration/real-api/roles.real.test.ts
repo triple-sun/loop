@@ -6,26 +6,24 @@
 import z from "zod";
 import type { WebClient } from "../../../src/web-client";
 import { roleSchema } from "./schemas/roles.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Roles API - Real API Tests", () => {
 	let client: WebClient;
+
+	const report = new TestReport("Roles");
 
 	beforeAll(() => {
 		client = createRealApiClient();
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("roles.getByName", () => {
 		it("should return role by name (system_user)", async () => {
-			await testMethod(
+			await report.testMethod(
 				"roles.getByName",
 				"GET /roles/name/:role_name",
 				() => client.roles.get.byName({ name: "system_user" }),
@@ -36,7 +34,7 @@ describe("Roles API - Real API Tests", () => {
 
 	describe("roles.getByNames", () => {
 		it("should return roles by names", async () => {
-			await testMethod(
+			await report.testMethod(
 				"roles.getByNames",
 				"POST /roles/names",
 				() =>

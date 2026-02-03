@@ -6,43 +6,6 @@ import { WebClient } from "../../../../src/web-client";
 import { describeSchema, validateType, type z } from "./type-schema.utils";
 
 /**
- * Load environment variables from test.env
- */
-dotenv.config({ path: path.resolve(process.cwd(), "test.env") });
-
-/**
- * Real API test configuration from test.env
- */
-export const TEST_LOOP_URL = process.env["TEST_LOOP_URL"] ?? "";
-export const TEST_LOOP_TOKEN = process.env["TEST_LOOP_TOKEN"] ?? "";
-
-/**
- * Validates that required environment variables are present
- */
-export function validateTestEnv(): void {
-	if (!TEST_LOOP_URL) {
-		throw new Error("TEST_LOOP_URL is not set in test.env");
-	}
-	if (!TEST_LOOP_TOKEN) {
-		throw new Error("TEST_LOOP_TOKEN is not set in test.env");
-	}
-}
-
-/**
- * Creates a WebClient configured for real API testing
- */
-export function createRealApiClient(): WebClient {
-	validateTestEnv();
-
-	return new WebClient(TEST_LOOP_URL, {
-		token: TEST_LOOP_TOKEN,
-		logLevel: LogLevel.ERROR,
-		retryConfig: { retries: 2 },
-		saveFetchedUserID: true
-	});
-}
-
-/**
  * Result categories for API method tests
  */
 export enum TestResultCategory {
@@ -96,38 +59,59 @@ export interface MethodTestResult {
 }
 
 /**
- * Full test report structure
+ * Load environment variables from test.env
  */
-export interface TestReport {
-	/** Test run timestamp */
-	timestamp: string;
-	/** API URL tested */
-	apiUrl: string;
-	/** Total methods tested */
-	totalMethods: number;
-	/** Results by category */
-	results: {
-		success: number;
-		permissionDenied: number;
-		notFound: number;
-		invalidRequest: number;
-		serverError: number;
-		notImplemented: number;
-		typeMismatch: number;
-		unknownError: number;
-	};
-	/** Individual method results */
-	methods: MethodTestResult[];
-}
+dotenv.config({ path: path.resolve(process.cwd(), "test.env") });
 
 /**
- * Global test report that accumulates results
+ * Real API test configuration from test.env
  */
-export const testReport: TestReport = {
-	timestamp: new Date().toISOString(),
-	apiUrl: TEST_LOOP_URL,
-	totalMethods: 0,
-	results: {
+export const TEST_LOOP_URL = process.env["TEST_LOOP_URL"] ?? "";
+export const TEST_LOOP_TOKEN = process.env["TEST_LOOP_TOKEN"] ?? "";
+
+/**
+ * Validates that required environment variables are present
+ */
+export const validateTestEnv = (): void => {
+	if (!TEST_LOOP_URL) {
+		throw new Error("TEST_LOOP_URL is not set in test.env");
+	}
+	if (!TEST_LOOP_TOKEN) {
+		throw new Error("TEST_LOOP_TOKEN is not set in test.env");
+	}
+};
+
+/**
+ * Creates a WebClient configured for real API testing
+ */
+export const createRealApiClient = (): WebClient => {
+	validateTestEnv();
+
+	return new WebClient(TEST_LOOP_URL, {
+		token: TEST_LOOP_TOKEN,
+		logLevel: LogLevel.ERROR,
+		retryConfig: { retries: 2 },
+		saveFetchedUserID: true
+	});
+};
+
+interface MethodTestResults {
+	success: number;
+	permissionDenied: number;
+	notFound: number;
+	invalidRequest: number;
+	serverError: number;
+	notImplemented: number;
+	typeMismatch: number;
+	unknownError: number;
+}
+
+export class TestReport {
+	name: string = "";
+	timestamp: string = new Date().toISOString();
+	apiUrl: string = TEST_LOOP_URL;
+	totalMethods: number = 0;
+	results: MethodTestResults = {
 		success: 0,
 		permissionDenied: 0,
 		notFound: 0,
@@ -136,264 +120,267 @@ export const testReport: TestReport = {
 		notImplemented: 0,
 		typeMismatch: 0,
 		unknownError: 0
-	},
-	methods: []
-};
+	};
 
-/**
- * Records a test result
- */
-export function recordResult(result: MethodTestResult): void {
-	testReport.methods.push(result);
-	testReport.totalMethods++;
+	methods: MethodTestResults[] = [];
 
-	switch (result.category) {
-		case TestResultCategory.SUCCESS:
-			testReport.results.success++;
-			break;
-		case TestResultCategory.PERMISSION_DENIED:
-			testReport.results.permissionDenied++;
-			break;
-		case TestResultCategory.NOT_FOUND:
-			testReport.results.notFound++;
-			break;
-		case TestResultCategory.INVALID_REQUEST:
-			testReport.results.invalidRequest++;
-			break;
-		case TestResultCategory.SERVER_ERROR:
-			testReport.results.serverError++;
-			break;
-		case TestResultCategory.NOT_IMPLEMENTED:
-			testReport.results.notImplemented++;
-			break;
-		case TestResultCategory.TYPE_MISMATCH:
-			testReport.results.typeMismatch++;
-			break;
-		default:
-			testReport.results.unknownError++;
+	constructor(name: string) {
+		this.name = name;
 	}
-}
 
-/**
- * Categorizes an error into a result category
- */
-export function categorizeError(error: unknown): TestResultCategory {
-	if (error instanceof Error) {
-		const message = error.message.toLowerCase();
+	/**
+	 * Records a test result
+	 */
+	saveResult(result: MethodTestResults): void {
+		this.methods.push(result);
+		this.totalMethods++;
 
-		// Check for HTTP status codes in error messages
-		if (
-			message.includes("403") ||
-			message.includes("forbidden") ||
-			message.includes("permission")
-		) {
-			return TestResultCategory.PERMISSION_DENIED;
-		}
-		if (message.includes("404") || message.includes("not found")) {
-			return TestResultCategory.NOT_FOUND;
-		}
-		if (
-			message.includes("400") ||
-			message.includes("bad request") ||
-			message.includes("invalid")
-		) {
-			return TestResultCategory.INVALID_REQUEST;
-		}
-		if (
-			message.includes("500") ||
-			message.includes("502") ||
-			message.includes("503") ||
-			message.includes("server")
-		) {
-			return TestResultCategory.SERVER_ERROR;
-		}
-		if (message.includes("501") || message.includes("not implemented")) {
-			return TestResultCategory.NOT_IMPLEMENTED;
+		switch (result.category) {
+			case TestResultCategory.SUCCESS:
+				this.results.success++;
+				break;
+			case TestResultCategory.PERMISSION_DENIED:
+				this.results.permissionDenied++;
+				break;
+			case TestResultCategory.NOT_FOUND:
+				this.results.notFound++;
+				break;
+			case TestResultCategory.INVALID_REQUEST:
+				this.results.invalidRequest++;
+				break;
+			case TestResultCategory.SERVER_ERROR:
+				this.results.serverError++;
+				break;
+			case TestResultCategory.NOT_IMPLEMENTED:
+				this.results.notImplemented++;
+				break;
+			case TestResultCategory.TYPE_MISMATCH:
+				this.results.typeMismatch++;
+				break;
+			default:
+				this.results.unknownError++;
 		}
 	}
 
-	return TestResultCategory.UNKNOWN_ERROR;
-}
+	/**
+	 * Categorizes an error into a result category
+	 */
+	categorizeError(error: unknown): TestResultCategory {
+		if (error instanceof Error) {
+			const message = error.message.toLowerCase();
 
-/**
- * Helper to run a test method and record the result
- */
-/**
- * Helper to run a test method and record the result
- */
-export async function testMethod<T>(
-	methodPath: string,
-	endpoint: string,
-	testFn: () => Promise<{ data: T }>,
-	schema: z.ZodType
-): Promise<MethodTestResult> {
-	const startTime = Date.now();
-
-	try {
-		const { data } = await testFn();
-		const durationMs = Date.now() - startTime;
-
-		const validation = validateType(data, schema);
-
-		const result: MethodTestResult = {
-			methodPath,
-			endpoint,
-			category: validation.matches
-				? TestResultCategory.SUCCESS
-				: TestResultCategory.TYPE_MISMATCH,
-			responseData: truncateResponse(data),
-			expectedType: describeSchema(schema),
-			actualType: typeof data,
-			durationMs,
-			typeValidation: {
-				matches: validation.matches,
-				differences: validation.differences
+			// Check for HTTP status codes in error messages
+			if (
+				message.includes("403") ||
+				message.includes("forbidden") ||
+				message.includes("permission")
+			) {
+				return TestResultCategory.PERMISSION_DENIED;
 			}
-		};
+			if (message.includes("404") || message.includes("not found")) {
+				return TestResultCategory.NOT_FOUND;
+			}
+			if (
+				message.includes("400") ||
+				message.includes("bad request") ||
+				message.includes("invalid")
+			) {
+				return TestResultCategory.INVALID_REQUEST;
+			}
+			if (
+				message.includes("500") ||
+				message.includes("502") ||
+				message.includes("503") ||
+				message.includes("server")
+			) {
+				return TestResultCategory.SERVER_ERROR;
+			}
+			if (message.includes("501") || message.includes("not implemented")) {
+				return TestResultCategory.NOT_IMPLEMENTED;
+			}
+		}
 
-		recordResult(result);
-		return result;
-	} catch (error) {
-		const durationMs = Date.now() - startTime;
-		const category = categorizeError(error);
-
-		const result: MethodTestResult = {
-			methodPath,
-			endpoint,
-			category,
-			errorMessage: error instanceof Error ? error.message : String(error),
-			expectedType: describeSchema(schema),
-			durationMs
-		};
-
-		recordResult(result);
-		return result;
-	}
-}
-
-/**
- * Truncates large response objects for logging
- */
-function truncateResponse(
-	response: unknown,
-	maxLength = Number.POSITIVE_INFINITY
-): unknown {
-	if (process.env["GENERATE_SCHEMAS"] === "true") {
-		return response;
-	}
-	const str = JSON.stringify(response);
-	if (str.length <= maxLength) {
-		return response;
-	}
-	return `[Truncated: ${str.length} chars] ${str.substring(0, maxLength)}...`;
-}
-
-/**
- * Prints the test report summary and saves results to files
- */
-export function printReportSummary(): void {
-	// Calculate type validation stats
-	const methodsWithValidation = testReport.methods.filter(
-		m => m.typeValidation !== undefined
-	);
-	const typeValidationPassed = methodsWithValidation.filter(
-		m => m.typeValidation?.matches === true
-	).length;
-	const typeValidationFailed = methodsWithValidation.filter(
-		m => m.typeValidation?.matches === false
-	).length;
-
-	const summaryLines = [
-		"",
-		"========== API TEST REPORT SUMMARY ==========",
-		`Timestamp: ${testReport.timestamp}`,
-		`API URL: ${testReport.apiUrl}`,
-		`Total Methods Tested: ${testReport.totalMethods}`,
-		"",
-		"Results:",
-		`  ✅ Success: ${testReport.results.success}`,
-		`  🔒 Permission Denied: ${testReport.results.permissionDenied}`,
-		`  🔍 Not Found: ${testReport.results.notFound}`,
-		`  ⚠️  Invalid Request: ${testReport.results.invalidRequest}`,
-		`  ❌ Server Error: ${testReport.results.serverError}`,
-		`  🚫 Not Implemented: ${testReport.results.notImplemented}`,
-		`  📝 Type Mismatch: ${testReport.results.typeMismatch}`,
-		`  ❓ Unknown Error: ${testReport.results.unknownError}`,
-		""
-	];
-
-	// Add type validation stats if any methods were validated
-	if (methodsWithValidation.length > 0) {
-		summaryLines.push(
-			"Type Validation:",
-			`  Total Validated: ${methodsWithValidation.length}`,
-			`  ✅ Passed: ${typeValidationPassed}`,
-			`  ❌ Failed: ${typeValidationFailed}`,
-			""
-		);
+		return TestResultCategory.UNKNOWN_ERROR;
 	}
 
-	// Add detailed type mismatch information
-	const failedValidations = methodsWithValidation.filter(
-		m => m.typeValidation?.matches === false
-	);
-	if (failedValidations.length > 0) {
-		summaryLines.push("Type Mismatch Details:", "");
-		for (const method of failedValidations) {
-			summaryLines.push(`  📌 ${method.methodPath} (${method.endpoint})`);
-			if (method.typeValidation?.differences) {
-				for (const diff of method.typeValidation.differences) {
-					summaryLines.push(`     - ${diff}`);
+	/**
+	 * Helper to run a test method and record the result
+	 */
+	/**
+	 * Helper to run a test method and record the result
+	 */
+	async testMethod<T>(
+		methodPath: string,
+		endpoint: string,
+		testFn: () => Promise<{ data: T }>,
+		schema: z.ZodType
+	): Promise<MethodTestResults> {
+		const startTime = Date.now();
+
+		try {
+			const { data } = await testFn();
+			const durationMs = Date.now() - startTime;
+
+			const validation = validateType(data, schema);
+
+			const result: MethodTestResults = {
+				methodPath,
+				endpoint,
+				category: validation.matches
+					? TestResultCategory.SUCCESS
+					: TestResultCategory.TYPE_MISMATCH,
+				responseData: this.truncateResponse(data),
+				expectedType: describeSchema(schema),
+				actualType: typeof data,
+				durationMs,
+				typeValidation: {
+					matches: validation.matches,
+					differences: validation.differences
 				}
-			}
-			summaryLines.push("");
+			};
+
+			this.saveResult(result);
+			return result;
+		} catch (error) {
+			const durationMs = Date.now() - startTime;
+			const category = this.categorizeError(error);
+
+			const result: MethodTestResults = {
+				methodPath,
+				endpoint,
+				category,
+				errorMessage: error instanceof Error ? error.message : String(error),
+				expectedType: describeSchema(schema),
+				durationMs
+			};
+
+			this.saveResult(result);
+			return result;
 		}
 	}
 
-	summaryLines.push("==============================================", "");
-
-	// Print to console
-	for (const line of summaryLines) {
-		console.log(line);
+	/**
+	 * Truncates large response objects for logging
+	 */
+	truncateResponse(
+		response: unknown,
+		maxLength = Number.POSITIVE_INFINITY
+	): unknown {
+		if (process.env["GENERATE_SCHEMAS"] === "true") {
+			return response;
+		}
+		const str = JSON.stringify(response);
+		if (str.length <= maxLength) {
+			return response;
+		}
+		return `[Truncated: ${str.length} chars] ${str.substring(0, maxLength)}...`;
 	}
 
-	// Save to files
-	saveReportToFile(summaryLines.join("\n"));
-}
+	/**
+	 * Prints the test report summary and saves results to files
+	 */
+	summarize(): void {
+		// Calculate type validation stats
+		const methodsWithValidation = this.methods.filter(
+			m => m.typeValidation !== undefined
+		);
+		const typeValidationPassed = methodsWithValidation.filter(
+			m => m.typeValidation?.matches === true
+		).length;
+		const typeValidationFailed = methodsWithValidation.filter(
+			m => m.typeValidation?.matches === false
+		).length;
 
-/**
- * Saves the test report to files in the reports directory
- */
-function saveReportToFile(summaryText: string): void {
-	const reportsDir = path.resolve(__dirname, "reports");
+		const summaryLines = [
+			"",
+			"========== API TEST REPORT SUMMARY ==========",
+			`Timestamp: ${this.timestamp}`,
+			`API URL: ${this.apiUrl}`,
+			`Total Methods Tested: ${this.totalMethods}`,
+			"",
+			"Results:",
+			`  ✅ Success: ${this.results.success}`,
+			`  🔒 Permission Denied: ${this.results.permissionDenied}`,
+			`  🔍 Not Found: ${this.results.notFound}`,
+			`  ⚠️  Invalid Request: ${this.results.invalidRequest}`,
+			`  ❌ Server Error: ${this.results.serverError}`,
+			`  🚫 Not Implemented: ${this.results.notImplemented}`,
+			`  📝 Type Mismatch: ${this.results.typeMismatch}`,
+			`  ❓ Unknown Error: ${this.results.unknownError}`,
+			""
+		];
 
-	// Create reports directory if it doesn't exist
-	if (!fs.existsSync(reportsDir)) {
-		fs.mkdirSync(reportsDir, { recursive: true });
+		// Add type validation stats if any methods were validated
+		if (methodsWithValidation.length > 0) {
+			summaryLines.push(
+				"Type Validation:",
+				`  Total Validated: ${methodsWithValidation.length}`,
+				`  ✅ Passed: ${typeValidationPassed}`,
+				`  ❌ Failed: ${typeValidationFailed}`,
+				""
+			);
+		}
+
+		// Add detailed type mismatch information
+		const failedValidations = methodsWithValidation.filter(
+			m => m.typeValidation?.matches === false
+		);
+		if (failedValidations.length > 0) {
+			summaryLines.push("Type Mismatch Details:", "");
+			for (const method of failedValidations) {
+				summaryLines.push(`  📌 ${method.methodPath} (${method.endpoint})`);
+				if (method.typeValidation?.differences) {
+					for (const diff of method.typeValidation.differences) {
+						summaryLines.push(`     - ${diff}`);
+					}
+				}
+				summaryLines.push("");
+			}
+		}
+
+		summaryLines.push("==============================================", "");
+
+		// Print to console
+		console.log(summaryLines.join(`\n`));
+
+		// Save to files
+		this.saveToFile(summaryLines.join("\n"));
 	}
 
-	// Generate timestamp-based filename (ISO format with safe characters)
-	const timestamp = testReport.timestamp.replace(/[:.]/g, "-");
-	const jsonFilename = `report-${timestamp}.json`;
-	const txtFilename = `report-${timestamp}.txt`;
+	/**
+	 * Saves the test report to files in the reports directory
+	 */
+	saveToFile(summaryText: string): void {
+		const reportsDir = path.resolve(__dirname, "..", "reports");
 
-	const jsonPath = path.join(reportsDir, jsonFilename);
-	const txtPath = path.join(reportsDir, txtFilename);
+		// Create reports directory if it doesn't exist
+		if (!fs.existsSync(reportsDir)) {
+			fs.mkdirSync(reportsDir, { recursive: true });
+		}
 
-	// Save full JSON report
-	fs.writeFileSync(jsonPath, JSON.stringify(testReport, null, 2), "utf-8");
+		// Generate timestamp-based filename (ISO format with safe characters)
+		const timestamp = this.timestamp.replace(/[:.]/g, "-");
+		const jsonFilename = `report-${this.name}-${timestamp}.json`;
+		const txtFilename = `report-${this.name}-${timestamp}.txt`;
 
-	// Save text summary
-	fs.writeFileSync(txtPath, summaryText, "utf-8");
+		const jsonPath = path.join(reportsDir, jsonFilename);
+		const txtPath = path.join(reportsDir, txtFilename);
 
-	console.log(`📁 Report saved to:`);
-	console.log(`   JSON: ${jsonPath}`);
-	console.log(`   TXT:  ${txtPath}`);
-}
+		// Save full JSON report
+		fs.writeFileSync(jsonPath, JSON.stringify(this, null, 2), "utf-8");
 
-/**
- * Returns the full test report
- */
-export function getTestReport(): TestReport {
-	return testReport;
+		// Save text summary
+		fs.writeFileSync(txtPath, summaryText, "utf-8");
+
+		console.log(`📁 Report saved to:`);
+		console.log(`   JSON: ${jsonPath}`);
+		console.log(`   TXT:  ${txtPath}`);
+	}
+
+	/**
+	 * Returns the full test report
+	 */
+	getTestReport(): TestReport {
+		return this;
+	}
 }

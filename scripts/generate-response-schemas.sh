@@ -13,6 +13,7 @@ for FILE in \
 	src/types/emojis.ts \
 	src/types/files.ts \
 	src/types/plugins.ts \
+	src/types/preferences.ts \
 	src/types/reactions.ts src/types/roles.ts src/types/teams.ts src/types/users.ts; do
 
 	if [ ! -f "$FILE" ]; then
@@ -66,14 +67,11 @@ for FILE in \
 
 	# channels fix
 	if [ "$FILENAME" = "channels" ]; then
-		sed -i '' 's/{ FileInfo }/{}/g' "$TYPEFILE"
+		sed -i '' 's/file: FileInfo/file?: FileInfo/g' "$TYPEFILE"
 	fi
 
 	# teams fix
 	sed -i '' 's/{ ServerError }/{}/g' "$TYPEFILE"
-
-	sed -i '' 's/{ StringBool }/{}/g' "$TYPEFILE"
-	sed -i '' 's/StringBool/string/g' "$TYPEFILE"
 
 	echo "✔ Generics fixed!"
 

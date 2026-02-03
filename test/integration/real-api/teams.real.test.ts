@@ -11,17 +11,15 @@ import {
 	teamSchema,
 	teamStatsSchema
 } from "./schemas/teams.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Teams API - Real API Tests", () => {
 	let client: WebClient;
 	const foundTeamId: string = "";
 	const foundTeamName: string = "";
 	let currentUserId: string = "";
+
+	const report = new TestReport("Teams");
 
 	beforeAll(async () => {
 		client = createRealApiClient();
@@ -36,12 +34,12 @@ describe("Teams API - Real API Tests", () => {
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("teams.list", () => {
 		it("should return list of teams", async () => {
-			await testMethod(
+			await report.testMethod(
 				"teams.list",
 				"GET /teams",
 				() => client.teams.list({ page: 0, per_page: 10 }),
@@ -57,7 +55,7 @@ describe("Teams API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"teams.getById",
 				"GET /teams/:team_id",
 				() => client.teams.get.byId({ team_id: foundTeamId }),
@@ -73,7 +71,7 @@ describe("Teams API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"teams.getByName",
 				"GET /teams/name/:name",
 				() => client.teams.get.byName({ name: foundTeamName }),
@@ -89,7 +87,7 @@ describe("Teams API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"teams.getStats",
 				"GET /teams/:team_id/stats",
 				() => client.teams.getStats({ team_id: foundTeamId }),
@@ -105,7 +103,7 @@ describe("Teams API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"teams.members.list",
 				"GET /teams/:team_id/members",
 				() => client.teams.members.list({ team_id: foundTeamId }),
@@ -121,7 +119,7 @@ describe("Teams API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"teams.members.get",
 				"GET /teams/:team_id/members/:user_id",
 				() =>

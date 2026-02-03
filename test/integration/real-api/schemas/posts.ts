@@ -6,7 +6,6 @@ import type { OpenGraphMetadata } from "./metadata";
 import type { Reaction } from "./reactions";
 import type { TeamType } from "./teams";
 import type {} from "./users";
-import type {} from "./utilities";
 
 /**
  * ===============================================
@@ -29,7 +28,7 @@ export interface Post {
 	props?:  {
 		app_bindings?: any[];
 		attachments?: PostAttachment[];
-		from_bot?: string;
+		from_bot?: 'true' | 'false';
 	};
 	hashtags: string;
 	pending_post_id: string;

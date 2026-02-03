@@ -180,7 +180,7 @@ export const postSchema: z.ZodSchema<Post> = z.lazy(() => z.object({
     props: z.object({
         app_bindings: z.array(z.any()).optional(),
         attachments: z.array(postAttachmentSchema).optional(),
-        from_bot: z.string().optional()
+        from_bot: z.union([z.literal("true"), z.literal("false")]).optional()
     }).optional(),
     hashtags: z.string(),
     pending_post_id: z.string(),

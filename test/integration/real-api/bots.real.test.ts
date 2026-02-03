@@ -6,26 +6,24 @@
 import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
 import { botSchema } from "./schemas/bots.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Bots API - Real API Tests", () => {
 	let client: WebClient;
+
+	const report = new TestReport("Bots");
 
 	beforeAll(() => {
 		client = createRealApiClient();
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("bots.list", () => {
 		it("should return list of bots", async () => {
-			await testMethod(
+			await report.testMethod(
 				"bots.list",
 				"GET /bots",
 				() => client.bots.list({ page: 0, per_page: 20 }),

@@ -6,7 +6,6 @@ import type { OpenGraphMetadata } from "./metadata";
 import type { Reaction } from "./reactions";
 import type { TeamType } from "./teams";
 import type { UserProfile } from "./users";
-import type { StringBool } from "./utilities";
 
 /**
  * ===============================================
@@ -29,7 +28,7 @@ export interface Post<PROPS_TYPE = Record<string, unknown>> {
 	props?: PROPS_TYPE & {
 		app_bindings?: AppBinding[];
 		attachments?: PostAttachment[];
-		from_bot?: StringBool;
+		from_bot?: "true" | "false";
 	};
 	hashtags: string;
 	pending_post_id: string;
@@ -252,45 +251,6 @@ export interface PostContext {
 	track_as_submit?: boolean;
 	acting_user?: { id: string };
 	[key: string]: unknown;
-}
-
-/**
- * ===============================================
- * @description Posts responses
- * ===============================================
- */
-
-export enum PostNotificationStatus {
-	ERROR = "error",
-	NOT_SENT = "not_sent",
-	UNSUPPORTED = "unsupported",
-	SUCCESS = "success"
-}
-
-export interface PostListResponse {
-	order: Array<string>;
-	posts: Record<string, Post>;
-	next_post_id: string;
-	prev_post_id: string;
-	first_inaccessible_post_time: number;
-}
-
-export interface PaginatedPostListResponse extends PostListResponse {
-	has_next: boolean;
-}
-
-export interface PostSearchResponse extends PostListResponse {
-	matches: { [postId: string]: string[] };
-}
-
-export interface PostsUsageResponse {
-	count: number;
-}
-
-export interface PostNotificationResponse {
-	status: PostNotificationStatus;
-	reason?: string;
-	data?: string;
 }
 
 /**

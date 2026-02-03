@@ -9,9 +9,8 @@ import { statusOkSchema } from "./schemas/common.zod";
 import { postListResponseSchema, postSchema } from "./schemas/posts.zod";
 import {
 	createRealApiClient,
-	printReportSummary,
-	TestResultCategory,
-	testMethod
+	TestReport,
+	TestResultCategory
 } from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jesting>
@@ -21,6 +20,8 @@ describe("Posts API - Real API Tests", () => {
 	let foundChannelId: string = "";
 	let currentUserId: string = "";
 	let createdPostId: string = "";
+
+	const report = new TestReport("Posts");
 
 	beforeAll(async () => {
 		client = createRealApiClient();
@@ -71,7 +72,8 @@ describe("Posts API - Real API Tests", () => {
 				console.error("Failed to cleanup test post:", error);
 			}
 		}
-		printReportSummary();
+
+		report.summarize();
 	});
 
 	describe("posts.create", () => {
@@ -81,7 +83,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			const result = await report.testMethod(
 				"posts.create",
 				"POST /posts",
 				async () => {
@@ -108,7 +110,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.get",
 				"GET /posts/:post_id",
 				() => client.posts.get({ post_id: createdPostId }),
@@ -124,7 +126,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.update",
 				"PUT /posts/:id",
 				() =>
@@ -144,7 +146,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.getThread",
 				"GET /posts/:post_id/thread",
 				() => client.posts.getThread({ post_id: createdPostId }),
@@ -160,7 +162,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.getForChannel",
 				"GET /channels/:channel_id/posts",
 				() =>
@@ -181,7 +183,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.pin",
 				"POST /posts/:post_id/pin",
 				() => client.posts.pin({ post_id: createdPostId }),
@@ -197,7 +199,7 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"posts.unpin",
 				"POST /posts/:post_id/unpin",
 				() => client.posts.unpin({ post_id: createdPostId }),

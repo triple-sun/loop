@@ -171,9 +171,34 @@ export const channelUnreadResponseSchema = z.object({
     deltaMsgs: z.number()
 });
 
+const fileInfoSchema = z.any();
+
 export const serverChannelSchema = channelSchema.extend({
     total_msg_count: z.number(),
     total_msg_count_root: z.number()
+});
+
+export const channelBookmarkSchema = z.object({
+    id: z.string(),
+    create_at: z.number(),
+    update_at: z.number(),
+    delete_at: z.number(),
+    channel_id: z.string(),
+    owner_id: z.string(),
+    file_id: z.string().optional(),
+    file: fileInfoSchema.optional(),
+    display_name: z.string(),
+    sort_order: z.number(),
+    link_url: z.string().optional(),
+    image_url: z.string().optional(),
+    emoji: z.string().optional(),
+    type: channelBookmarkTypeSchema,
+    original_id: z.string().optional(),
+    parent_id: z.string().optional()
+});
+
+export const channelBookmarkWithFileInfoSchema = channelBookmarkSchema.extend({
+    file: fileInfoSchema.optional()
 });
 
 export const channelMembershipSchema = z.object({

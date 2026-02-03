@@ -1,6 +1,4 @@
-import type { Audit } from "./audits";
 import type { TeamMembership } from "./teams";
-import type { STRING_NULL, string } from "./utilities";
 
 export enum UserNotify {
 	DEFAULT = "default",
@@ -9,40 +7,12 @@ export enum UserNotify {
 	NONE = "none"
 }
 
-export enum UserNotifyComments {
-	NEVER = "never",
-	ROOT = "root",
-	ANY = "any"
-}
-
-export enum UserNotifyDesktopSound {
-	BING = "Bing",
-	CRACKLE = "Crackle",
-	DOWN = "Down",
-	HELLO = "Hello",
-	RIPPLE = "Ripple",
-	UPSTAIRS = "Upstairs"
-}
-
-export enum UserNotifyMarkUnread {
-	ALL = UserNotify.ALL,
-	MENTION = UserNotify.MENTION
-}
-
 export enum UserCallSound {
 	DYNAMIC = "Dynamic",
 	CALM = "Calm",
 	URGENT = "Urgent",
 	CHEERFUL = "Cheerful",
 	NULL = ""
-}
-
-export enum PushStatus {
-	OOO = "ooo",
-	OFFLINE = "offline",
-	AWAY = "away",
-	DND = "dnd",
-	ONLINE = "online"
 }
 
 export enum UserStatusValue {
@@ -64,25 +34,25 @@ export enum CustomStatusDuration {
 }
 
 export interface NotifyProps {
-	channel: string;
-	comments: UserNotifyComments;
+	channel: "true" | "false";
+	comments: "never" | "root" | "any";
 	desktop: UserNotify;
-	desktop_sound: string;
+	desktop_sound: "true" | "false";
 	desktop_threads?: UserNotify;
-	email: string;
+	email: "true" | "false";
 	email_threads?: UserNotify;
-	first_name: string;
+	first_name: "true" | "false";
 	/** @version Loop only */
 	loop_mobile_push_reactions?: UserNotify;
 	/** @version Loop only */
-	loop_mobile_push_reactions_sound?: string;
+	loop_mobile_push_reactions_sound?: "true" | "false";
 	/** @version Loop only */
 	loop_push_reactions?: UserNotify;
 	/** @version Loop only */
-	loop_push_reactions_sound?: string;
+	loop_push_reactions_sound?: "true" | "false";
 	mention_keys: string;
 	push: UserNotify;
-	push_status: PushStatus;
+	push_status: "ooo" | "offline" | "away" | "dnd" | "online";
 	push_threads?: UserNotify;
 
 	/**
@@ -90,13 +60,19 @@ export interface NotifyProps {
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	calls_desktop_sound?: string;
+	calls_desktop_sound?: "true" | "false";
 	/**
 	 * @deprecated
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	desktop_notification_sound?: UserNotifyDesktopSound;
+	desktop_notification_sound?:
+		| "Bing"
+		| "Crackle"
+		| "Down"
+		| "Hello"
+		| "Ripple"
+		| "Upstairs";
 
 	/**
 	 * @deprecated
@@ -110,7 +86,7 @@ export interface NotifyProps {
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	auto_responder_active?: string;
+	auto_responder_active?: "true" | "false";
 
 	/**
 	 * @deprecated
@@ -124,7 +100,7 @@ export interface NotifyProps {
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	calls_mobile_sound?: string | STRING_NULL;
+	calls_mobile_sound?: "true" | "false" | "";
 
 	/**
 	 * @deprecated
@@ -267,7 +243,7 @@ export interface UserSession {
 }
 
 export interface UserTimezone {
-	useAutomaticTimezone: boolean | string;
+	useAutomaticTimezone: boolean | "true" | "false";
 	automaticTimezone: string;
 	manualTimezone: string;
 }

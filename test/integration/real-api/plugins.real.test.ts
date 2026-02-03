@@ -9,26 +9,23 @@ import {
 	pluginManifestSchema,
 	pluginStatusSchema
 } from "./schemas/plugins.zod";
-import {
-	createRealApiClient,
-	printReportSummary,
-	testMethod
-} from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
 
 describe("Plugins API - Real API Tests", () => {
 	let client: WebClient;
+	const report = new TestReport("Plugins");
 
 	beforeAll(() => {
 		client = createRealApiClient();
 	});
 
 	afterAll(() => {
-		printReportSummary();
+		report.summarize();
 	});
 
 	describe("plugins.get", () => {
 		it("should return list of plugins (may require admin)", async () => {
-			await testMethod(
+			await report.testMethod(
 				"plugins.get",
 				"GET /plugins",
 				() => client.plugins.get(),
@@ -39,7 +36,7 @@ describe("Plugins API - Real API Tests", () => {
 
 	describe("plugins.getStatuses", () => {
 		it("should return plugin statuses", async () => {
-			await testMethod(
+			await report.testMethod(
 				"plugins.getStatuses",
 				"GET /plugins/statuses",
 				() => client.plugins.getStatuses(),
@@ -50,7 +47,7 @@ describe("Plugins API - Real API Tests", () => {
 
 	describe("plugins.getWebapp", () => {
 		it("should return webapp plugins", async () => {
-			await testMethod(
+			await report.testMethod(
 				"plugins.getWebapp",
 				"GET /plugins/webapp",
 				() => client.plugins.getWebapp(),

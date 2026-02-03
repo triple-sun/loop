@@ -108,7 +108,7 @@ export class WebClient extends Methods {
 
 	/**
 	 * @description Use post.user_id in PostCreateArguments to fetch a channel_id for post
-	 * Will call channels.createDirect for current
+	 * Will call channels.create.direct for current user if true
 	 * Will fetch current user ID from server if no userID was provided or overridden by token in options
 	 *
 	 * @default true
@@ -140,6 +140,7 @@ export class WebClient extends Methods {
 			useCurrentUserForDirectChannels = true,
 			useCurrentUserForPostCreation = true,
 			saveFetchedUserID = false,
+			testConnectionOnInit = false,
 			agent = undefined,
 			tls = undefined,
 			timeout = 0,
@@ -245,6 +246,9 @@ export class WebClient extends Methods {
 		/** main data serializer interceptor */
 		this.axios.interceptors.request.use(this.serializeApiCallData.bind(this));
 
+		/** test connection if needed */
+		if (testConnectionOnInit) this.system.getPing();
+
 		this.logger.debug("initialized");
 	}
 
@@ -258,51 +262,54 @@ export class WebClient extends Methods {
 	public async apiCall<T = unknown>(
 		config: WebApiCallConfig,
 		options: Record<string, unknown> = {}
-	): Promise<WebAPICallResult<T>> {
-		this.logger.debug(`apiCall [${config.method} ${config.path}] start`);
+	): Promise<Readonly<WebAPICallResult<T>>> {
+		this.logger.debug(`APICall [${config.method} ${config.path}] start`);
 
 		if (
 			typeof options === "string" ||
 			typeof options === "number" ||
 			typeof options === "boolean"
 		) {
-			throw new TypeError(
-				`expected an options argument but instead received a ${typeof options}`
-			);
+			throw new TypeError(`Expected options; instead got ${typeof options}`);
 		}
 
+		/** gotta set headers! */
 		const headers: RawAxiosRequestHeaders = {
 			"Content-Type": config.type
 		};
 
-		/** handle TokenOverridable */
+		/** and handle TokenOverridable */
 		if (typeof options["token"] === "string") {
 			headers["Authorization"] = `Bearer ${options[""]}`;
 			options["token"] = undefined;
 
-			this.logger.debug(`token has been overridden from options`);
+			this.logger.debug(`token has been overridden`);
 		}
 
-		/** warn if no fallback */
+		/** and warn if no fallback in attachments */
 		warnIfFallbackIsMissing(config.path, this.logger, options);
 
+		/** and fill url from options */
 		const url = this.fillRequestUrl(config, options);
 
 		const response = await this.makeRequest<T>(url, {
-			method: config.method,
 			headers,
+			method: config.method,
 			data: options
 		});
+
 		const result = this.buildResult<T>(url, response);
-		this.logger.debug(
-			`http request result: ${JSON.stringify(result, null, 2)}`
-		);
-		this.logger.debug(`apiCall [${config.method} ${config.path}] end`);
+
+		this.logger.debug(`APICall result: ${JSON.stringify(result, null, 2)}`);
+
+		this.logger.debug(`APICall [${config.method} ${config.path}] end`);
+
 		return result;
 	}
 
 	/**
-	 * Low-level function to make a single API request. handles queuing, retries, and http-level errors
+	 * @description Low-level function to make a single API request.
+	 * Handles queueing, retries, and http-level errors
 	 */
 	private async makeRequest<T>(
 		url: string,
@@ -334,16 +341,14 @@ export class WebClient extends Methods {
 				this.logger.debug("http response received");
 				this.logger.debug(`http response status: ${response.status}`);
 
-				const resServerVersion = response.headers[HEADER_X_VERSION_ID];
-				if (resServerVersion && this.serverVersion !== resServerVersion) {
-					this.serverVersion = resServerVersion;
+				if (this.serverVersion !== response.headers[HEADER_X_VERSION_ID]) {
+					this.serverVersion = response.headers[HEADER_X_VERSION_ID];
 				}
 
-				const resClusterId = response.headers[HEADER_X_CLUSTER_ID];
-
-				if (resClusterId && this.clusterId !== resClusterId) {
-					this.clusterId = resClusterId;
+				if (this.clusterId !== response.headers[HEADER_X_CLUSTER_ID]) {
+					this.clusterId = response.headers[HEADER_X_CLUSTER_ID];
 				}
+
 				/** handle error status code */
 				if (response.status > 300) {
 					this.logger.debug(
@@ -352,9 +357,7 @@ export class WebClient extends Methods {
 
 					const { data } = response;
 					if (isServerError(data)) {
-						if (response.status === 429) {
-							throw new WebAPIRateLimitedError(data);
-						}
+						if (response.status === 429) throw new WebAPIRateLimitedError(data);
 
 						throw new WebAPIServerError(data);
 					}
@@ -376,13 +379,13 @@ export class WebClient extends Methods {
 	private buildResult<T>(
 		url: string,
 		result: RetryOkResult<AxiosResponse<T>> | RetryFailedResult
-	): WebAPICallResult<T> {
+	): Readonly<WebAPICallResult<T>> {
 		const ctx: WebAPICallContext = { ...result.ctx, url };
 		/** short-circuit if we have an error */
 		if (!result.ok) throw result.ctx.errors[result.ctx.errors.length - 1];
 
 		this.logger.debug(
-			`http response header: ${JSON.stringify(result.value.headers, null, 2)}`
+			`response headers: ${JSON.stringify(result.value.headers, null, 2)}`
 		);
 
 		/**
@@ -400,7 +403,7 @@ export class WebClient extends Methods {
 			}
 		}
 
-		return { data: result.value.data, ctx };
+		return Object.freeze({ data: result.value.data, ctx });
 	}
 
 	private fillRequestUrl(
@@ -409,6 +412,7 @@ export class WebClient extends Methods {
 	): string {
 		let requestUrl = `${config.path}`;
 
+		/** fills :something with { something: "something" } from options */
 		if (requestUrl.match(new RegExp(/\/:\D*/))) {
 			for (const [k, v] of Object.entries(options)) {
 				this.logger.debug(`Replacing :${k} with ${v} in ${requestUrl}`);
@@ -434,6 +438,7 @@ export class WebClient extends Methods {
 
 		if (config.url?.endsWith("/api/v4/channels/direct")) {
 			const userIDs = data;
+
 			if (!Array.isArray(userIDs)) {
 				throw new WebClientOptionsError(`Expected user_ids to be an array`);
 			}
@@ -558,7 +563,7 @@ export class WebClient extends Methods {
 
 		if (
 			config.url?.endsWith("/api/v4/roles/names") &&
-			config.method === "post"
+			config.method?.toLowerCase() === "post"
 		) {
 			const roles = data.roles;
 

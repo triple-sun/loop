@@ -1,22 +1,26 @@
-export type BoardType = "O" | "P";
+export enum BoardType {
+	OPEN = "O",
+	PRIVATE = "P"
+}
 
-export type BoardCardPropertyType =
-	| "text"
-	| "number"
-	| "select"
-	| "multiSelect"
-	| "date"
-	| "person"
-	| "file"
-	| "checkbox"
-	| "url"
-	| "email"
-	| "phone"
-	| "createdTime"
-	| "createdBy"
-	| "updatedTime"
-	| "updatedBy"
-	| "unknown";
+export enum BoardCardPropertyType {
+	TEXT = "text",
+	NUMBER = "number",
+	SELECT = "select",
+	MULTI_SELECT = "multiSelect",
+	DATE = "date",
+	PERSON = "person",
+	FILE = "file",
+	CHECKBOX = "checkbox",
+	URL = "url",
+	EMAIL = "email",
+	PHONE = "phone",
+	CREATED_TIME = "createdTime",
+	CREATED_BY = "createdBy",
+	UPDATED_TIME = "updatedTime",
+	UPDATED_BY = "updatedBy",
+	UNKNOWN = "unknown"
+}
 
 export interface BoardCardPropertyOption {
 	id: string;
@@ -55,6 +59,6 @@ export declare type Board = {
 	deleteAt: number;
 };
 
-export declare type CreateBoardResponse = {
+export interface CreateBoardResponse {
 	boards: Board[];
-};
+}

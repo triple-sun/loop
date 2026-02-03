@@ -14,18 +14,19 @@ import {
 } from "./schemas/channels.zod";
 import {
 	createRealApiClient,
-	printReportSummary,
-	TestResultCategory,
-	testMethod
+	TestReport,
+	TestResultCategory
 } from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Channels API - Real API Tests", () => {
 	let client: WebClient;
-	let foundTeamId: string | undefined;
-	let foundChannelId: string | undefined;
-	let currentUserId: string | undefined;
-	let createdChannelId: string | undefined;
+	let foundTeamId: string = "";
+	let foundChannelId: string = "";
+	let currentUserId: string = "";
+	let createdChannelId: string = "";
+
+	const report = new TestReport("Channels");
 
 	beforeAll(async () => {
 		client = createRealApiClient();
@@ -76,7 +77,8 @@ describe("Channels API - Real API Tests", () => {
 				console.error("Failed to cleanup test channel:", error);
 			}
 		}
-		printReportSummary();
+
+		report.summarize();
 	});
 
 	describe("channels.list", () => {
@@ -86,10 +88,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			const result = await report.testMethod(
 				"channels.list",
 				"GET /teams/:team_id/channels",
-				() => client.channels.list.inTeam({ team_id: foundTeamId! }),
+				() => client.channels.list.inTeam({ team_id: foundTeamId }),
 				z.array(channelSchema)
 			);
 
@@ -106,10 +108,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.getById",
 				"GET /channels/:channel_id",
-				() => client.channels.get.byId({ channel_id: foundChannelId! }),
+				() => client.channels.get.byId({ channel_id: foundChannelId }),
 				channelSchema
 			);
 		});
@@ -122,10 +124,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.search",
 				"POST /teams/:team_id/channels/search",
-				() => client.channels.search.team({ team_id: foundTeamId!, term: "a" }),
+				() => client.channels.search.team({ team_id: foundTeamId, term: "a" }),
 				z.array(channelSchema)
 			);
 		});
@@ -138,11 +140,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.autocomplete",
 				"GET /teams/:team_id/channels/autocomplete",
-				() =>
-					client.channels.autocomplete({ team_id: foundTeamId!, name: "a" }),
+				() => client.channels.autocomplete({ team_id: foundTeamId, name: "a" }),
 				z.array(channelSchema)
 			);
 		});
@@ -155,10 +156,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.getStats",
 				"GET /channels/:channel_id/stats",
-				() => client.channels.getStats({ channel_id: foundChannelId! }),
+				() => client.channels.getStats({ channel_id: foundChannelId }),
 				channelStatsSchema
 			);
 		});
@@ -171,10 +172,10 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.members.get",
 				"GET /channels/:channel_id/members",
-				() => client.channels.members.get({ channel_id: foundChannelId! }),
+				() => client.channels.members.get({ channel_id: foundChannelId }),
 				z.array(channelMembershipSchema)
 			);
 		});
@@ -187,12 +188,12 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.members.getById",
 				"GET /channels/:channel_id/members/:user_id",
 				() =>
 					client.channels.members.getById({
-						channel_id: foundChannelId!,
+						channel_id: foundChannelId,
 						user_id: currentUserId!
 					}),
 				channelMembershipSchema
@@ -209,12 +210,12 @@ describe("Channels API - Real API Tests", () => {
 
 			const testChannelName = `test-channel-${Date.now()}`;
 
-			await testMethod(
+			await report.testMethod(
 				"channels.create",
 				"POST /channels",
 				async () => {
 					const response = await client.channels.create.regular({
-						team_id: foundTeamId!,
+						team_id: foundTeamId,
 						name: testChannelName,
 						display_name: "Test Channel (API Test)",
 						type: ChannelType.OPEN
@@ -229,7 +230,7 @@ describe("Channels API - Real API Tests", () => {
 
 	describe("channels.searchAll", () => {
 		it("should search all channels", async () => {
-			await testMethod(
+			await report.testMethod(
 				"channels.searchAll",
 				"POST /channels/search_all",
 				() => client.channels.search.all({ term: "test" }),
@@ -245,13 +246,13 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			await testMethod(
+			await report.testMethod(
 				"channels.listByIds",
 				"POST /channels/ids",
 				() =>
 					client.channels.list.byIds({
-						channel_ids: [foundChannelId!],
-						team_id: foundTeamId!
+						channel_ids: [foundChannelId],
+						team_id: foundTeamId
 					}),
 				z.array(channelSchema)
 			);

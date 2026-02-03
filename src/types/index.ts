@@ -41,6 +41,5 @@ export * from "./terms-of-service";
 export * from "./threads";
 export * from "./typing";
 export * from "./users";
-export * from "./utilities";
 export * from "./web-client";
 export * from "./websocket";

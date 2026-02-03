@@ -2,8 +2,6 @@ import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import type {
 	ComplianceReport,
-	PostListResponse,
-	PostSearchResponse,
 	StatusOK,
 	TokenOverridable,
 	UserCustomStatus,
@@ -234,6 +232,18 @@ import type {
 	JobsListByTypeArguments
 } from "./types/methods/jobs.methods";
 import type {
+	PlaybookRunsCreateArguments,
+	PlaybookRunsGetArguments,
+	PlaybookRunsListArguments
+} from "./types/methods/playbook-runs.methods";
+import type {
+	PlaybooksCreateArguments,
+	PlaybooksDeleteArguments,
+	PlaybooksGetArguments,
+	PlaybooksListArguments,
+	PlaybooksUpdateArguments
+} from "./types/methods/playbooks.methods";
+import type {
 	PluginsDisableArguments,
 	PluginsEnableArguments,
 	PluginsGetMarketplaceArguments,
@@ -360,6 +370,19 @@ import type {
 import type { Post } from "./types/posts";
 import type { PreferenceType } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
+import type {
+	PlaybookRunsCreateResponse,
+	PlaybookRunsGetResponse,
+	PlaybooksCreateResponse,
+	PlaybooksGetResponse,
+	PlaybooksListResponse,
+	PlaybooksRunsListResponse,
+	PlaybooksUpdateResponse
+} from "./types/responses/playbooks.responses";
+import type {
+	PostListResponse,
+	PostSearchResponse
+} from "./types/responses/posts.responses";
 import type { Role } from "./types/roles";
 import type { Scheme } from "./types/schemes";
 import type {
@@ -404,6 +427,15 @@ function bindApiCallWithOptionalArg<ARGS, RESULT>(
 /**
  * @description A class that defines all Web API methods, their arguments type,
  * their response type, and binds those methods to the `apiCall` class method.
+ *
+ * Due to irregularities in API some method paths include path params in Express.js notation
+ * @example `users/:user_id`
+ *
+ * Path params are then filled using options object
+ * @example { user_id: 'user_id_123456 } with path `users/:user_id/promote` will result in `users/user_id_123456/promote`
+ *
+ * Loop API reference:
+ * @see {@link https://developers.loop.ru/category/loop-api | Loop API}
  */
 export abstract class Methods extends EventEmitter<WebClientEvent> {
 	protected constructor() {
@@ -420,7 +452,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	public abstract apiCall(
 		config: WebApiCallConfig,
 		options?: Record<string, unknown>
-	): Promise<WebAPICallResult>;
+	): Promise<Readonly<WebAPICallResult>>;
 
 	/**
 	 * ============================================================================
@@ -2115,6 +2147,66 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	public readonly playbooks = {
+		list: bindApiCall<PlaybooksListArguments, PlaybooksListResponse>(this, {
+			method: "GET",
+			path: "playbooks",
+			type: ContentType.URLEncoded
+		}),
+		get: bindApiCall<PlaybooksGetArguments, PlaybooksGetResponse>(this, {
+			method: "GET",
+			path: "/playbooks/:id",
+			type: ContentType.URLEncoded
+		}),
+		create: bindApiCall<PlaybooksCreateArguments, PlaybooksCreateResponse>(
+			this,
+			{
+				method: "POST",
+				path: "playbooks",
+				type: ContentType.JSON
+			}
+		),
+		update: bindApiCall<PlaybooksUpdateArguments, PlaybooksUpdateResponse>(
+			this,
+			{
+				method: "PUT",
+				path: "playbooks",
+				type: ContentType.JSON
+			}
+		),
+		delete: bindApiCall<PlaybooksDeleteArguments, never>(this, {
+			method: "DELETE",
+			path: `playbooks/:id`,
+			type: ContentType.URLEncoded
+		}),
+		runs: {
+			get: bindApiCall<PlaybookRunsGetArguments, PlaybookRunsGetResponse>(
+				this,
+				{
+					method: "GET",
+					path: "runs/:id",
+					type: ContentType.URLEncoded
+				}
+			),
+			create: bindApiCall<
+				PlaybookRunsCreateArguments,
+				PlaybookRunsCreateResponse
+			>(this, {
+				method: "POST",
+				path: "runs",
+				type: ContentType.JSON
+			}),
+			list: bindApiCall<PlaybookRunsListArguments, PlaybooksRunsListResponse>(
+				this,
+				{
+					method: "GET",
+					path: "runs",
+					type: ContentType.URLEncoded
+				}
+			)
+		}
+	} as const;
+
 	/**
 	 * ============================================================================
 	 * @description Posts methods
@@ -2331,7 +2423,10 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "logs",
 			type: ContentType.URLEncoded
 		}),
-		getPing: bindApiCall<SystemGetPingArguments, { status: string }>(this, {
+		getPing: bindApiCallWithOptionalArg<
+			SystemGetPingArguments,
+			{ status: string }
+		>(this, {
 			method: "GET",
 			path: "system/ping",
 			type: ContentType.URLEncoded
