@@ -42,4 +42,3 @@ export * from "./threads";
 export * from "./typing";
 export * from "./users";
 export * from "./web-client";
-export * from "./websocket";

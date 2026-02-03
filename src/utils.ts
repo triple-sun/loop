@@ -4,14 +4,12 @@ import type { Logger } from "@triple-sun/logger";
 import type { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import { isStream } from "is-stream";
-import { DEFAULT_FILE_NAME, WEBSOCKET_HELLO } from "./const";
+import { DEFAULT_FILE_NAME } from "./const";
 import {
 	type CloudCustomerAddress,
 	type UserThread,
 	type UserThreadSynthetic,
-	UserThreadType,
-	type WebSocketHelloMessageData,
-	type WebSocketMessage
+	UserThreadType
 } from "./types";
 
 export const wait = (ms: number) => {
@@ -168,42 +166,3 @@ export const areShippingDetailsValid = (
 export const threadIsSynthetic = (
 	thread: UserThread | UserThreadSynthetic
 ): thread is UserThreadSynthetic => thread.type === UserThreadType.Synthetic;
-
-/**
- * Checks that evt.data is WebSocketMessage
- * @param data evt.data
- */
-export const isLoopWebSocketMessage = (
-	data: Record<string, unknown>
-): data is WebSocketMessage => {
-	if (
-		"seq" in data &&
-		"event" in data &&
-		"broadcast" in data &&
-		"data" in data
-	) {
-		return true;
-	}
-
-	return false;
-};
-
-/**
- * Checks that WebSocketMessage.data is WebSocketHelloMessageData
- * @param data msg.data
- */
-export const isWebSocketHelloMessage = (
-	event: string,
-	data: unknown
-): data is WebSocketHelloMessageData => {
-	if (
-		data &&
-		typeof data === "object" &&
-		"connection_id" in data &&
-		typeof data.connection_id === "string" &&
-		event === WEBSOCKET_HELLO
-	) {
-		return true;
-	}
-	return false;
-};

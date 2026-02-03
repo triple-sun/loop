@@ -6,13 +6,6 @@
 
 import type { Post } from "../posts";
 
-export enum PostNotificationStatus {
-	ERROR = "error",
-	NOT_SENT = "not_sent",
-	UNSUPPORTED = "unsupported",
-	SUCCESS = "success"
-}
-
 export interface PostListResponse {
 	order: string[];
 	posts: {
@@ -36,7 +29,7 @@ export interface PostsUsageResponse {
 }
 
 export interface PostNotificationResponse {
-	status: PostNotificationStatus;
+	status: "error" | "not_sent" | "unsupported" | "success";
 	reason?: string;
 	data?: string;
 }

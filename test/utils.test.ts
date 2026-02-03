@@ -6,15 +6,12 @@ import FormData from "form-data";
 import {
 	type UserThread,
 	type UserThreadSynthetic,
-	UserThreadType,
-	type WebSocketHelloMessageData
+	UserThreadType
 } from "../src/types";
 import {
 	areShippingDetailsValid,
 	checkForBinaryData,
 	getFormDataConfig,
-	isLoopWebSocketMessage,
-	isWebSocketHelloMessage,
 	redact,
 	threadIsSynthetic,
 	wait,
@@ -255,58 +252,6 @@ describe("utils", () => {
 				id: "thread-id"
 			} as UserThread;
 			expect(threadIsSynthetic(thread)).toBe(false);
-		});
-	});
-
-	describe("isLoopWebSocketMessage", () => {
-		it("should return true for valid WebSocket message", () => {
-			const data = {
-				seq: 1,
-				event: "posted",
-				broadcast: {},
-				data: {}
-			};
-			expect(isLoopWebSocketMessage(data)).toBe(true);
-		});
-
-		it("should return false when required fields are missing", () => {
-			expect(
-				isLoopWebSocketMessage({ event: "posted", broadcast: {}, data: {} })
-			).toBe(false);
-			expect(isLoopWebSocketMessage({ seq: 1, broadcast: {}, data: {} })).toBe(
-				false
-			);
-			expect(
-				isLoopWebSocketMessage({ seq: 1, event: "posted", data: {} })
-			).toBe(false);
-			expect(
-				isLoopWebSocketMessage({ seq: 1, event: "posted", broadcast: {} })
-			).toBe(false);
-		});
-	});
-
-	describe("isWebSocketHelloMessage", () => {
-		it("should return true for valid hello message", () => {
-			const data = {
-				connection_id: "conn-123"
-			} as WebSocketHelloMessageData;
-			expect(isWebSocketHelloMessage("hello", data)).toBe(true);
-		});
-
-		it("should return false for wrong event type", () => {
-			const data = {
-				connection_id: "conn-123"
-			} as WebSocketHelloMessageData;
-			expect(isWebSocketHelloMessage("posted", data)).toBe(false);
-		});
-
-		it("should return false when connection_id is missing or invalid", () => {
-			expect(isWebSocketHelloMessage("hello", {})).toBe(false);
-			expect(isWebSocketHelloMessage("hello", { connection_id: 123 })).toBe(
-				false
-			);
-			expect(isWebSocketHelloMessage("hello", null)).toBe(false);
-			expect(isWebSocketHelloMessage("hello", undefined)).toBe(false);
 		});
 	});
 });

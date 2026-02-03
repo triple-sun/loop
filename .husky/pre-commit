@@ -1,4 +1,4 @@
-pnpm exec biome format --write ./src
+pnpm exec biome format --write ./
 tsc --noEmit
 pnpm exec lint-staged --allow-empty
 pnpm run test

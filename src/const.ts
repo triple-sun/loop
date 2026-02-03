@@ -16,12 +16,6 @@ export const DEFAULT_LIMIT_AFTER = 30;
 export const DEFAULT_FILE_NAME = "Untitled";
 export const DEFAULT_USER_ME = "me";
 
-export const WEBSOCKET_MAX_FAILS = 7;
-export const WEBSOCKET_MIN_RETRY_TIME = 3000; // 3 sec
-export const WEBSOCKET_MAX_RETRY_TIME = 300000; // 5 mins
-export const WEBSOCKET_JITTER_RANGE = 2000; // 2 sec
-export const WEBSOCKET_HELLO = "hello";
-
 /**
  * The default retry policy. Retry up to 10 times, over the span of about 30 minutes. It's not exact because
  * randomization has been added to prevent a stampeding herd problem (if all instances in your application are retrying
