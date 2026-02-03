@@ -1,7 +1,9 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { LogLevel } from "@triple-sun/logger";
 import * as dotenv from "dotenv";
-import { WebClient } from "../../../src/web-client";
+import { WebClient } from "../../../../src/web-client";
+import { describeSchema, validateType, type z } from "./type-schema.utils";
 
 /**
  * Load environment variables from test.env
@@ -34,7 +36,7 @@ export function createRealApiClient(): WebClient {
 
 	return new WebClient(TEST_LOOP_URL, {
 		token: TEST_LOOP_TOKEN,
-		logLevel: LogLevel.DEBUG,
+		logLevel: LogLevel.ERROR,
 		retryConfig: { retries: 2 },
 		saveFetchedUserID: true
 	});
@@ -66,7 +68,7 @@ export enum TestResultCategory {
  * Test result structure for a single API method
  */
 export interface MethodTestResult {
-	/** Method path (e.g., "users.profile.me") */
+	/** Method path (e.g., "users.profile.get.me") */
 	methodPath: string;
 	/** HTTP endpoint called */
 	endpoint: string;
@@ -82,6 +84,13 @@ export interface MethodTestResult {
 	actualType?: string;
 	/** Any inconsistencies noted */
 	inconsistencies?: string[];
+	/** Type validation result */
+	typeValidation?: {
+		/** Whether types match */
+		matches: boolean;
+		/** List of differences */
+		differences: string[];
+	};
 	/** Execution time in ms */
 	durationMs?: number;
 }
@@ -209,26 +218,37 @@ export function categorizeError(error: unknown): TestResultCategory {
 /**
  * Helper to run a test method and record the result
  */
+/**
+ * Helper to run a test method and record the result
+ */
 export async function testMethod<T>(
 	methodPath: string,
 	endpoint: string,
-	testFn: () => Promise<T>,
-	expectedType?: string
+	testFn: () => Promise<{ data: T }>,
+	schema: z.ZodType
 ): Promise<MethodTestResult> {
 	const startTime = Date.now();
 
 	try {
-		const response = await testFn();
+		const { data } = await testFn();
 		const durationMs = Date.now() - startTime;
+
+		const validation = validateType(data, schema);
 
 		const result: MethodTestResult = {
 			methodPath,
 			endpoint,
-			category: TestResultCategory.SUCCESS,
-			responseData: truncateResponse(response),
-			expectedType,
-			actualType: typeof response,
-			durationMs
+			category: validation.matches
+				? TestResultCategory.SUCCESS
+				: TestResultCategory.TYPE_MISMATCH,
+			responseData: truncateResponse(data),
+			expectedType: describeSchema(schema),
+			actualType: typeof data,
+			durationMs,
+			typeValidation: {
+				matches: validation.matches,
+				differences: validation.differences
+			}
 		};
 
 		recordResult(result);
@@ -242,7 +262,7 @@ export async function testMethod<T>(
 			endpoint,
 			category,
 			errorMessage: error instanceof Error ? error.message : String(error),
-			expectedType,
+			expectedType: describeSchema(schema),
 			durationMs
 		};
 
@@ -254,7 +274,13 @@ export async function testMethod<T>(
 /**
  * Truncates large response objects for logging
  */
-function truncateResponse(response: unknown, maxLength = 1500): unknown {
+function truncateResponse(
+	response: unknown,
+	maxLength = Number.POSITIVE_INFINITY
+): unknown {
+	if (process.env["GENERATE_SCHEMAS"] === "true") {
+		return response;
+	}
 	const str = JSON.stringify(response);
 	if (str.length <= maxLength) {
 		return response;
@@ -263,23 +289,106 @@ function truncateResponse(response: unknown, maxLength = 1500): unknown {
 }
 
 /**
- * Prints the test report summary
+ * Prints the test report summary and saves results to files
  */
 export function printReportSummary(): void {
-	console.log("\n========== API TEST REPORT SUMMARY ==========");
-	console.log(`Timestamp: ${testReport.timestamp}`);
-	console.log(`API URL: ${testReport.apiUrl}`);
-	console.log(`Total Methods Tested: ${testReport.totalMethods}`);
-	console.log("\nResults:");
-	console.log(`  ✅ Success: ${testReport.results.success}`);
-	console.log(`  🔒 Permission Denied: ${testReport.results.permissionDenied}`);
-	console.log(`  🔍 Not Found: ${testReport.results.notFound}`);
-	console.log(`  ⚠️  Invalid Request: ${testReport.results.invalidRequest}`);
-	console.log(`  ❌ Server Error: ${testReport.results.serverError}`);
-	console.log(`  🚫 Not Implemented: ${testReport.results.notImplemented}`);
-	console.log(`  📝 Type Mismatch: ${testReport.results.typeMismatch}`);
-	console.log(`  ❓ Unknown Error: ${testReport.results.unknownError}`);
-	console.log("==============================================\n");
+	// Calculate type validation stats
+	const methodsWithValidation = testReport.methods.filter(
+		m => m.typeValidation !== undefined
+	);
+	const typeValidationPassed = methodsWithValidation.filter(
+		m => m.typeValidation?.matches === true
+	).length;
+	const typeValidationFailed = methodsWithValidation.filter(
+		m => m.typeValidation?.matches === false
+	).length;
+
+	const summaryLines = [
+		"",
+		"========== API TEST REPORT SUMMARY ==========",
+		`Timestamp: ${testReport.timestamp}`,
+		`API URL: ${testReport.apiUrl}`,
+		`Total Methods Tested: ${testReport.totalMethods}`,
+		"",
+		"Results:",
+		`  ✅ Success: ${testReport.results.success}`,
+		`  🔒 Permission Denied: ${testReport.results.permissionDenied}`,
+		`  🔍 Not Found: ${testReport.results.notFound}`,
+		`  ⚠️  Invalid Request: ${testReport.results.invalidRequest}`,
+		`  ❌ Server Error: ${testReport.results.serverError}`,
+		`  🚫 Not Implemented: ${testReport.results.notImplemented}`,
+		`  📝 Type Mismatch: ${testReport.results.typeMismatch}`,
+		`  ❓ Unknown Error: ${testReport.results.unknownError}`,
+		""
+	];
+
+	// Add type validation stats if any methods were validated
+	if (methodsWithValidation.length > 0) {
+		summaryLines.push(
+			"Type Validation:",
+			`  Total Validated: ${methodsWithValidation.length}`,
+			`  ✅ Passed: ${typeValidationPassed}`,
+			`  ❌ Failed: ${typeValidationFailed}`,
+			""
+		);
+	}
+
+	// Add detailed type mismatch information
+	const failedValidations = methodsWithValidation.filter(
+		m => m.typeValidation?.matches === false
+	);
+	if (failedValidations.length > 0) {
+		summaryLines.push("Type Mismatch Details:", "");
+		for (const method of failedValidations) {
+			summaryLines.push(`  📌 ${method.methodPath} (${method.endpoint})`);
+			if (method.typeValidation?.differences) {
+				for (const diff of method.typeValidation.differences) {
+					summaryLines.push(`     - ${diff}`);
+				}
+			}
+			summaryLines.push("");
+		}
+	}
+
+	summaryLines.push("==============================================", "");
+
+	// Print to console
+	for (const line of summaryLines) {
+		console.log(line);
+	}
+
+	// Save to files
+	saveReportToFile(summaryLines.join("\n"));
+}
+
+/**
+ * Saves the test report to files in the reports directory
+ */
+function saveReportToFile(summaryText: string): void {
+	const reportsDir = path.resolve(__dirname, "reports");
+
+	// Create reports directory if it doesn't exist
+	if (!fs.existsSync(reportsDir)) {
+		fs.mkdirSync(reportsDir, { recursive: true });
+	}
+
+	// Generate timestamp-based filename (ISO format with safe characters)
+	const timestamp = testReport.timestamp.replace(/[:.]/g, "-");
+	const jsonFilename = `report-${timestamp}.json`;
+	const txtFilename = `report-${timestamp}.txt`;
+
+	const jsonPath = path.join(reportsDir, jsonFilename);
+	const txtPath = path.join(reportsDir, txtFilename);
+
+	// Save full JSON report
+	fs.writeFileSync(jsonPath, JSON.stringify(testReport, null, 2), "utf-8");
+
+	// Save text summary
+	fs.writeFileSync(txtPath, summaryText, "utf-8");
+
+	console.log(`📁 Report saved to:`);
+	console.log(`   JSON: ${jsonPath}`);
+	console.log(`   TXT:  ${txtPath}`);
 }
 
 /**

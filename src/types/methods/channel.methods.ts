@@ -1,4 +1,4 @@
-import type { Channel, ChannelType } from "../channels/channels";
+import type { Channel, ChannelModerationPatch, ChannelType } from "../channels";
 import type {
 	ChannelID,
 	Paginated,
@@ -307,4 +307,332 @@ export interface ChannelsMemberUpdateNotifyPropsArguments
 	email?: string;
 	push?: string;
 	mark_unread?: string;
+}
+
+// ============================================================================
+// Core Channel Operations
+// ============================================================================
+
+/**
+ * Arguments for updating a channel's privacy.
+ * @description Convert a public channel to private or vice-versa.
+ * @see https://developers.loop.ru/API/4.0.0/update-channel-privacy
+ */
+export interface ChannelsUpdatePrivacyArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** The new privacy setting: 'O' for public, 'P' for private */
+	privacy: "O" | "P";
+}
+
+/**
+ * Arguments for moving a channel to another team.
+ * @description Move a channel to a different team.
+ * @see https://developers.loop.ru/API/4.0.0/move-channel
+ */
+export interface ChannelsMoveArguments extends TokenOverridable, ChannelID {
+	/** The team ID to move the channel to */
+	team_id: string;
+	/** Whether to force the move even if there are scheme-assigned members */
+	force?: boolean;
+}
+
+/**
+ * Arguments for getting pinned posts in a channel.
+ * @description Get a list of pinned posts in a channel.
+ * @see https://developers.loop.ru/API/4.0.0/get-channel-pinned-posts
+ */
+export interface ChannelsGetPinnedArguments
+	extends TokenOverridable,
+		ChannelID {}
+
+/**
+ * Arguments for getting user timezones in a channel.
+ * @description Get a list of timezones of users in a channel.
+ * @see https://developers.loop.ru/API/4.0.0/get-channel-timezones
+ */
+export interface ChannelsGetTimezonesArguments
+	extends TokenOverridable,
+		ChannelID {}
+
+// ============================================================================
+// Channel Discovery (Missing)
+// ============================================================================
+
+/**
+ * Arguments for listing private channels in a team.
+ * @description Get a list of private channels in a specific team.
+ * @see https://developers.loop.ru/API/4.0.0/get-private-channels
+ */
+export interface ChannelsListPrivateArguments
+	extends TokenOverridable,
+		TeamID,
+		Paginated {}
+
+/**
+ * Arguments for listing deleted channels in a team.
+ * @description Get a list of deleted (archived) channels in a team.
+ * @see https://developers.loop.ru/API/4.0.0/get-deleted-channels
+ */
+export interface ChannelsListDeletedArguments
+	extends TokenOverridable,
+		TeamID,
+		Paginated {
+	/** Include the total count in response */
+	include_total_count?: boolean;
+}
+
+/**
+ * Arguments for autocompleting channels for search.
+ * @description Autocomplete channels for search in a team.
+ * @see https://developers.loop.ru/API/4.0.0/autocomplete-channels-for-search
+ */
+export interface ChannelsSearchAutocompleteArguments
+	extends TokenOverridable,
+		TeamID {
+	/** The search term */
+	name: string;
+}
+
+/**
+ * Arguments for searching group channels.
+ * @description Search for group message channels.
+ * @see https://developers.loop.ru/API/4.0.0/search-group-channels
+ */
+export interface ChannelsSearchGroupsArguments extends TokenOverridable {
+	/** The search term to match against group names */
+	term: string;
+}
+
+// ============================================================================
+// Channel Member Operations (Missing)
+// ============================================================================
+
+/**
+ * Arguments for getting all channels for a user in a team.
+ * @description Get all channel memberships and roles for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/get-channels-for-user
+ */
+export interface ChannelsGetForUserArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** Include deleted channels */
+	include_deleted?: boolean;
+	/** Include the last deleted channel */
+	last_delete_at?: number;
+}
+
+/**
+ * Arguments for getting all channels for a user across all teams.
+ * @description Get all channel memberships for a user.
+ * @see https://developers.loop.ru/API/4.0.0/get-all-channels-for-user
+ */
+export interface ChannelsGetAllForUserArguments
+	extends TokenOverridable,
+		UserID {
+	/** Include deleted channels */
+	include_deleted?: boolean;
+	/** Include the last deleted channel */
+	last_delete_at?: number;
+}
+
+/**
+ * Arguments for getting unread count for a channel.
+ * @description Get the unread message and mention counts for a user in a channel.
+ * @see https://developers.loop.ru/API/4.0.0/get-channel-unread
+ */
+export interface ChannelsGetUnreadArguments
+	extends TokenOverridable,
+		UserID,
+		ChannelID {}
+
+/**
+ * Arguments for getting channel members minus group members.
+ * @description Get channel members who are not part of specified groups.
+ * @see https://developers.loop.ru/API/4.0.0/channel-members-minus-group-members
+ */
+export interface ChannelsGetMembersMinusGroupArguments
+	extends TokenOverridable,
+		ChannelID,
+		Paginated {
+	/** Comma-separated list of group IDs */
+	group_ids: string;
+}
+
+/**
+ * Arguments for getting member counts by group.
+ * @description Get counts of channel members categorized by group.
+ * @see https://developers.loop.ru/API/4.0.0/channel-member-counts-by-group
+ */
+export interface ChannelsCountByGroupArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** Include timezone information */
+	include_timezones?: boolean;
+}
+
+// ============================================================================
+// Channel Moderation
+// ============================================================================
+
+/**
+ * Arguments for getting channel moderation settings.
+ * @description Get the moderation settings for a channel.
+ * @see https://developers.loop.ru/API/4.0.0/get-channel-moderations
+ */
+export interface ChannelsModerationGetArguments
+	extends TokenOverridable,
+		ChannelID {}
+
+/**
+ * Arguments for updating channel moderation settings.
+ * @description Update the moderation settings for a channel.
+ * @see https://developers.loop.ru/API/4.0.0/update-channel-moderations
+ */
+export interface ChannelsModerationUpdateArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** Array of moderation patches to apply */
+	patches: ChannelModerationPatch[];
+}
+
+/**
+ * Arguments for setting a channel's scheme.
+ * @description Set a channel's permission scheme.
+ * @see https://developers.loop.ru/API/4.0.0/set-channel-scheme
+ */
+export interface ChannelsSetSchemeArguments
+	extends TokenOverridable,
+		ChannelID {
+	/** The ID of the scheme to set, or empty string to remove */
+	scheme_id: string;
+}
+
+// ============================================================================
+// Sidebar Categories
+// ============================================================================
+
+/**
+ * Arguments for listing sidebar categories.
+ * @description Get a user's custom sidebar categories for a team.
+ * @see https://developers.loop.ru/API/4.0.0/get-sidebar-categories
+ */
+export interface ChannelsCategoriesListArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {}
+
+/**
+ * Arguments for creating a sidebar category.
+ * @description Create a new sidebar category for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/create-sidebar-category
+ */
+export interface ChannelsCategoriesCreateArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** Display name of the category */
+	display_name: string;
+	/** Type of category: 'favorites', 'channels', 'direct_messages', or 'custom' */
+	type: "favorites" | "channels" | "direct_messages" | "custom";
+	/** Array of channel IDs to include in this category */
+	channel_ids?: string[];
+}
+
+/**
+ * Sidebar category data for updates.
+ */
+export interface SidebarCategory {
+	/** Category ID */
+	id: string;
+	/** Display name */
+	display_name: string;
+	/** Type of category */
+	type: "favorites" | "channels" | "direct_messages" | "custom";
+	/** Sorting method */
+	sorting?: "alpha" | "manual" | "recent";
+	/** Channel IDs in this category */
+	channel_ids: string[];
+}
+
+/**
+ * Arguments for updating all sidebar categories.
+ * @description Update a user's sidebar categories for a team.
+ * @see https://developers.loop.ru/API/4.0.0/update-sidebar-categories
+ */
+export interface ChannelsCategoriesUpdateAllArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** Array of category objects to update */
+	categories: SidebarCategory[];
+}
+
+/**
+ * Arguments for getting a sidebar category.
+ * @description Get a specific sidebar category for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/get-sidebar-category
+ */
+export interface ChannelsCategoryGetArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** The category ID */
+	category_id: string;
+}
+
+/**
+ * Arguments for updating a sidebar category.
+ * @description Update a specific sidebar category for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/update-sidebar-category
+ */
+export interface ChannelsCategoryUpdateArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** The category ID */
+	category_id: string;
+	/** Display name of the category */
+	display_name?: string;
+	/** Sorting method */
+	sorting?: "alpha" | "manual" | "recent";
+	/** Channel IDs in this category */
+	channel_ids?: string[];
+}
+
+/**
+ * Arguments for deleting a sidebar category.
+ * @description Delete a sidebar category for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/delete-sidebar-category
+ */
+export interface ChannelsCategoryDeleteArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** The category ID */
+	category_id: string;
+}
+
+/**
+ * Arguments for getting sidebar category order.
+ * @description Get the order of sidebar categories for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/get-sidebar-category-order
+ */
+export interface ChannelsCategoriesOrderGetArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {}
+
+/**
+ * Arguments for updating sidebar category order.
+ * @description Update the order of sidebar categories for a user in a team.
+ * @see https://developers.loop.ru/API/4.0.0/update-sidebar-category-order
+ */
+export interface ChannelsCategoriesOrderUpdateArguments
+	extends TokenOverridable,
+		UserID,
+		TeamID {
+	/** Ordered array of category IDs */
+	order: string[];
 }

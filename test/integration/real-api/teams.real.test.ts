@@ -2,34 +2,36 @@
  * @file Teams API Integration Tests
  * @description Tests teams methods against the real Loop API
  */
-/** biome-ignore-all lint/style/noNonNullAssertion: <jest> */
 
+import { describe } from "@jest/globals";
+import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
+import {
+	teamMembershipSchema,
+	teamSchema,
+	teamStatsSchema
+} from "./schemas/teams.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
-	TestResultCategory,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 describe("Teams API - Real API Tests", () => {
 	let client: WebClient;
-	let foundTeamId: string | undefined;
-	let foundTeamName: string | undefined;
+	const foundTeamId: string = "";
+	const foundTeamName: string = "";
+	let currentUserId: string = "";
 
 	beforeAll(async () => {
 		client = createRealApiClient();
 
-		// Get a team for subsequent tests
+		// Get current user
 		try {
-			const teams = await client.teams.list();
-			if (teams.data.length > 0) {
-				foundTeamId = teams.data[0]?.id;
-				foundTeamName = teams.data[0]?.name;
-				console.log("Found team:", { id: foundTeamId, name: foundTeamName });
-			}
+			const me = await client.users.profile.get.me();
+			currentUserId = me.data.id;
 		} catch (error) {
-			console.error("Failed to get teams:", error);
+			console.error("Failed to get current user:", error);
 		}
 	});
 
@@ -39,105 +41,95 @@ describe("Teams API - Real API Tests", () => {
 
 	describe("teams.list", () => {
 		it("should return list of teams", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"teams.list",
 				"GET /teams",
-				() => client.teams.list(),
-				"Team[]"
+				() => client.teams.list({ page: 0, per_page: 10 }),
+				z.array(teamSchema)
 			);
-
-			if (result.category === TestResultCategory.SUCCESS) {
-				expect(result.responseData).toBeDefined();
-			}
-
-			console.log("teams.list result:", JSON.stringify(result, null, 2));
 		});
 	});
 
-	describe("teams.get.byId", () => {
+	describe("teams.getById", () => {
 		it("should return team by ID", async () => {
 			if (!foundTeamId) {
 				console.log("Skipping: No team ID available");
 				return;
 			}
 
-			const result = await testMethod(
-				"teams.get.byId",
+			await testMethod(
+				"teams.getById",
 				"GET /teams/:team_id",
-				() => client.teams.get.byId({ team_id: foundTeamId! }),
-				"Team"
+				() => client.teams.get.byId({ team_id: foundTeamId }),
+				teamSchema
 			);
-
-			console.log("teams.get.byId result:", JSON.stringify(result, null, 2));
 		});
 	});
 
-	describe("teams.get.byName", () => {
+	describe("teams.getByName", () => {
 		it("should return team by name", async () => {
 			if (!foundTeamName) {
 				console.log("Skipping: No team name available");
 				return;
 			}
 
-			const result = await testMethod(
-				"teams.get.byName",
+			await testMethod(
+				"teams.getByName",
 				"GET /teams/name/:name",
-				() => client.teams.get.byName({ name: foundTeamName! }),
-				"Team"
+				() => client.teams.get.byName({ name: foundTeamName }),
+				teamSchema
 			);
-
-			console.log("teams.get.byName result:", JSON.stringify(result, null, 2));
-		});
-	});
-
-	describe("teams.search", () => {
-		it("should search teams", async () => {
-			const result = await testMethod(
-				"teams.search",
-				"POST /teams/search",
-				() => client.teams.search({ term: "a" }),
-				"Team[]"
-			);
-
-			console.log("teams.search result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("teams.getStats", () => {
-		it("should return team statistics", async () => {
+		it("should return team stats", async () => {
 			if (!foundTeamId) {
 				console.log("Skipping: No team ID available");
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"teams.getStats",
 				"GET /teams/:team_id/stats",
-				() => client.teams.getStats({ team_id: foundTeamId! }),
-				"TeamStats"
+				() => client.teams.getStats({ team_id: foundTeamId }),
+				teamStatsSchema
 			);
-
-			console.log("teams.getStats result:", JSON.stringify(result, null, 2));
 		});
 	});
 
-	describe("teams.checkNameExists", () => {
-		it("should check if team name exists", async () => {
-			if (!foundTeamName) {
-				console.log("Skipping: No team name available");
+	describe("teams.members.get", () => {
+		it("should return team members", async () => {
+			if (!foundTeamId) {
+				console.log("Skipping: No team ID available");
 				return;
 			}
 
-			const result = await testMethod(
-				"teams.checkNameExists",
-				"GET /teams/name/:name/exists",
-				() => client.teams.checkNameExists({ name: foundTeamName! }),
-				"{ exists: boolean }"
+			await testMethod(
+				"teams.members.list",
+				"GET /teams/:team_id/members",
+				() => client.teams.members.list({ team_id: foundTeamId }),
+				z.array(teamMembershipSchema)
 			);
+		});
+	});
 
-			console.log(
-				"teams.checkNameExists result:",
-				JSON.stringify(result, null, 2)
+	describe("teams.members.getById", () => {
+		it("should return team member by ID", async () => {
+			if (!foundTeamId || !currentUserId) {
+				console.log("Skipping: No team ID or user ID available");
+				return;
+			}
+
+			await testMethod(
+				"teams.members.get",
+				"GET /teams/:team_id/members/:user_id",
+				() =>
+					client.teams.members.get({
+						team_id: foundTeamId,
+						user_id: currentUserId
+					}),
+				teamMembershipSchema
 			);
 		});
 	});

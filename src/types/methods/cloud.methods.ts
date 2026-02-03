@@ -1,11 +1,11 @@
-import type { Address, CloudCustomerPatch } from "../cloud";
+import type { CloudCustomerAddress, CloudCustomerPatch } from "../cloud";
 
 export interface CloudUpdateCustomerArguments extends CloudCustomerPatch {
 	customer: CloudCustomerPatch;
 }
 
 export interface CloudUpdateAddressArguments {
-	address: Address;
+	address: CloudCustomerAddress;
 }
 
 export interface CloudConfirmCustomerPaymentArguments {

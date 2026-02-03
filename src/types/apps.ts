@@ -1,40 +1,25 @@
 import type { ProductScope } from "./products";
 
+/**
+ * ===============================================
+ * @description Apps Manifest type
+ * ===============================================
+ */
 export enum AppPermission {
-	UserJoinedChannelNotification = "user_joined_channel_notification",
-	ActAsBot = "act_as_bot",
-	ActAsUser = "act_as_user",
-	PermissionActAsAdmin = "act_as_admin",
-	RemoteOAuth2 = "remote_oauth2",
-	RemoteWebhooks = "remote_webhooks"
+	USER_JOINED_CHANNEL_NOTIFICATION = "user_joined_channel_notification",
+	ACT_AS_BOT = "act_as_bot",
+	ACT_AS_USER = "act_as_user",
+	ACT_AS_ADMIN = "act_as_admin",
+	REMOTE_OAUTH2 = "remote_oauth2",
+	REMOTE_WEBHOOKS = "remote_webhooks"
 }
 
-export enum AppLocations {
-	PostMenu = "/post_menu",
-	ChannelHeader = "/channel_header",
-	Command = "/command",
-	InPost = "/in_post"
-}
-
-/** Тип поля формы приложений mattermost */
-export enum AppFormFieldType {
-	Boolean = "boolean" /**   A boolean selector represented as a checkbox. */,
-	Channel = "channel" /**    A dropdown to select channels. */,
-	DynamicSelect = "dynamic_select" /** A dropdown select that loads the elements dynamically. */,
-	Markdown = "markdown" /**  An arbitrary markdown text; only visible in modal dialogs. Read-only. */,
-	StaticSelect = "static_select" /**  A dropdown select with static elements. */,
-	Text = "text" /**   A plain text field. */,
-	User = "user" /**   A dropdown to select users. */
-}
-/** The text field subtypes, except textarea, map to the types of the HTML input form element */
-export enum AppFormFieldSubType {
-	Input = "input" /**  A single-line text input field. */,
-	TextArea = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
-	Email = "email" /**  A field for editing an email address. */,
-	Number = "number" /** A field for entering a number; includes a spinner component. */,
-	Password = "password" /** A single-line text input field whose value is obscured. */,
-	Tel = "tel" /**  A field for entering a telephone number. */,
-	Url = "url" /**  A field for entering a URL. */
+export enum AppRequestedLocation {
+	POST_MENU = "/post_menu",
+	CHANNEL_HEADER = "/channel_header",
+	COMMAND = "/command",
+	IN_POST = "/in_post",
+	EMBEDDED = "/embedded"
 }
 
 export type AppManifest = {
@@ -45,30 +30,117 @@ export type AppManifest = {
 	display_name: string;
 	description?: string;
 	requested_permissions?: AppPermission[];
-	requested_locations?: AppLocations[];
+	requested_locations?: AppRequestedLocation[];
 };
 
-export type AppModalState = {
-	form: AppForm;
-	call: AppCallRequest;
+/**
+ * =======================================
+ * @description Apps Call Types
+ * =======================================
+ */
+
+export enum AppExpandLevel {
+	NULL = "",
+	NONE = "none",
+	SUMMARY = "summary",
+	SUMMARY_PLUS = "+summary",
+	ALL = "all",
+	ALL_PLUS = "+all",
+	ID = "id"
+}
+
+export type AppContextProps = {
+	[name: string]: string;
 };
 
-export type AppCommandFormMap = { [location: string]: AppForm };
+export type AppContext = {
+	app_id: string;
+	location?: string;
+	acting_user_id?: string;
+	user_id?: string;
+	channel_id?: string;
+	team_id?: string;
+	post_id?: string;
+	root_id?: string;
+	props?: AppContextProps;
+	user_agent?: string;
+	track_as_submit?: boolean;
+};
 
-export type BindingsInfo = {
+export type AppExpand = {
+	app?: AppExpandLevel;
+	acting_user?: AppExpandLevel;
+	acting_user_access_token?: AppExpandLevel;
+	channel?: AppExpandLevel;
+	config?: AppExpandLevel;
+	mentioned?: AppExpandLevel;
+	parent_post?: AppExpandLevel;
+	post?: AppExpandLevel;
+	root_post?: AppExpandLevel;
+	team?: AppExpandLevel;
+	user?: AppExpandLevel;
+	locale?: AppExpandLevel;
+};
+
+export type AppCallValues = {
+	[name: string]: unknown;
+};
+
+export type AppCallMetadataForClient = {
+	bot_user_id: string;
+	bot_username: string;
+};
+
+export type AppCall = {
+	path: string;
+	expand?: AppExpand;
+	state?: unknown;
+};
+
+export type AppCallRequest = AppCall & {
+	context: AppContext;
+	values?: AppCallValues;
+	raw_command?: string;
+	selected_field?: string;
+	query?: string;
+};
+
+export type AppCallResponseType = string;
+
+export type AppCallResponse<Res = unknown> = {
+	type: AppCallResponseType;
+	text?: string;
+	data?: Res;
+	navigate_to_url?: string;
+	use_external_browser?: boolean;
+	call?: AppCall;
+	form?: AppForm;
+	app_metadata?: AppCallMetadataForClient;
+};
+
+/**
+ * =======================================
+ * @description App Bindings Types
+ * =======================================
+ */
+export enum AppLocation {
+	POST_MENU = "post_menu",
+	CHANNEL_HEADER = "channel_header",
+	COMMAND = "command",
+	IN_POST = "in_post",
+	EMBEDDED = "embedded"
+}
+
+export type AppCommandFormMap = { [location in AppLocation]: AppForm };
+
+export interface BindingsInfo {
 	bindings: AppBinding[];
 	forms: AppCommandFormMap;
-};
+}
 
-export type AppsState = {
-	main: BindingsInfo;
-	rhs: BindingsInfo;
-	pluginEnabled: boolean;
-};
-
-export type AppBinding = {
+export interface AppBinding {
 	app_id: string;
-	location?: string | "embedded";
+	location?: AppLocation;
 	supported_product_ids?: ProductScope;
 	icon?: string;
 
@@ -98,87 +170,58 @@ export type AppBinding = {
 	bindings?: AppBinding[];
 	form?: AppForm;
 	submit?: AppCall;
-};
+}
 
-export type AppCallValues = {
-	[name: string]: unknown;
-};
+/**
+ * =======================================
+ * @description App Form Types
+ * =======================================
+ */
 
-export type AppCall = {
-	path: string;
-	expand?: AppExpand;
-	state?: unknown;
-};
+/** Тип поля формы  mattermost apps */
+export enum AppFormFieldType {
+	BOOLEAN = "boolean" /**   A boolean selector represented as a checkbox. */,
+	CHANNEL = "channel" /**    A dropdown to select channels. */,
+	DYNAMIC_SELECT = "dynamic_select" /** A dropdown select that loads the elements dynamically. */,
+	MARKDOWN = "markdown" /**  An arbitrary markdown text; only visible in modal dialogs. Read-only. */,
+	STATIC_SELECT = "static_select" /**  A dropdown select with static elements. */,
+	TEXT = "text" /**   A plain text field. */,
+	USER = "user" /**   A dropdown to select users. */
+}
 
-export type AppCallRequest = AppCall & {
-	context: AppContext;
-	values?: AppCallValues;
-	raw_command?: string;
-	selected_field?: string;
-	query?: string;
-};
+/** The text field subtypes, except textarea, map to the types of the HTML input form element */
+export enum AppFormFieldSubType {
+	INPUT = "input" /**  A single-line text input field. */,
+	TEXT_AREA = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
+	EMAIL = "email" /**  A field for editing an email address. */,
+	NUMBER = "number" /** A field for entering a number; includes a spinner component. */,
+	PASSWORD = "password" /** A single-line text input field whose value is obscured. */,
+	TELEPHONE = "tel" /**  A field for entering a telephone number. */,
+	URL = "url" /**  A field for entering a URL. */
+}
 
-export type AppCallResponseType = string;
+export type AppFormValue = string | AppFormSelectOption | boolean | null;
+export interface AppFormValues {
+	[name: string]: string | AppFormSelectOption | boolean | null;
+}
 
-export type AppCallResponse<Res = unknown> = {
-	type: AppCallResponseType;
-	text?: string;
-	data?: Res;
-	navigate_to_url?: string;
-	use_external_browser?: boolean;
-	call?: AppCall;
-	form?: AppForm;
-	app_metadata?: AppMetadataForClient;
-};
+export interface AppFormLookupResponse {
+	items: AppFormSelectOption[];
+}
 
-export type AppMetadataForClient = {
-	bot_user_id: string;
-	bot_username: string;
-};
+export interface AppFormResponseData {
+	errors?: {
+		[field: string]: string;
+	};
+}
 
-export type AppContext = {
-	app_id: string;
-	location?: string;
-	acting_user_id?: string;
-	user_id?: string;
-	channel_id?: string;
-	team_id?: string;
-	post_id?: string;
-	root_id?: string;
-	props?: AppContextProps;
-	user_agent?: string;
-	track_as_submit?: boolean;
-};
+export interface AppFormSelectOption {
+	label: string;
+	value: string;
+	icon_data?: string;
+}
 
-export type AppContextProps = {
-	[name: string]: string;
-};
-
-export type AppExpandLevel =
-	| ""
-	| "none"
-	| "summary"
-	| "+summary"
-	| "all"
-	| "+all"
-	| "id";
-
-export type AppExpand = {
-	app?: AppExpandLevel;
-	acting_user?: AppExpandLevel;
-	acting_user_access_token?: AppExpandLevel;
-	channel?: AppExpandLevel;
-	config?: AppExpandLevel;
-	mentioned?: AppExpandLevel;
-	parent_post?: AppExpandLevel;
-	post?: AppExpandLevel;
-	root_post?: AppExpandLevel;
-	team?: AppExpandLevel;
-	user?: AppExpandLevel;
-	locale?: AppExpandLevel;
-};
-
-export type AppForm = {
+export interface AppForm {
 	title?: string;
 	header?: string;
 	footer?: string;
@@ -186,7 +229,7 @@ export type AppForm = {
 	submit_buttons?: string;
 	cancel_button?: boolean;
 	submit_on_cancel?: boolean;
-	fields?: AppField[];
+	fields?: AppFormField[];
 
 	// source is used in 2 cases:
 	//   - if submit is not set, it is used to fetch the submittable form from
@@ -200,41 +243,25 @@ export type AppForm = {
 	submit?: AppCall;
 
 	depends_on?: string[];
-};
-
-export type AppFormValue = string | AppSelectOption | boolean | null;
-export type AppFormValues = { [name: string]: AppFormValue };
-
-export type AppSelectOption = {
-	label: string;
-	value: string;
-	icon_data?: string;
-};
-
-export type AppFieldType = string;
+}
 
 // This should go in mattermost-redux
-export type AppField = {
+export interface AppFormField {
 	// Name is the name of the JSON field to use.
 	name: string;
 	type: AppFormFieldType;
 	is_required?: boolean;
 	readonly?: boolean;
-
-	// Present (default) value of the field
 	value?: AppFormValue;
-
 	description?: string;
-
 	label?: string;
 	hint?: string;
 	position?: number;
-
 	modal_label?: string;
 
 	// Select props
 	refresh?: boolean;
-	options?: AppSelectOption[];
+	options?: AppFormSelectOption[];
 	multiselect?: boolean;
 	lookup?: AppCall;
 
@@ -242,14 +269,4 @@ export type AppField = {
 	subtype?: AppFormFieldSubType;
 	min_length?: number;
 	max_length?: number;
-};
-
-export type FormResponseData = {
-	errors?: {
-		[field: string]: string;
-	};
-};
-
-export type AppLookupResponse = {
-	items: AppSelectOption[];
-};
+}

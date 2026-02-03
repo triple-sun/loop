@@ -4,14 +4,20 @@
  */
 /** biome-ignore-all lint/style/noNonNullAssertion: <jest> */
 
+import { z } from "zod";
 import { ChannelType } from "../../../src/types";
 import type { WebClient } from "../../../src/web-client";
+import {
+	channelMembershipSchema,
+	channelSchema,
+	channelStatsSchema
+} from "./schemas/channels.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
 	TestResultCategory,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Channels API - Real API Tests", () => {
@@ -26,7 +32,7 @@ describe("Channels API - Real API Tests", () => {
 
 		// Get current user
 		try {
-			const me = await client.users.profile.me();
+			const me = await client.users.profile.get.me();
 			currentUserId = me.data.id;
 			console.log("Current user ID:", currentUserId);
 		} catch (error) {
@@ -84,14 +90,12 @@ describe("Channels API - Real API Tests", () => {
 				"channels.list",
 				"GET /teams/:team_id/channels",
 				() => client.channels.list.inTeam({ team_id: foundTeamId! }),
-				"Channel[]"
+				z.array(channelSchema)
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
 				expect(result.responseData).toBeDefined();
 			}
-
-			console.log("channels.list result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -102,14 +106,12 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.getById",
 				"GET /channels/:channel_id",
 				() => client.channels.get.byId({ channel_id: foundChannelId! }),
-				"Channel"
+				channelSchema
 			);
-
-			console.log("channels.getById result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -120,14 +122,12 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.search",
 				"POST /teams/:team_id/channels/search",
 				() => client.channels.search.team({ team_id: foundTeamId!, term: "a" }),
-				"Channel[]"
+				z.array(channelSchema)
 			);
-
-			console.log("channels.search result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -138,17 +138,12 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.autocomplete",
 				"GET /teams/:team_id/channels/autocomplete",
 				() =>
 					client.channels.autocomplete({ team_id: foundTeamId!, name: "a" }),
-				"Channel[]"
-			);
-
-			console.log(
-				"channels.autocomplete result:",
-				JSON.stringify(result, null, 2)
+				z.array(channelSchema)
 			);
 		});
 	});
@@ -160,14 +155,12 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.getStats",
 				"GET /channels/:channel_id/stats",
 				() => client.channels.getStats({ channel_id: foundChannelId! }),
-				"ChannelStats"
+				channelStatsSchema
 			);
-
-			console.log("channels.getStats result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -178,16 +171,11 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.members.get",
 				"GET /channels/:channel_id/members",
 				() => client.channels.members.get({ channel_id: foundChannelId! }),
-				"ChannelMembership[]"
-			);
-
-			console.log(
-				"channels.members.get result:",
-				JSON.stringify(result, null, 2)
+				z.array(channelMembershipSchema)
 			);
 		});
 	});
@@ -199,7 +187,7 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.members.getById",
 				"GET /channels/:channel_id/members/:user_id",
 				() =>
@@ -207,12 +195,7 @@ describe("Channels API - Real API Tests", () => {
 						channel_id: foundChannelId!,
 						user_id: currentUserId!
 					}),
-				"ChannelMembership"
-			);
-
-			console.log(
-				"channels.members.getById result:",
-				JSON.stringify(result, null, 2)
+				channelMembershipSchema
 			);
 		});
 	});
@@ -226,7 +209,7 @@ describe("Channels API - Real API Tests", () => {
 
 			const testChannelName = `test-channel-${Date.now()}`;
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.create",
 				"POST /channels",
 				async () => {
@@ -234,30 +217,23 @@ describe("Channels API - Real API Tests", () => {
 						team_id: foundTeamId!,
 						name: testChannelName,
 						display_name: "Test Channel (API Test)",
-						type: ChannelType.Open
+						type: ChannelType.OPEN
 					});
 					createdChannelId = response.data.id;
 					return response;
 				},
-				"Channel"
+				channelSchema
 			);
-
-			console.log("channels.create result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("channels.searchAll", () => {
 		it("should search all channels", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"channels.searchAll",
 				"POST /channels/search_all",
 				() => client.channels.search.all({ term: "test" }),
-				"Channel[]"
-			);
-
-			console.log(
-				"channels.searchAll result:",
-				JSON.stringify(result, null, 2)
+				z.array(channelSchema)
 			);
 		});
 	});
@@ -269,7 +245,7 @@ describe("Channels API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"channels.listByIds",
 				"POST /channels/ids",
 				() =>
@@ -277,12 +253,7 @@ describe("Channels API - Real API Tests", () => {
 						channel_ids: [foundChannelId!],
 						team_id: foundTeamId!
 					}),
-				"Channel[]"
-			);
-
-			console.log(
-				"channels.listByIds result:",
-				JSON.stringify(result, null, 2)
+				z.array(channelSchema)
 			);
 		});
 	});

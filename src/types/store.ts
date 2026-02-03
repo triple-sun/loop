@@ -1,19 +1,5 @@
-import type { AdminState } from "./admin";
-import type { AppsState } from "./apps";
 import type { Bot } from "./bots";
-import type { ChannelsState } from "./channels/channels";
-import type { ChannelBookmarksState } from "./channels/channels-bookmarks";
-import type { ChannelCategoriesState } from "./channels/channels-categories";
-import type { CloudState, CloudUsage } from "./cloud";
-import type { EmojisState } from "./emojis";
-import type { FilesState } from "./files";
-import type { GeneralState } from "./general";
-import type { GroupsState } from "./groups";
-import type { HostedCustomerState } from "./hosted-customer";
-import type { IntegrationsState } from "./integrations";
-import type { JobsState } from "./jobs";
-import type { LimitsState } from "./limits";
-import type { PostsState } from "./posts/posts";
+import type { CloudUsage } from "./cloud";
 import type { PreferenceType } from "./preferences";
 import type {
 	AdminRequestsStatuses,
@@ -26,12 +12,29 @@ import type {
 	UsersRequestsStatuses
 } from "./requests";
 import type { Role } from "./roles";
-import type { SchemesState } from "./schemes";
-import type { SearchState } from "./search";
-import type { TeamsState } from "./teams";
-import type { ThreadsState } from "./threads";
+import type {
+	AdminState,
+	AppsState,
+	ChannelBookmarksState,
+	ChannelCategoriesState,
+	ChannelsState,
+	CloudState,
+	EmojisState,
+	FilesState,
+	GeneralState,
+	GroupsState,
+	HostedCustomerState,
+	IntegrationsState,
+	JobsState,
+	LimitsState,
+	PostsState,
+	SchemesState,
+	SearchState,
+	TeamsState,
+	ThreadsState,
+	UsersState
+} from "./state";
 import type { Typing } from "./typing";
-import type { UsersState } from "./users";
 
 export type GlobalState = {
 	entities: {

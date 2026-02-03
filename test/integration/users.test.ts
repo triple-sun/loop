@@ -18,7 +18,7 @@ describe("Users Integration Tests", () => {
 		cleanupTestClient();
 	});
 
-	describe("users.profile.me", () => {
+	describe("users.profile.get.me", () => {
 		it("should fetch current user profile", async () => {
 			const mockUser = {
 				id: "me_id",
@@ -31,7 +31,7 @@ describe("Users Integration Tests", () => {
 				`Bearer ${TEST_TOKEN}`
 			);
 
-			const result = await client.users.profile.me();
+			const result = await client.users.profile.get.me();
 
 			expect(result.data.id).toBe(mockUser.id);
 			expect(result.data.username).toBe(mockUser.username);
@@ -50,7 +50,7 @@ describe("Users Integration Tests", () => {
 				401
 			);
 
-			await expect(client.users.profile.me()).rejects.toThrow();
+			await expect(client.users.profile.get.me()).rejects.toThrow();
 		});
 	});
 

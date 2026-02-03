@@ -17,7 +17,7 @@ export function setupTestClient(
 	return new WebClient(TEST_URL, {
 		token: options.token ?? TEST_TOKEN,
 		logLevel: LogLevel.ERROR, // Use ERROR to reduce noise
-		retryConfig: options.retryConfig ?? { retries: 1 } // Default to 1 retry unless overridden
+		retryConfig: options.retryConfig ?? { retries: 0 } // Default to 1 retry unless overridden
 	});
 }
 

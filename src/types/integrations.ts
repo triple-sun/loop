@@ -1,8 +1,17 @@
-import type { Dialog } from "./dialog";
-import type { PostAttachment } from "./posts/posts-attachment";
-import type { IDMappedObjects } from "./utilities";
+import type { PostAttachment } from "./posts";
 
-export type IncomingWebhook = {
+export enum CommandMethod {
+	P = "P",
+	G = "G",
+	NULL = ""
+}
+
+export enum OAuthGrantType {
+	CREDENTIALS = "client_credentials",
+	PASSWORD = "password"
+}
+
+export interface IncomingWebhook {
 	id: string;
 	create_at: number;
 	update_at: number;
@@ -15,9 +24,9 @@ export type IncomingWebhook = {
 	username: string;
 	icon_url: string;
 	channel_locked: boolean;
-};
+}
 
-export type OutgoingWebhook = {
+export interface OutgoingWebhook {
 	id: string;
 	token: string;
 	create_at: number;
@@ -34,9 +43,9 @@ export type OutgoingWebhook = {
 	content_type: string;
 	username: string;
 	icon_url: string;
-};
+}
 
-export type Command = {
+export interface Command {
 	id: string;
 	token: string;
 	create_at: number;
@@ -45,7 +54,7 @@ export type Command = {
 	creator_id: string;
 	team_id: string;
 	trigger: string;
-	method: "P" | "G" | "";
+	method: CommandMethod;
 	username: string;
 	icon_url: string;
 	auto_complete: boolean;
@@ -54,15 +63,15 @@ export type Command = {
 	display_name: string;
 	description: string;
 	url: string;
-};
+}
 
-export type CommandArgs = {
+export interface CommandArgs {
 	channel_id: string;
 	team_id?: string;
 	root_id?: string;
-};
+}
 
-export type CommandResponse = {
+export interface CommandResponse {
 	response_type: string;
 	text: string;
 	username: string;
@@ -75,9 +84,9 @@ export type CommandResponse = {
 	skip_slack_parsing: boolean;
 	attachments: PostAttachment[];
 	extra_responses: CommandResponse[];
-};
+}
 
-export type OAuthApp = {
+export interface OAuthApp {
 	id: string;
 	creator_id: string;
 	create_at: number;
@@ -89,9 +98,9 @@ export type OAuthApp = {
 	callback_urls: string[];
 	homepage: string;
 	is_trusted: boolean;
-};
+}
 
-export type OutgoingOAuthConnection = {
+export interface OutgoingOAuthConnection {
 	id: string;
 	name: string;
 	creator_id: string;
@@ -102,21 +111,6 @@ export type OutgoingOAuthConnection = {
 	credentials_username?: string;
 	credentials_password?: string;
 	oauth_token_url: string;
-	grant_type: "client_credentials" | "password";
+	grant_type: OAuthGrantType;
 	audiences: string[];
-};
-
-export type IntegrationsState = {
-	incomingHooks: IDMappedObjects<IncomingWebhook>;
-	outgoingHooks: IDMappedObjects<OutgoingWebhook>;
-	oauthApps: IDMappedObjects<OAuthApp>;
-	outgoingOAuthConnections: IDMappedObjects<OutgoingOAuthConnection>;
-	appsOAuthAppIDs: string[];
-	appsBotIDs: string[];
-	systemCommands: IDMappedObjects<Command>;
-	commands: IDMappedObjects<Command>;
-	dialog?: {
-		url: string;
-		dialog: Dialog;
-	};
-};
+}

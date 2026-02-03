@@ -2,6 +2,9 @@ import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import type {
 	ComplianceReport,
+	PostListResponse,
+	PostSearchResponse,
+	StatusOK,
 	TokenOverridable,
 	UserCustomStatus,
 	UserID,
@@ -15,20 +18,22 @@ import type {
 	Channel,
 	ChannelMembership,
 	ChannelStats,
+	ChannelUnreadResponse,
 	ChannelViewResponse
-} from "./types/channels/channels";
+} from "./types/channels";
 import type {
 	CloudCustomer,
-	Invoice,
-	Limits,
-	Product,
-	Subscription
+	CloudInvoice,
+	CloudLimits,
+	CloudProduct,
+	CloudSubscription
 } from "./types/cloud";
 import type { ClientConfig } from "./types/config";
 import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
 import type {
 	FileInfo,
+	FileSearchResponse,
 	FileUploadResponse,
 	UploadSession
 } from "./types/files";
@@ -65,16 +70,33 @@ import type {
 } from "./types/methods/brand.methods";
 import type {
 	ChannelsAutocompleteArguments,
+	ChannelsCategoriesCreateArguments,
+	ChannelsCategoriesListArguments,
+	ChannelsCategoriesOrderGetArguments,
+	ChannelsCategoriesOrderUpdateArguments,
+	ChannelsCategoriesUpdateAllArguments,
+	ChannelsCategoryDeleteArguments,
+	ChannelsCategoryGetArguments,
+	ChannelsCategoryUpdateArguments,
+	ChannelsCountByGroupArguments,
 	ChannelsCreateArguments,
 	ChannelsCreateDirectArguments,
 	ChannelsCreateGroupArguments,
 	ChannelsDeleteArguments,
+	ChannelsGetAllForUserArguments,
 	ChannelsGetByIdArguments,
 	ChannelsGetByIdsArguments,
 	ChannelsGetByNameArguments,
+	ChannelsGetForUserArguments,
+	ChannelsGetMembersMinusGroupArguments,
+	ChannelsGetPinnedArguments,
 	ChannelsGetStatsArguments,
+	ChannelsGetTimezonesArguments,
+	ChannelsGetUnreadArguments,
 	ChannelsListAllArguments,
+	ChannelsListDeletedArguments,
 	ChannelsListInTeamArguments,
+	ChannelsListPrivateArguments,
 	ChannelsMemberAddArguments,
 	ChannelsMemberArguments,
 	ChannelsMemberRemoveArguments,
@@ -83,13 +105,21 @@ import type {
 	ChannelsMemberUpdateNotifyPropsArguments,
 	ChannelsMemberUpdateRolesArguments,
 	ChannelsMemberUpdateSchemeRolesArguments,
+	ChannelsModerationGetArguments,
+	ChannelsModerationUpdateArguments,
+	ChannelsMoveArguments,
 	ChannelsPatchArguments,
 	ChannelsRestoreArguments,
 	ChannelsSearchAllArguments,
 	ChannelsSearchArchivedArguments,
 	ChannelsSearchArguments,
+	ChannelsSearchAutocompleteArguments,
+	ChannelsSearchGroupsArguments,
+	ChannelsSetSchemeArguments,
 	ChannelsUpdateArguments,
-	ChannelsViewArguments
+	ChannelsUpdatePrivacyArguments,
+	ChannelsViewArguments,
+	SidebarCategory
 } from "./types/methods/channel.methods";
 import type {
 	CloudConfirmCustomerPaymentArguments,
@@ -132,7 +162,7 @@ import type {
 } from "./types/methods/emoji.methods";
 import type {
 	FilesGetArguments,
-	FilesGetInfoArguments,
+	FilesGetMetadataArguments,
 	FilesGetPreviewArguments,
 	FilesGetPublicArguments,
 	FilesGetPublicLinkArguments,
@@ -215,12 +245,22 @@ import type {
 } from "./types/methods/plugins.methods";
 import type {
 	PostsCreateArguments,
+	PostsCreateEphemeralArguments,
 	PostsDeleteArguments,
+	PostsDoActionArguments,
 	PostsGetArguments,
+	PostsGetAroundLastUnreadArguments,
+	PostsGetByIdsArguments,
+	PostsGetFileInfoArguments,
+	PostsGetFlaggedArguments,
 	PostsGetForChannelArguments,
 	PostsGetThreadArguments,
+	PostsMarkAsUnreadArguments,
 	PostsMoveArguments,
+	PostsPatchArguments,
 	PostsPinArguments,
+	PostsSearchArguments,
+	PostsSetReminderArguments,
 	PostsUnpinArguments,
 	PostsUpdateArguments
 } from "./types/methods/post.methods";
@@ -298,7 +338,6 @@ import type {
 } from "./types/methods/uploads.methods";
 import type {
 	UsersAutocompleteArguments,
-	UsersChannelsArguments,
 	UsersCustomStatusSetArguments,
 	UsersCustomStatusUnsetArguments,
 	UsersDeleteImageArguments,
@@ -313,8 +352,12 @@ import type {
 	UsersStatusSetAruments,
 	UsersUpdateRolesArguments
 } from "./types/methods/user.methods";
-import type { PluginManifest, PluginStatus } from "./types/plugins";
-import type { Post, PostList } from "./types/posts/posts";
+import type {
+	PluginManifest,
+	PluginStatus,
+	PluginsGetResponse
+} from "./types/plugins";
+import type { Post } from "./types/posts";
 import type { PreferenceType } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
 import type { Role } from "./types/roles";
@@ -328,7 +371,6 @@ import type {
 import type { TermsOfService } from "./types/terms-of-service";
 import {
 	ContentType,
-	type StatusOK,
 	type WebApiCallConfig,
 	type WebClientEvent
 } from "./types/web-client";
@@ -360,8 +402,8 @@ function bindApiCallWithOptionalArg<ARGS, RESULT>(
 }
 
 /**
- * A class that defines all Web API methods, their arguments type, their response type, and binds those methods to the
- * `apiCall` class method.
+ * @description A class that defines all Web API methods, their arguments type,
+ * their response type, and binds those methods to the `apiCall` class method.
  */
 export abstract class Methods extends EventEmitter<WebClientEvent> {
 	protected constructor() {
@@ -380,11 +422,16 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		options?: Record<string, unknown>
 	): Promise<WebAPICallResult>;
 
+	/**
+	 * ============================================================================
+	 * @description Bots methods
+	 * ============================================================================
+	 */
 	public readonly bots = {
 		convert: {
 			/**
 			 * @description Convert a user to a bot.
-			 * @permissions Requires `manage_system` permission.
+			 * Requires `manage_system` permission.
 			 */
 			fromUser: bindApiCall<BotsConvertUserArguments, StatusOK>(this, {
 				method: "POST",
@@ -393,7 +440,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			/**
 			 * @description Convert a bot to a user.
-			 * @permissions Requires `manage_system` permission.
+			 * Requires `manage_system` permission.
 			 */
 			toUser: bindApiCall<BotsConvertBotToUserArguments, StatusOK>(this, {
 				method: "POST",
@@ -404,7 +451,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		},
 		/**
 		 * @description Create a new bot.
-		 * @permissions Requires `create_bot` permission.
+		 * Requires `create_bot` permission.
 		 */
 		create: bindApiCall<BotsCreateArguments, Bot>(this, {
 			method: "POST",
@@ -460,6 +507,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Brand methods
+	 * ============================================================================
+	 */
 	public readonly brand = {
 		image: {
 			get: bindApiCall<BrandGetImageArguments, Buffer | Stream>(this, {
@@ -480,6 +532,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * Compliance methods
+	 * ============================================================================
+	 */
 	public readonly compliance = {
 		createReport: bindApiCall<
 			ComplianceCreateReportArguments,
@@ -507,6 +564,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		)
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Channels methods
+	 * ============================================================================
+	 */
 	public readonly channels = {
 		autocomplete: bindApiCall<ChannelsAutocompleteArguments, Channel[]>(this, {
 			method: "GET",
@@ -537,6 +599,9 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		},
 
 		list: {
+			/**
+			 * @description List all channels
+			 */
 			all: bindApiCallWithOptionalArg<ChannelsListAllArguments, Channel[]>(
 				this,
 				{
@@ -557,6 +622,38 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				method: "POST",
 				path: "teams/:team_id/channels/ids",
 				type: ContentType.JSON
+			}),
+			/**
+			 * @description Get all channels for a user across all teams.
+			 */
+			forUser: bindApiCall<ChannelsGetAllForUserArguments, Channel[]>(this, {
+				method: "GET",
+				path: "users/:user_id/channels",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Get all channels for a user in a specific team.
+			 */
+			forUserInTeam: bindApiCall<ChannelsGetForUserArguments, Channel[]>(this, {
+				method: "GET",
+				path: "users/:user_id/teams/:team_id/channels",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Get private channels for a team.
+			 */
+			private: bindApiCall<ChannelsListPrivateArguments, Channel[]>(this, {
+				method: "GET",
+				path: "teams/:team_id/channels/private",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Get deleted channels for a team.
+			 */
+			deleted: bindApiCall<ChannelsListDeletedArguments, Channel[]>(this, {
+				method: "GET",
+				path: "teams/:team_id/channels/deleted",
+				type: ContentType.URLEncoded
 			})
 		},
 		search: {
@@ -567,12 +664,31 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			all: bindApiCall<ChannelsSearchAllArguments, Channel[]>(this, {
 				method: "POST",
-				path: "channels/search_all",
+				path: "channels/search",
 				type: ContentType.JSON
 			}),
 			archived: bindApiCall<ChannelsSearchArchivedArguments, Channel[]>(this, {
 				method: "POST",
 				path: "teams/:team_id/channels/search_archived",
+				type: ContentType.JSON
+			}),
+			/**
+			 * @description Autocomplete channels for search in a team.
+			 */
+			autocomplete: bindApiCall<ChannelsSearchAutocompleteArguments, Channel[]>(
+				this,
+				{
+					method: "GET",
+					path: "teams/:team_id/channels/search_autocomplete",
+					type: ContentType.URLEncoded
+				}
+			),
+			/**
+			 * @description Search for group message channels.
+			 */
+			groups: bindApiCall<ChannelsSearchGroupsArguments, Channel[]>(this, {
+				method: "POST",
+				path: "channels/group/search",
 				type: ContentType.JSON
 			})
 		},
@@ -650,7 +766,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			/**
 			 * @description Add a user to a channel.
-			 * @permissions Requires `join_public_channels` for public channels.
+			 * Requires `join_public_channels` for public channels.
 			 */
 			add: bindApiCall<ChannelsMemberAddArguments, ChannelMembership>(this, {
 				method: "POST",
@@ -708,10 +824,121 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				method: "PUT",
 				path: "channels/:channel_id/members/:user_id/notify_props",
 				type: ContentType.JSON
+			}),
+			/**
+			 * @description Get channel members minus group members.
+			 * @permission Must have manage_system permission.
+			 */
+			getMinusGroupMembers: bindApiCall<
+				ChannelsGetMembersMinusGroupArguments,
+				{ users: unknown[]; total_count: number; next_page_id: string }
+			>(this, {
+				method: "GET",
+				path: "channels/:channel_id/members_minus_group_members",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Get member counts by group for a channel.
+			 */
+			countByGroup: bindApiCall<
+				ChannelsCountByGroupArguments,
+				{ group_id: string; channel_member_count: number }[]
+			>(this, {
+				method: "GET",
+				path: "channels/:channel_id/member_counts_by_group",
+				type: ContentType.URLEncoded
+			})
+		},
+
+		/**
+		 * @description Update a channel's privacy setting.
+		 * Converts a public channel to private or vice-versa.
+		 */
+		updatePrivacy: bindApiCall<ChannelsUpdatePrivacyArguments, Channel>(this, {
+			method: "PUT",
+			path: "channels/:channel_id/privacy",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Move a channel to a different team.
+		 */
+		move: bindApiCall<ChannelsMoveArguments, Channel>(this, {
+			method: "POST",
+			path: "channels/:channel_id/move",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Get pinned posts in a channel.
+		 */
+		getPinned: bindApiCall<ChannelsGetPinnedArguments, PostListResponse>(this, {
+			method: "GET",
+			path: "channels/:channel_id/pinned",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Get timezones of users in a channel.
+		 */
+		getTimezones: bindApiCall<ChannelsGetTimezonesArguments, string[]>(this, {
+			method: "GET",
+			path: "channels/:channel_id/timezones",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Get unread message and mention counts for a user in a channel.
+		 */
+		getUnread: bindApiCall<ChannelsGetUnreadArguments, ChannelUnreadResponse>(
+			this,
+			{
+				method: "GET",
+				path: "users/:user_id/channels/:channel_id/unread",
+				type: ContentType.URLEncoded
+			}
+		),
+
+		/**
+		 * @description Set a channel's scheme.
+		 */
+		setScheme: bindApiCall<ChannelsSetSchemeArguments, StatusOK>(this, {
+			method: "PUT",
+			path: "channels/:channel_id/scheme",
+			type: ContentType.JSON
+		}),
+
+		moderation: {
+			/**
+			 * @description Get moderation settings for a channel.
+			 */
+			get: bindApiCall<
+				ChannelsModerationGetArguments,
+				{ name: string; roles: { guests: boolean; members: boolean } }[]
+			>(this, {
+				method: "GET",
+				path: "channels/:channel_id/moderations",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Update moderation settings for a channel.
+			 */
+			update: bindApiCall<
+				ChannelsModerationUpdateArguments,
+				{ name: string; roles: { guests: boolean; members: boolean } }[]
+			>(this, {
+				method: "PUT",
+				path: "channels/:channel_id/moderations/patch",
+				type: ContentType.JSON
 			})
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Cloud methods
+	 * ============================================================================
+	 */
 	public readonly cloud = {
 		customer: {
 			get: bindApiCallWithOptionalArg<never, CloudCustomer>(this, {
@@ -760,33 +987,33 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			})
 		},
 		invoices: {
-			get: bindApiCallWithOptionalArg<never, Invoice[]>(this, {
+			get: bindApiCallWithOptionalArg<never, CloudInvoice[]>(this, {
 				method: "GET",
 				path: "cloud/invoices",
 				type: ContentType.URLEncoded
 			})
 		},
 		subscription: {
-			get: bindApiCallWithOptionalArg<never, Subscription>(this, {
+			get: bindApiCallWithOptionalArg<never, CloudSubscription>(this, {
 				method: "GET",
 				path: "cloud/subscription",
 				type: ContentType.URLEncoded
 			}),
-			update: bindApiCallWithOptionalArg<never, Subscription>(this, {
+			update: bindApiCallWithOptionalArg<never, CloudSubscription>(this, {
 				method: "PUT",
 				path: "cloud/subscription",
 				type: ContentType.JSON
 			})
 		},
 		products: {
-			get: bindApiCallWithOptionalArg<never, Product[]>(this, {
+			get: bindApiCallWithOptionalArg<never, CloudProduct[]>(this, {
 				method: "GET",
 				path: "cloud/products",
 				type: ContentType.URLEncoded
 			})
 		},
 		limits: {
-			get: bindApiCallWithOptionalArg<never, Limits>(this, {
+			get: bindApiCallWithOptionalArg<never, CloudLimits>(this, {
 				method: "GET",
 				path: "cloud/limits",
 				type: ContentType.URLEncoded
@@ -794,6 +1021,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Data retention methods
+	 * ============================================================================
+	 */
 	public readonly dataRetention = {
 		policies: {
 			create: bindApiCall<
@@ -941,7 +1173,12 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
-	public readonly emoji = {
+	/**
+	 * ============================================================================
+	 * @description Emojis methods
+	 * ============================================================================
+	 */
+	public readonly emojis = {
 		autocomplete: bindApiCall<EmojisAutocompleteArguments, CustomEmoji[]>(
 			this,
 			{
@@ -989,55 +1226,140 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Files methods
+	 * ============================================================================
+	 */
 	public readonly files = {
+		/**
+		 * Upload a file
+		 *
+		 * @description Uploads a file that can later be attached to a post.
+		 * This request can either be a multipart/form-data request with a channel_id,
+		 * files and optional client_ids defined in the FormData, or it can be a request
+		 * with the channel_id and filename defined as query parameters with the contents of a single file in the body of the request.
+		 *
+		 * Only multipart/form-data requests are supported by server versions up to and including 4.7.
+		 * Server versions 4.8 and higher support both types of requests.
+		 *
+		 * Must have upload_file permission.
+		 *
+		 * @see https://developers.loop.ru/API/4.0.0/upload-file
+		 */
 		upload: bindApiCall<FilesUploadArguments, FileUploadResponse>(this, {
 			method: "POST",
 			path: "files",
 			type: ContentType.FormData
 		}),
-		get: bindApiCall<FilesGetArguments, Blob>(this, {
-			method: "GET",
-			path: "files/:file_id",
-			type: ContentType.URLEncoded
-		}),
-		getThumbnail: bindApiCall<FilesGetThumbnailArguments, Blob>(this, {
-			method: "GET",
-			path: "files/:file_id/thumbnail",
-			type: ContentType.URLEncoded
-		}),
-		getPreview: bindApiCall<FilesGetPreviewArguments, Blob>(this, {
-			method: "GET",
-			path: "files/:file_id/preview",
-			type: ContentType.URLEncoded
-		}),
-		getPublicLink: bindApiCall<FilesGetPublicLinkArguments, { link: string }>(
-			this,
-			{
+		/**
+		 * @description Get file and various file-related data
+		 */
+		get: {
+			/**
+			 * Get a file
+			 *
+			 * @description Gets a file that has been uploaded previously.
+			 *
+			 * Must have read_channel permission or be uploader of the file.
+			 */
+			file: bindApiCall<FilesGetArguments, Blob>(this, {
 				method: "GET",
-				path: "files/:file_id/link",
+				path: "files/:file_id",
 				type: ContentType.URLEncoded
-			}
-		),
-		getInfo: bindApiCall<FilesGetInfoArguments, FileInfo>(this, {
-			method: "GET",
-			path: "files/:file_id/info",
-			type: ContentType.URLEncoded
-		}),
-		getPublicFile: bindApiCall<FilesGetPublicArguments, Blob>(this, {
-			method: "GET",
-			path: "files/:file_id/public",
-			type: ContentType.URLEncoded
-		}),
-		search: bindApiCall<FilesSearchArguments, FileInfo[]>(this, {
+			}),
+			/**
+			 * Get metadata for a file
+			 *
+			 * @description Gets a file's info.
+			 *
+			 * Must have read_channel permission or be uploader of the file.
+			 */
+			metadata: bindApiCall<FilesGetMetadataArguments, FileInfo>(this, {
+				method: "GET",
+				path: "files/:file_id/info",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * Get a file's preview
+			 *
+			 * @description Gets a file's preview.
+			 *
+			 * Must have read_channel permission or be uploader of the file.
+			 */
+			preview: bindApiCall<FilesGetPreviewArguments, Blob>(this, {
+				method: "GET",
+				path: "files/:file_id/preview",
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * Get a public file link
+			 *
+			 * @description Gets a public link for a file that can be accessed without logging into LOOP.
+			 *
+			 * Must have read_channel permission or be uploader of the file.
+			 */
+			publicLink: bindApiCall<FilesGetPublicLinkArguments, { link: string }>(
+				this,
+				{
+					method: "GET",
+					path: "files/:file_id/link",
+					type: ContentType.URLEncoded
+				}
+			),
+
+			/**
+			 * Get a public file
+			 *
+			 * No permissions required.
+			 */
+			publicFile: bindApiCall<FilesGetPublicArguments, Blob>(this, {
+				method: "GET",
+				path: "files/:file_id/public",
+				type: ContentType.URLEncoded
+			}),
+
+			/**
+			 * Get a file's thumbnail
+			 *
+			 * @description Gets a file's thumbnail.
+			 *
+			 * Must have read_channel permission or be uploader of the file.
+			 */
+			thumbnail: bindApiCall<FilesGetThumbnailArguments, Blob>(this, {
+				method: "GET",
+				path: "files/:file_id/thumbnail",
+				type: ContentType.URLEncoded
+			})
+		},
+		/**
+		 * Search files in team
+		 *
+		 * @description Search for files in a team based on file name, extention and file content
+		 * (if file content extraction is enabled and supported for the files).
+		 * Must be authenticated and have the view_team permission.
+		 *
+		 * @version 5.34+
+		 *
+		 * @see https://developers.loop.ru/API/4.0.0/search-files
+		 */
+		search: bindApiCall<FilesSearchArguments, FileSearchResponse>(this, {
 			method: "POST",
 			path: "teams/:team_id/files/search",
 			type: ContentType.JSON
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Integrations methods
+	 * ============================================================================
+	 */
 	public readonly integrations = {
 		/**
-		 * @description Interactive dialogs for post actions/commands
+		 * ============================================================================
+		 * @description Integration interactive dialogs methods
+		 * ============================================================================
 		 */
 		dialogs: {
 			/**
@@ -1066,12 +1388,14 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		},
 
 		/**
-		 * @description Commands
+		 * ============================================================================
+		 * @description Integration commands methods
+		 * ============================================================================
 		 */
 		commands: {
 			/**
 			 * @description Create a command for a team.
-			 * @permissions `manage_slash_commands` for the team the command is in.
+			 * `manage_slash_commands` for the team the command is in.
 			 */
 			create: bindApiCall<CommandsCreateArguments, Command>(this, {
 				method: "POST",
@@ -1123,6 +1447,12 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				type: ContentType.URLEncoded
 			})
 		},
+
+		/**
+		 * ============================================================================
+		 * @description Integration webhooks methods
+		 * ============================================================================
+		 */
 		webhooks: {
 			incoming: {
 				create: bindApiCall<IncomingWebhooksCreateArguments, IncomingWebhook>(
@@ -1205,6 +1535,12 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				})
 			}
 		},
+
+		/**
+		 * ============================================================================
+		 * @description OAuth apps methods
+		 * ============================================================================
+		 */
 		oauth: {
 			apps: {
 				create: bindApiCall<OAuthAppsCreateArguments, OAuthApp>(this, {
@@ -1249,10 +1585,15 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Groups methods
+	 * ============================================================================
+	 */
 	public readonly groups = {
 		/**
 		 * @description Create a new group.
-		 * @permissions Requires `manage_system` permission.
+		 * Requires `manage_system` permission.
 		 */
 		create: bindApiCall<GroupsCreateArguments, Group>(this, {
 			method: "POST",
@@ -1261,7 +1602,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}),
 		/**
 		 * @description Retrieve a group by its ID.
-		 * @permissions Requires `manage_system` permission.
+		 * Requires `manage_system` permission.
 		 */
 		get: bindApiCall<GroupsGetArguments, Group>(this, {
 			method: "GET",
@@ -1270,7 +1611,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}),
 		/**
 		 * @description List all groups.
-		 * @permissions Requires `manage_system` permission.
+		 * Requires `manage_system` permission.
 		 */
 		list: bindApiCall<GroupsListArguments, Group[]>(this, {
 			method: "GET",
@@ -1324,11 +1665,17 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				type: ContentType.JSON
 			})
 		},
+
+		/**
+		 * ============================================================================
+		 * @description Group members methods
+		 * ============================================================================
+		 */
 		members: {
 			/**
 			 * @description Get groups for a user.
 			 */
-			list: bindApiCall<GroupsListForUserArguments, Group[]>(this, {
+			listForUser: bindApiCall<GroupsListForUserArguments, Group[]>(this, {
 				method: "GET",
 				path: "users/:user_id/groups",
 				type: ContentType.URLEncoded
@@ -1391,10 +1738,15 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Jobs methods
+	 * ============================================================================
+	 */
 	public readonly jobs = {
 		/**
 		 * @description Create a new job.
-		 * @permissions Requires `manage_jobs` permission.
+		 * Requires `manage_jobs` permission.
 		 */
 		create: bindApiCall<JobsCreateArguments, Job>(this, {
 			method: "POST",
@@ -1436,10 +1788,15 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Plugins methods
+	 * ============================================================================
+	 */
 	public readonly plugins = {
 		/**
 		 * @description Upload a plugin.
-		 * @permissions Requires `manage_system` permission.
+		 * Requires `manage_system` permission.
 		 */
 		upload: bindApiCall<PluginsUploadArguments, PluginManifest>(this, {
 			method: "POST",
@@ -1479,7 +1836,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "plugins/:plugin_id/disable",
 			type: ContentType.URLEncoded
 		}),
-		get: bindApiCallWithOptionalArg<never, PluginManifest[]>(this, {
+		get: bindApiCallWithOptionalArg<never, PluginsGetResponse>(this, {
 			method: "GET",
 			path: "plugins",
 			type: ContentType.URLEncoded
@@ -1507,6 +1864,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Roles methods
+	 * ============================================================================
+	 */
 	public readonly roles = {
 		get: {
 			/**
@@ -1519,7 +1881,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			byName: bindApiCall<RolesGetByNameArguments, Role>(this, {
 				method: "GET",
-				path: "roles/name/:role_name",
+				path: "roles/name/:name",
 				type: ContentType.URLEncoded
 			}),
 			byNames: bindApiCall<RolesGetByNamesArguments, Role[]>(this, {
@@ -1535,6 +1897,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Schemes methods
+	 * ============================================================================
+	 */
 	public readonly schemes = {
 		create: bindApiCall<SchemesCreateArguments, Scheme>(this, {
 			method: "POST",
@@ -1573,6 +1940,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Teams methods
+	 * ============================================================================
+	 */
 	public readonly teams = {
 		create: bindApiCall<TeamsCreateArguments, Team>(this, {
 			method: "POST",
@@ -1662,7 +2034,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		members: {
 			/**
 			 * @description Get a page of team members list.
-			 * @permissions Requires `view_team` permission.
+			 * Requires `view_team` permission.
 			 */
 			list: bindApiCall<TeamsMembersListArguments, TeamMembership[]>(this, {
 				method: "GET",
@@ -1671,7 +2043,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			/**
 			 * @description Add a user to a team.
-			 * @permissions Requires `add_user_to_team` permission.
+			 * Requires `add_user_to_team` permission.
 			 */
 			add: bindApiCall<TeamsMemberAddArguments, TeamMembership>(this, {
 				method: "POST",
@@ -1680,7 +2052,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			/**
 			 * @description Add a number of users to a team.
-			 * @permissions Requires `add_user_to_team` permission.
+			 * Requires `add_user_to_team` permission.
 			 */
 			addBatch: bindApiCall<
 				TeamsMemberAddBatchArguments,
@@ -1700,7 +2072,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			}),
 			/**
 			 * @description Remove a user from a team.
-			 * @permissions Requires `remove_user_from_team` permission.
+			 * Requires `remove_user_from_team` permission.
 			 */
 			remove: bindApiCall<TeamsMemberRemoveArguments, StatusOK>(this, {
 				method: "DELETE",
@@ -1743,10 +2115,24 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Posts methods
+	 * ============================================================================
+	 */
 	public readonly posts = {
 		create: bindApiCall<PostsCreateArguments, Post>(this, {
 			method: "POST",
 			path: "posts",
+			type: ContentType.JSON
+		}),
+		/**
+		 * @description Create an ephemeral post.
+		 * Creates a new ephemeral post that is visible only to the specified user.
+		 */
+		createEphemeral: bindApiCall<PostsCreateEphemeralArguments, Post>(this, {
+			method: "POST",
+			path: "posts/ephemeral",
 			type: ContentType.JSON
 		}),
 		update: bindApiCall<PostsUpdateArguments, Post>(this, {
@@ -1764,16 +2150,19 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "posts/:post_id",
 			type: ContentType.URLEncoded
 		}),
-		getThread: bindApiCall<PostsGetThreadArguments, PostList>(this, {
+		getThread: bindApiCall<PostsGetThreadArguments, PostListResponse>(this, {
 			method: "GET",
 			path: "posts/:post_id/thread",
 			type: ContentType.URLEncoded
 		}),
-		getForChannel: bindApiCall<PostsGetForChannelArguments, PostList>(this, {
-			method: "GET",
-			path: "channels/:channel_id/posts",
-			type: ContentType.URLEncoded
-		}),
+		getForChannel: bindApiCall<PostsGetForChannelArguments, PostListResponse>(
+			this,
+			{
+				method: "GET",
+				path: "channels/:channel_id/posts",
+				type: ContentType.URLEncoded
+			}
+		),
 		pin: bindApiCall<PostsPinArguments, StatusOK>(this, {
 			method: "POST",
 			path: "posts/:post_id/pin",
@@ -1788,9 +2177,107 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			method: "POST",
 			path: "posts/:post_id/move",
 			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Mark a channel as being unread from a given post.
+		 * Sets the last viewed at timestamp for the user's channel to the post's create_at timestamp.
+		 */
+		setUnread: bindApiCall<PostsMarkAsUnreadArguments, StatusOK>(this, {
+			method: "POST",
+			path: "users/:user_id/posts/:post_id/set_unread",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Partially update a post.
+		 * Updates a post by providing only the fields that need to change.
+		 */
+		patch: bindApiCall<PostsPatchArguments, Post>(this, {
+			method: "PUT",
+			path: "posts/:post_id/patch",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Get a list of flagged posts for a user.
+		 * Retrieves posts that the specified user has flagged/saved.
+		 */
+		getFlagged: bindApiCall<PostsGetFlaggedArguments, PostListResponse>(this, {
+			method: "GET",
+			path: "users/:user_id/posts/flagged",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Get file info for a post.
+		 * Gets a list of file information objects for the files attached to a post.
+		 */
+		getFilesInfo: bindApiCall<PostsGetFileInfoArguments, FileInfo[]>(this, {
+			method: "GET",
+			path: "posts/:post_id/files/info",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Get posts around the last unread.
+		 * Get the posts around the oldest unread post in a channel for a given user.
+		 */
+		getAroundUnread: bindApiCall<
+			PostsGetAroundLastUnreadArguments,
+			PostListResponse
+		>(this, {
+			method: "GET",
+			path: "users/:user_id/channels/:channel_id/posts/unread",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Search posts in a team.
+		 * Search posts in the specified team using the provided terms.
+		 */
+		search: bindApiCall<PostsSearchArguments, PostSearchResponse>(this, {
+			method: "POST",
+			path: "teams/:team_id/posts/search",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Perform a post action.
+		 * Perform an action on a post, such as clicking an interactive button.
+		 */
+		doAction: bindApiCall<PostsDoActionArguments, StatusOK>(this, {
+			method: "POST",
+			path: "posts/:post_id/actions/:action_id",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Get posts by IDs.
+		 * Get a list of posts based on a provided list of post IDs.
+		 */
+		getByIds: bindApiCall<PostsGetByIdsArguments, Post[]>(this, {
+			method: "POST",
+			path: "posts/ids",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Set a reminder for a post.
+		 * Set a reminder for the specified user on the specified post.
+		 */
+		setReminder: bindApiCall<PostsSetReminderArguments, StatusOK>(this, {
+			method: "POST",
+			path: "users/:user_id/posts/:post_id/reminder",
+			type: ContentType.JSON
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Reactions methods
+	 * ============================================================================
+	 */
 	public readonly reactions = {
 		create: bindApiCall<ReactionsCreateArguments, Reaction>(this, {
 			method: "POST",
@@ -1818,171 +2305,10 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	} as const;
 
 	/**
-	 * @description Users methods
+	 * ============================================================================
+	 * @description System methods
+	 * ============================================================================
 	 */
-	public readonly users = {
-		list: bindApiCallWithOptionalArg<UsersListArguments, UserProfile[]>(this, {
-			method: "GET",
-			path: "users",
-			type: ContentType.URLEncoded
-		}),
-		autocomplete: bindApiCall<
-			UsersAutocompleteArguments,
-			{ users: UserProfile[]; out_of_channel?: UserProfile[] }
-		>(this, {
-			method: "GET",
-			path: "users/autocomplete",
-			type: ContentType.URLEncoded
-		}),
-		channels: bindApiCall<UsersChannelsArguments, Channel[]>(this, {
-			method: "GET",
-			path: "users/:user_id/channels",
-			type: ContentType.URLEncoded
-		}),
-		profile: {
-			/**
-			 * @description Retrieve a user's profile information, including their custom status.
-			 */
-			me: bindApiCallWithOptionalArg<TokenOverridable, UserProfile>(this, {
-				method: "GET",
-				path: `users/:user_id`,
-				type: ContentType.URLEncoded
-			}),
-			/**
-			 * @description Retrieve a user's profile information, including their custom status.
-			 */
-			getById: bindApiCallWithOptionalArg<
-				UsersProfileGetArguments,
-				UserProfile
-			>(this, {
-				method: "GET",
-				path: `users/:user_id`,
-				type: ContentType.URLEncoded
-			}),
-			/**
-			 * @description Find a user with an email address.
-			 */
-			getByEmail: bindApiCall<UsersGetByEmailArguments, UserProfile>(this, {
-				method: "GET",
-				path: `users/email/:email`,
-				type: ContentType.URLEncoded
-			}),
-			/**
-			 * @description Find a user with an email address.
-			 */
-			getByUsername: bindApiCall<UsersGetByUsernameArguments, UserProfile>(
-				this,
-				{
-					method: "GET",
-					path: `users/username/:username`,
-					type: ContentType.URLEncoded
-				}
-			),
-			/**
-			 * @description Set a user's profile information, including custom status.
-			 * @see {@link https://docs.slack.dev/reference/methods/users.profile.set `users.profile.set` API reference}.
-			 */
-			patch: bindApiCall<UsersProfileSetArguments, UserProfile>(this, {
-				method: "PUT",
-				path: `users/:user_id`,
-				type: ContentType.JSON
-			}),
-			/**
-			 * @description Set the user profile image.
-			 */
-			setProfileImage: bindApiCall<UsersSetImageArguments, StatusOK>(this, {
-				method: "POST",
-				path: `users/:user_id/image`,
-				type: ContentType.URLEncoded
-			}),
-			/**
-			 * @description Delete the user profile image.
-			 */
-			deleteProfileImage: bindApiCallWithOptionalArg<
-				UsersDeleteImageArguments,
-				StatusOK
-			>(this, {
-				method: "DELETE",
-				path: `users/:user_id/image`,
-				type: ContentType.URLEncoded
-			})
-		},
-		search: bindApiCall<UsersSearchArguments, UserProfile[]>(this, {
-			method: "POST",
-			path: "users/search",
-			type: ContentType.JSON
-		}),
-		status: {
-			/**
-			 * @description Gets status for user
-			 */
-			get: bindApiCall<UsersStatusGetAruments, UserStatus>(this, {
-				method: "GET",
-				path: `users/:user_id/status`,
-				type: ContentType.URLEncoded
-			}),
-			/**
-			 * @description Update users status by id
-			 * Must have edit_other_users permission for the team.
-			 */
-			set: bindApiCall<UsersStatusSetAruments, UserStatus>(this, {
-				method: "PUT",
-				path: `users/:user_id/status`,
-				type: ContentType.JSON
-			}),
-			setCustom: bindApiCall<UsersCustomStatusSetArguments, UserCustomStatus>(
-				this,
-				{
-					method: "PUT",
-					path: `users/:user_id/status/custom`,
-					type: ContentType.JSON
-				}
-			),
-			unsetCustom: bindApiCall<UsersCustomStatusUnsetArguments, StatusOK>(
-				this,
-				{
-					method: "DELETE",
-					path: `users/:user_id/status/custom`,
-					type: ContentType.URLEncoded
-				}
-			)
-		},
-		preferences: {
-			get: bindApiCall<PreferencesGetArguments, PreferenceType[]>(this, {
-				method: "GET",
-				path: "users/:user_id/preferences",
-				type: ContentType.URLEncoded
-			}),
-			save: bindApiCall<PreferencesSaveArguments, StatusOK>(this, {
-				method: "PUT",
-				path: "users/:user_id/preferences",
-				type: ContentType.JSON
-			}),
-			delete: bindApiCall<PreferencesDeleteArguments, StatusOK>(this, {
-				method: "POST",
-				path: "users/:user_id/preferences/delete",
-				type: ContentType.JSON
-			})
-		},
-		guest: {
-			toUser: bindApiCall<UserID, StatusOK>(this, {
-				method: "POST",
-				path: `users/:user_id/promote`,
-				type: ContentType.URLEncoded
-			}),
-			fromUser: bindApiCall<UserID, StatusOK>(this, {
-				method: "post",
-				path: `users/:user_id/demote`,
-				type: ContentType.URLEncoded
-			})
-		},
-		updateRoles: bindApiCall<UsersUpdateRolesArguments, StatusOK>(this, {
-			method: "PUT",
-			path: `users/:user_id/roles`,
-			type: ContentType.URLEncoded
-		})
-	} as const;
-
 	public readonly system = {
 		checkIntegrity: bindApiCall<
 			SystemCheckIntegrityArguments,
@@ -2058,6 +2384,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		})
 	} as const;
 
+	/**
+	 * ============================================================================
+	 * @description Uploads profile methods
+	 * ============================================================================
+	 */
 	public readonly uploads = {
 		create: bindApiCall<UploadsCreateArguments, UploadSession>(this, {
 			method: "POST",
@@ -2073,6 +2404,289 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			method: "POST",
 			path: "uploads/:upload_id",
 			type: ContentType.FormData
+		})
+	} as const;
+
+	/**
+	 * ============================================================================
+	 * @description User methods
+	 * ============================================================================
+	 */
+	public readonly users = {
+		list: bindApiCallWithOptionalArg<UsersListArguments, UserProfile[]>(this, {
+			method: "GET",
+			path: "users",
+			type: ContentType.URLEncoded
+		}),
+		autocomplete: bindApiCall<
+			UsersAutocompleteArguments,
+			{ users: UserProfile[]; out_of_channel?: UserProfile[] }
+		>(this, {
+			method: "GET",
+			path: "users/autocomplete",
+			type: ContentType.URLEncoded
+		}),
+		channels: {
+			list: {
+				inTeam: this.channels.list.forUserInTeam,
+				all: this.channels.list.forUser
+			},
+			sidebar: {
+				categories: {
+					/**
+					 * @description Get sidebar categories for a user in a team.
+					 */
+					list: bindApiCall<
+						ChannelsCategoriesListArguments,
+						{ order: string[]; categories: SidebarCategory[] }
+					>(this, {
+						method: "GET",
+						path: "users/:user_id/teams/:team_id/channels/categories",
+						type: ContentType.URLEncoded
+					}),
+					/**
+					 * @description Create a new sidebar category.
+					 */
+					create: bindApiCall<
+						ChannelsCategoriesCreateArguments,
+						SidebarCategory
+					>(this, {
+						method: "POST",
+						path: "users/:user_id/teams/:team_id/channels/categories",
+						type: ContentType.JSON
+					}),
+					/**
+					 * @description Update all sidebar categories for a user.
+					 */
+					updateAll: bindApiCall<
+						ChannelsCategoriesUpdateAllArguments,
+						SidebarCategory[]
+					>(this, {
+						method: "PUT",
+						path: "users/:user_id/teams/:team_id/channels/categories",
+						type: ContentType.JSON
+					}),
+					/**
+					 * @description Get a specific sidebar category.
+					 */
+					get: bindApiCall<ChannelsCategoryGetArguments, SidebarCategory>(
+						this,
+						{
+							method: "GET",
+							path: "users/:user_id/teams/:team_id/channels/categories/:category_id",
+							type: ContentType.URLEncoded
+						}
+					),
+					/**
+					 * @description Update a specific sidebar category.
+					 */
+					update: bindApiCall<ChannelsCategoryUpdateArguments, SidebarCategory>(
+						this,
+						{
+							method: "PUT",
+							path: "users/:user_id/teams/:team_id/channels/categories/:category_id",
+							type: ContentType.JSON
+						}
+					),
+					/**
+					 * @description Delete a sidebar category.
+					 */
+					delete: bindApiCall<ChannelsCategoryDeleteArguments, StatusOK>(this, {
+						method: "DELETE",
+						path: "users/:user_id/teams/:team_id/channels/categories/:category_id",
+						type: ContentType.URLEncoded
+					}),
+					/**
+					 * @description Get sidebar category order.
+					 */
+					getOrder: bindApiCall<ChannelsCategoriesOrderGetArguments, string[]>(
+						this,
+						{
+							method: "GET",
+							path: "users/:user_id/teams/:team_id/channels/categories/order",
+							type: ContentType.URLEncoded
+						}
+					),
+					/**
+					 * @description Update sidebar category order.
+					 */
+					updateOrder: bindApiCall<
+						ChannelsCategoriesOrderUpdateArguments,
+						string[]
+					>(this, {
+						method: "PUT",
+						path: "users/:user_id/teams/:team_id/channels/categories/order",
+						type: ContentType.JSON
+					})
+				}
+			}
+		},
+
+		getGroups: this.groups.members.listForUser,
+
+		/**
+		 * ============================================================================
+		 * @description Guest methods
+		 * ============================================================================
+		 */
+		guest: {
+			toUser: bindApiCall<UserID, StatusOK>(this, {
+				method: "POST",
+				path: `users/:user_id/promote`,
+				type: ContentType.URLEncoded
+			}),
+			fromUser: bindApiCall<UserID, StatusOK>(this, {
+				method: "post",
+				path: `users/:user_id/demote`,
+				type: ContentType.URLEncoded
+			})
+		},
+
+		/**
+		 * ============================================================================
+		 * @description User profile methods
+		 * ============================================================================
+		 */
+		profile: {
+			get: {
+				/**
+				 * @description Retrieve a user's profile information, including their custom status.
+				 */
+				me: bindApiCallWithOptionalArg<TokenOverridable, UserProfile>(this, {
+					method: "GET",
+					path: `users/:user_id`,
+					type: ContentType.URLEncoded
+				}),
+
+				/**
+				 * @description Retrieve a user's profile information, including their custom status.
+				 */
+				byId: bindApiCallWithOptionalArg<UsersProfileGetArguments, UserProfile>(
+					this,
+					{
+						method: "GET",
+						path: `users/:user_id`,
+						type: ContentType.URLEncoded
+					}
+				),
+
+				/**
+				 * @description Find a user with an email address.
+				 */
+				byEmail: bindApiCall<UsersGetByEmailArguments, UserProfile>(this, {
+					method: "GET",
+					path: `users/email/:email`,
+					type: ContentType.URLEncoded
+				}),
+
+				/**
+				 * @description Find a user with an email address.
+				 */
+				byUsername: bindApiCall<UsersGetByUsernameArguments, UserProfile>(
+					this,
+					{
+						method: "GET",
+						path: `users/username/:username`,
+						type: ContentType.URLEncoded
+					}
+				)
+			},
+
+			/**
+			 * @description Set a user's profile information, including custom status.
+			 * @see {@link https://docs.slack.dev/reference/methods/users.profile.set `users.profile.set` API reference}.
+			 */
+			patch: bindApiCall<UsersProfileSetArguments, UserProfile>(this, {
+				method: "PUT",
+				path: `users/:user_id`,
+				type: ContentType.JSON
+			}),
+			/**
+			 * @description Profile image methods
+			 */
+			image: {
+				/**
+				 * @description Set the user profile image.
+				 */
+				set: bindApiCall<UsersSetImageArguments, StatusOK>(this, {
+					method: "POST",
+					path: `users/:user_id/image`,
+					type: ContentType.URLEncoded
+				}) /**
+				 * @description Delete the user profile image.
+				 */,
+				delete: bindApiCallWithOptionalArg<UsersDeleteImageArguments, StatusOK>(
+					this,
+					{
+						method: "DELETE",
+						path: `users/:user_id/image`,
+						type: ContentType.URLEncoded
+					}
+				)
+			}
+		},
+		search: bindApiCall<UsersSearchArguments, UserProfile[]>(this, {
+			method: "POST",
+			path: "users/search",
+			type: ContentType.JSON
+		}),
+		status: {
+			/**
+			 * @description Gets status for user
+			 */
+			get: bindApiCall<UsersStatusGetAruments, UserStatus>(this, {
+				method: "GET",
+				path: `users/:user_id/status`,
+				type: ContentType.URLEncoded
+			}),
+			/**
+			 * @description Update users status by id
+			 * Must have edit_other_users permission for the team.
+			 */
+			set: bindApiCall<UsersStatusSetAruments, UserStatus>(this, {
+				method: "PUT",
+				path: `users/:user_id/status`,
+				type: ContentType.JSON
+			}),
+			setCustom: bindApiCall<UsersCustomStatusSetArguments, UserCustomStatus>(
+				this,
+				{
+					method: "PUT",
+					path: `users/:user_id/status/custom`,
+					type: ContentType.JSON
+				}
+			),
+			unsetCustom: bindApiCall<UsersCustomStatusUnsetArguments, StatusOK>(
+				this,
+				{
+					method: "DELETE",
+					path: `users/:user_id/status/custom`,
+					type: ContentType.URLEncoded
+				}
+			)
+		},
+		preferences: {
+			get: bindApiCall<PreferencesGetArguments, PreferenceType[]>(this, {
+				method: "GET",
+				path: "users/:user_id/preferences",
+				type: ContentType.URLEncoded
+			}),
+			save: bindApiCall<PreferencesSaveArguments, StatusOK>(this, {
+				method: "PUT",
+				path: "users/:user_id/preferences",
+				type: ContentType.JSON
+			}),
+			delete: bindApiCall<PreferencesDeleteArguments, StatusOK>(this, {
+				method: "POST",
+				path: "users/:user_id/preferences/delete",
+				type: ContentType.JSON
+			})
+		},
+
+		updateRoles: bindApiCall<UsersUpdateRolesArguments, StatusOK>(this, {
+			method: "PUT",
+			path: `users/:user_id/roles`,
+			type: ContentType.URLEncoded
 		})
 	} as const;
 }

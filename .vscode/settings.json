@@ -5,7 +5,7 @@
 		"**/.hg": true,
 		"**/.DS_Store": true,
 		"**/Thumbs.db": true,
-		"**/node_modules": false
+		"**/node_modules": true
 	},
 	"editor.codeActionsOnSave": {
 		"source.organizeImports.biome": "explicit",
@@ -38,5 +38,8 @@
 	},
 	"[vue]": {
 		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[shellscript]": {
+		"editor.defaultFormatter": "mkhl.shfmt"
 	}
 }

@@ -4,13 +4,20 @@
  */
 /** biome-ignore-all lint/style/noNonNullAssertion: <jest> */
 
+import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
+import {
+	channelSchema,
+	preferenceTypeSchema,
+	userProfileSchema,
+	userStatusSchema
+} from "./response-schemas";
 import {
 	createRealApiClient,
 	printReportSummary,
 	TestResultCategory,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Users API - Real API Tests", () => {
@@ -23,7 +30,7 @@ describe("Users API - Real API Tests", () => {
 
 		// Get current user ID for subsequent tests
 		try {
-			const me = await client.users.profile.me();
+			const me = await client.users.profile.get.me();
 			currentUserId = me.data.id;
 			console.log("Current user ID:", currentUserId);
 		} catch (error) {
@@ -46,20 +53,18 @@ describe("Users API - Real API Tests", () => {
 		printReportSummary();
 	});
 
-	describe("users.profile.me", () => {
+	describe("users.profile.get.me", () => {
 		it("should return current user profile", async () => {
 			const result = await testMethod(
-				"users.profile.me",
+				"users.profile.get.me",
 				"GET /users/me",
-				() => client.users.profile.me(),
-				"UserProfile"
+				() => client.users.profile.get.me(),
+				userProfileSchema
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
 				expect(result.responseData).toBeDefined();
 			}
-
-			console.log("users.profile.me result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -70,16 +75,11 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"users.profile.getById",
 				"GET /users/:user_id",
-				() => client.users.profile.getById({ user_id: currentUserId! }),
-				"UserProfile"
-			);
-
-			console.log(
-				"users.profile.getById result:",
-				JSON.stringify(result, null, 2)
+				() => client.users.profile.get.byId({ user_id: currentUserId! }),
+				userProfileSchema
 			);
 		});
 	});
@@ -90,7 +90,7 @@ describe("Users API - Real API Tests", () => {
 				"users.list",
 				"GET /users",
 				() => client.users.list({ page: 0, per_page: 10 }),
-				"UserProfile[]"
+				z.array(userProfileSchema)
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
@@ -99,23 +99,19 @@ describe("Users API - Real API Tests", () => {
 						typeof result.responseData === "string"
 				).toBe(true);
 			}
-
-			console.log("users.list result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("users.autocomplete", () => {
 		it("should return user autocomplete results", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"users.autocomplete",
 				"GET /users/autocomplete",
 				() => client.users.autocomplete({ name: "a" }),
-				"{ users: UserProfile[]; out_of_channel?: UserProfile[] }"
-			);
-
-			console.log(
-				"users.autocomplete result:",
-				JSON.stringify(result, null, 2)
+				z.object({
+					users: z.array(userProfileSchema),
+					out_of_channel: z.array(userProfileSchema).optional()
+				})
 			);
 		});
 	});
@@ -127,14 +123,12 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"users.status.get",
 				"GET /users/:user_id/status",
 				() => client.users.status.get({ user_id: currentUserId! }),
-				"UserStatus"
+				userStatusSchema
 			);
-
-			console.log("users.status.get result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -145,14 +139,12 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"users.channels",
 				"GET /users/:user_id/channels",
-				() => client.users.channels({ user_id: currentUserId! }),
-				"Channel[]"
+				() => client.users.channels.list.all({ user_id: currentUserId! }),
+				z.array(channelSchema)
 			);
-
-			console.log("users.channels result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -163,48 +155,36 @@ describe("Users API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"users.preferences.get",
 				"GET /users/:user_id/preferences",
 				() => client.users.preferences.get({ user_id: currentUserId! }),
-				"PreferenceType[]"
-			);
-
-			console.log(
-				"users.preferences.get result:",
-				JSON.stringify(result, null, 2)
+				z.array(preferenceTypeSchema)
 			);
 		});
 	});
 
 	describe("users.profile.getByEmail", () => {
 		it("should find user by email (may require specific email)", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"users.profile.getByEmail",
 				"GET /users/email",
-				() => client.users.profile.getByEmail({ email: "test@example.com" }),
-				"UserProfile"
-			);
-
-			console.log(
-				"users.profile.getByEmail result:",
-				JSON.stringify(result, null, 2)
+				() =>
+					client.users.profile.get.byEmail({
+						email: "sploit.strannik@gmail.com"
+					}),
+				userProfileSchema
 			);
 		});
 	});
 
 	describe("users.profile.getByUsername", () => {
 		it("should find user by username", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"users.profile.getByUsername",
 				"GET /users/username",
-				() => client.users.profile.getByUsername({ username: "triplesun" }),
-				"UserProfile"
-			);
-
-			console.log(
-				"users.profile.getByUsername result:",
-				JSON.stringify(result, null, 2)
+				() => client.users.profile.get.byUsername({ username: "triplesun" }),
+				userProfileSchema
 			);
 		});
 	});

@@ -1,31 +1,12 @@
 import type { AllowedIPRange } from "./config";
 
-export type CloudState = {
-	subscription?: Subscription;
-	products?: Record<string, Product>;
-	customer?: CloudCustomer;
-	invoices?: Record<string, Invoice>;
-	limits: {
-		limitsLoaded: boolean;
-		limits: Limits;
-	};
-	errors: {
-		subscription?: true;
-		products?: true;
-		customer?: true;
-		invoices?: true;
-		limits?: true;
-		trueUpReview?: true;
-	};
-};
-
-export type Installation = {
+export interface CloudInstallation {
 	id: string;
 	state: string;
 	allowed_ip_ranges: AllowedIPRange[];
-};
+}
 
-export type Subscription = {
+export interface CloudSubscription {
 	id: string;
 	customer_id: string;
 	product_id: string;
@@ -34,8 +15,8 @@ export type Subscription = {
 	end_at: number;
 	create_at: number;
 	seats: number;
-	last_invoice?: Invoice;
-	upcoming_invoice?: Invoice;
+	last_invoice?: CloudInvoice;
+	upcoming_invoice?: CloudInvoice;
 	trial_end_at: number;
 	is_free_trial: string;
 	delinquent_since?: number;
@@ -44,30 +25,30 @@ export type Subscription = {
 	cancel_at?: number;
 	will_renew?: string;
 	simulated_current_time_ms?: number;
-};
+}
 
-export type Product = {
+export interface CloudProduct {
 	id: string;
 	name: string;
 	description: string;
 	price_per_seat: number;
-	add_ons: AddOn[];
+	add_ons: CloudAddOn[];
 	product_family: string;
 	sku: string;
 	billing_scheme: string;
 	recurring_interval: string;
 	cross_sells_to: string;
-};
+}
 
-export type AddOn = {
+export interface CloudAddOn {
 	id: string;
 	name: string;
 	display_name: string;
 	price_per_seat: number;
-};
+}
 
 // Customer model represents a customer on the system.
-export type CloudCustomer = {
+export interface CloudCustomer {
 	id: string;
 	creator_id: string;
 	create_at: number;
@@ -76,48 +57,48 @@ export type CloudCustomer = {
 	num_employees: number;
 	contact_first_name: string;
 	contact_last_name: string;
-	billing_address: Address;
-	company_address: Address;
-	payment_method: PaymentMethod;
-};
+	billing_address: CloudCustomerAddress;
+	company_address: CloudCustomerAddress;
+	payment_method: CloudCustomerPaymentMethod;
+}
 
 // CustomerPatch model represents a customer patch on the system.
-export type CloudCustomerPatch = {
+export interface CloudCustomerPatch {
 	email?: string;
 	name?: string;
 	num_employees?: number;
 	contact_first_name?: string;
 	contact_last_name?: string;
-};
+}
 
 // Address model represents a customer's address.
-export type Address = {
+export interface CloudCustomerAddress {
 	city: string;
 	country: string;
 	line1: string;
 	line2: string;
 	postal_code: string;
 	state: string;
-};
+}
 
 // PaymentMethod represents methods of payment for a customer.
-export type PaymentMethod = {
+export interface CloudCustomerPaymentMethod {
 	type: string;
 	last_four: string;
 	exp_month: number;
 	exp_year: number;
 	card_brand: string;
 	name: string;
-};
+}
 
-export type NotifyAdminRequest = {
+export interface CloudNotifyAdminRequest {
 	trial_notification: boolean;
 	required_plan: string;
 	required_feature: string;
-};
+}
 
 // Invoice model represents a invoice on the system.
-export type Invoice = {
+export interface CloudInvoice {
 	id: string;
 	number: string;
 	create_at: number;
@@ -128,32 +109,32 @@ export type Invoice = {
 	period_start: number;
 	period_end: number;
 	subscription_id: string;
-	line_items: InvoiceLineItem[];
+	line_items: CloudInvoiceLineItem[];
 	current_product_name: string;
-};
+}
 
 // actual string values come from customer-web-server and should be kept in sync with values seen there
-export const InvoiceLineItemType = {
-	Full: "full",
-	Partial: "partial",
-	OnPremise: "onpremise",
-	Metered: "metered"
-} as const;
+export enum CloudInvoiceLineItemType {
+	FULL = "full",
+	PARTIAL = "partial",
+	ON_PREMISE = "onpremise",
+	METERED = "metered"
+}
 
 // InvoiceLineItem model represents a invoice lineitem tied to an invoice.
-export type InvoiceLineItem = {
+export interface CloudInvoiceLineItem {
 	price_id: string;
 	total: number;
 	quantity: number;
 	price_per_unit: number;
 	description: string;
-	type: (typeof InvoiceLineItemType)[keyof typeof InvoiceLineItemType];
+	type: CloudInvoiceLineItemType;
 	metadata: Record<string, string>;
 	period_start: number;
 	period_end: number;
-};
+}
 
-export type Limits = {
+export interface CloudLimits {
 	messages?: {
 		history?: number;
 	};
@@ -163,7 +144,7 @@ export type Limits = {
 	teams?: {
 		active?: number;
 	};
-};
+}
 
 export interface CloudUsage {
 	files: {
@@ -174,25 +155,25 @@ export interface CloudUsage {
 		history: number;
 		historyLoaded: boolean;
 	};
-	teams: TeamsUsage;
+	teams: CloudTeamsUsage;
 }
 
-export type TeamsUsage = {
+export interface CloudTeamsUsage {
 	active: number;
 	cloudArchived: number;
 	teamsLoaded: boolean;
-};
+}
 
-export type ValidBusinessEmail = {
+export interface CloudValidBusinessEmail {
 	is_valid: boolean;
-};
+}
 
-export interface NewsletterRequestBody {
+export interface CloudNewsletterRequestBody {
 	email: string;
 	subscribed_content: string;
 }
 
-export type Feedback = {
+export interface CloudFeedback {
 	reason: string;
 	comments: string;
-};
+}

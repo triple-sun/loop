@@ -1,10 +1,6 @@
 import { LogLevel } from "@triple-sun/logger";
 import nock from "nock";
-import {
-	WebAPIRateLimitedError,
-	WebAPIRequestError,
-	WebAPIServerError
-} from "../../src/errors";
+import { WebAPIRateLimitedError, WebAPIServerError } from "../../src/errors";
 import { ChannelType } from "../../src/types";
 import { WebClient } from "../../src/web-client";
 
@@ -13,17 +9,15 @@ const TEST_TOKEN = "test-token";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("WebClient Integration Tests", () => {
-	let client: WebClient;
+	const client = new WebClient(TEST_URL, {
+		token: TEST_TOKEN,
+		logLevel: LogLevel.ERROR,
+		// Disable retries for most tests to speed them up, unless specifically testing retries
+		retryConfig: { retries: 0 }
+	});
 
 	beforeEach(() => {
 		if (!nock.isActive()) nock.activate();
-
-		client = new WebClient(TEST_URL, {
-			token: TEST_TOKEN,
-			logLevel: LogLevel.DEBUG,
-			// Disable retries for most tests to speed them up, unless specifically testing retries
-			retryConfig: { retries: 1 }
-		});
 	});
 
 	afterEach(() => {
@@ -38,7 +32,7 @@ describe("WebClient Integration Tests", () => {
 				.matchHeader("Authorization", `Bearer ${TEST_TOKEN}`)
 				.reply(200, { id: "user_id_123", username: "testuser" });
 
-			const result = await client.users.profile.me();
+			const result = await client.users.profile.get.me();
 
 			expect(result.data.id).toBe("user_id_123");
 			expect(result.data.username).toBe("testuser");
@@ -50,7 +44,7 @@ describe("WebClient Integration Tests", () => {
 				team_id: "team_id_123",
 				name: "new-channel",
 				display_name: "New Channel",
-				type: ChannelType.Open
+				type: ChannelType.OPEN
 			};
 
 			const scope = nock(TEST_URL)
@@ -90,7 +84,7 @@ describe("WebClient Integration Tests", () => {
 				status_code: 500
 			});
 
-			await expect(client.users.profile.me()).rejects.toThrow(
+			await expect(client.users.profile.get.me()).rejects.toThrow(
 				WebAPIServerError
 			);
 
@@ -102,8 +96,8 @@ describe("WebClient Integration Tests", () => {
 				.get("/api/v4/users/me")
 				.reply(400, { name: Error, message: "http_error" });
 
-			await expect(client.users.profile.me()).rejects.toThrow(
-				WebAPIRequestError
+			await expect(client.users.profile.get.me()).rejects.toThrow(
+				"A request error occurred"
 			);
 
 			scope.done();
@@ -116,7 +110,7 @@ describe("WebClient Integration Tests", () => {
 				status_code: 429
 			});
 
-			await expect(client.users.profile.me()).rejects.toThrow(
+			await expect(client.users.profile.get.me()).rejects.toThrow(
 				WebAPIRateLimitedError
 			);
 

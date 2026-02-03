@@ -1,3 +1,16 @@
+export enum CollapsedThreads {
+	DISABLED = "disabled",
+	DEFAULT_ON = "default_on",
+	DEFAULT_OFF = "default_off",
+	ALWAYS_ON = "always_on"
+}
+
+export enum ServiceEnvironment {
+	PRODUCTION = "production",
+	TEST = "test",
+	DEV = "dev"
+}
+
 export type ClientConfig = {
 	AboutLink: string;
 	AllowBannerDismissal: string;
@@ -869,7 +882,7 @@ export type JobSettings = {
 
 export type ProductSettings = Record<string, never>;
 
-export type PluginSettings = {
+export interface PluginSettings {
 	Enable: boolean;
 	EnableUploads: boolean;
 	AllowInsecureDownloadURL: boolean;
@@ -885,20 +898,20 @@ export type PluginSettings = {
 	MarketplaceURL: string;
 	SignaturePublicKeyFiles: string[];
 	ChimeraOAuthProxyURL: string;
-};
+}
 
-export type DisplaySettings = {
+export interface DisplaySettings {
 	CustomURLSchemes: string[];
 	MaxMarkdownNodes: number;
-};
+}
 
-export type GuestAccountsSettings = {
+export interface GuestAccountsSettings {
 	Enable: boolean;
 	HideTags: boolean;
 	AllowEmailAccounts: boolean;
 	EnforceMultifactorAuthentication: boolean;
 	RestrictCreationToDomains: string;
-};
+}
 
 export type ImageProxySettings = {
 	Enable: boolean;
@@ -992,19 +1005,6 @@ export type WarnMetricStatus = {
 	acked: boolean;
 	store_status: string;
 };
-
-export enum CollapsedThreads {
-	DISABLED = "disabled",
-	DEFAULT_ON = "default_on",
-	DEFAULT_OFF = "default_off",
-	ALWAYS_ON = "always_on"
-}
-
-export enum ServiceEnvironment {
-	PRODUCTION = "production",
-	TEST = "test",
-	DEV = "dev"
-}
 
 export type AllowedIPRange = {
 	cidr_block: string;

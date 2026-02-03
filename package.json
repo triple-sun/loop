@@ -9,9 +9,13 @@
 	"scripts": {
 		"test": "jest",
 		"build": "rimraf ./build && tsc -p tsconfig.json",
-		"format": "biome format ./src --write",
+		"format": "biome format ./ --write",
+		"gen:schemas:res": "./scripts/generate-response-schemas.sh",
 		"lint": "biome lint ./src",
-		"prepare": "husky && jest"
+		"prepare": "husky",
+		"prepublishOnly": "rimraf build && tsc && husky && jest",
+		"test:real:base": "pnpm run test --testPathIgnorePatterns=null",
+		"test:real:only": "pnpm run test --testPathIgnorePatterns=null --testMatch=\"**/test/integration/real-api/*.test.ts\""
 	},
 	"repository": {
 		"type": "git",
@@ -29,7 +33,7 @@
 	],
 	"dependencies": {
 		"@triple-sun/logger": "^0.0.1",
-		"again-ts": "^1.0.0",
+		"again-ts": "^1.0.5",
 		"axios": "^1.13.3",
 		"breadline-ts": "^1.0.0",
 		"eventemitter3": "^5.0.4",
@@ -54,8 +58,10 @@
 		"rimraf": "^6.1.2",
 		"ts-jest": "^29.4.6",
 		"ts-node": "^10.9.2",
+		"ts-to-zod": "^5.1.0",
 		"tsd": "^0.33.0",
-		"typescript": "5.9.3"
+		"typescript": "5.9.3",
+		"zod": "^4.3.6"
 	},
 	"lint-staged": {
 		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
@@ -64,6 +70,7 @@
 		],
 		"*": [
 			"biome check --no-errors-on-unmatched --files-ignore-unknown=true"
-		]
+		],
+		"test/integration/real-api/schemas/*": []
 	}
 }

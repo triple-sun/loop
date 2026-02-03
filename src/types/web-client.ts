@@ -20,10 +20,6 @@ export enum ContentType {
 	URLEncoded = "application/x-www-form-urlencoded"
 }
 
-export type StatusOK = {
-	status: "OK";
-};
-
 export type FileUploadData = {
 	file: unknown;
 	channel_id: string;

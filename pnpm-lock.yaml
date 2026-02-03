@@ -12,8 +12,8 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
       again-ts:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.5
+        version: 1.0.5
       axios:
         specifier: ^1.13.3
         version: 1.13.3
@@ -687,8 +687,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  again-ts@1.0.0:
-    resolution: {integrity: sha512-Ty0g/xW5ye7SOMG3EhqAofAzKMkf8bB8oP5lzTuXsr9/DD+OAERSlUOvzgIZPt/Ypye1KnHiY6AMqs2eMI0GVg==}
+  again-ts@1.0.5:
+    resolution: {integrity: sha512-bpYV+JX4A8EIEdicU8vkjyHvC7ZoKJEqzogVlLSfVlzuTfHhDAKtT98NgXRuZhVFEje43YyGYgnC5jnj884/ZQ==}
     engines: {node: '>=20'}
 
   ansi-escapes@4.3.2:
@@ -2819,7 +2819,7 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  again-ts@1.0.0: {}
+  again-ts@1.0.5: {}
 
   ansi-escapes@4.3.2:
     dependencies:

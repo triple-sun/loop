@@ -18,7 +18,7 @@ describe("WebClient Integration Tests", () => {
 	let client: WebClient;
 
 	beforeEach(() => {
-		client = setupTestClient({ retryConfig: { retries: 1 } });
+		client = setupTestClient({ retryConfig: { retries: 0 } });
 	});
 
 	afterEach(() => {
@@ -34,7 +34,7 @@ describe("WebClient Integration Tests", () => {
 				200
 			).matchHeader("Authorization", `Bearer ${TEST_TOKEN}`);
 
-			const result = await client.users.profile.me();
+			const result = await client.users.profile.get.me();
 
 			expect(result.data.id).toBe("user_id_123");
 			expect(result.data.username).toBe("testuser");
@@ -46,7 +46,7 @@ describe("WebClient Integration Tests", () => {
 				team_id: "team_id_123",
 				name: "new-channel",
 				display_name: "New Channel",
-				type: ChannelType.Open
+				type: ChannelType.OPEN
 			};
 
 			// Explicitly match body for JSON POST (use true to match any body)
@@ -87,14 +87,13 @@ describe("WebClient Integration Tests", () => {
 			const scope = nock(TEST_URL)
 				.get("/api/v4/users/me")
 				.query(true)
-				.times(2)
 				.reply(500, {
 					id: "api.context.server_err",
 					message: "Internal Server Error",
 					status_code: 500
 				});
 
-			await expect(client.users.profile.me()).rejects.toThrow(
+			await expect(client.users.profile.get.me()).rejects.toThrow(
 				WebAPIServerError
 			);
 
@@ -107,7 +106,7 @@ describe("WebClient Integration Tests", () => {
 				.query(true)
 				.reply(400, { name: Error, message: "http_error" });
 
-			await expect(client.users.profile.me()).rejects.toThrow(
+			await expect(client.users.profile.get.me()).rejects.toThrow(
 				WebAPIRequestError
 			);
 
@@ -118,14 +117,13 @@ describe("WebClient Integration Tests", () => {
 			const scope = nock(TEST_URL)
 				.get("/api/v4/users/me")
 				.query(true)
-				.times(2)
 				.reply(429, {
 					id: "api.context.rate_limit",
 					message: "Rate Limited",
 					status_code: 429
 				});
 
-			await expect(client.users.profile.me()).rejects.toThrow(
+			await expect(client.users.profile.get.me()).rejects.toThrow(
 				WebAPIRateLimitedError
 			);
 

@@ -1,4 +1,8 @@
-export type SchemeScope = "team" | "channel";
+export enum SchemeScope {
+	TEAM = "team",
+	CHANNEL = "channel"
+}
+
 export type Scheme = {
 	id: string;
 	name: string;
@@ -18,11 +22,7 @@ export type Scheme = {
 	default_playbook_member_role: string;
 	default_run_member_role: string;
 };
-export type SchemesState = {
-	schemes: {
-		[x: string]: Scheme;
-	};
-};
+
 export type SchemePatch = {
 	name?: string;
 	description?: string;

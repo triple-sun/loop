@@ -20,7 +20,7 @@ describe("Channels Integration Tests", () => {
 				team_id: "team_id",
 				name: "new-channel",
 				display_name: "New Channel",
-				type: ChannelType.Open
+				type: ChannelType.OPEN
 			};
 			const responseChannel = { ...channelData, id: "channel_id" };
 
@@ -34,7 +34,7 @@ describe("Channels Integration Tests", () => {
 
 	describe("channels.create.direct", () => {
 		it("should create a direct channel", async () => {
-			const responseChannel = { id: "dc_id", type: ChannelType.Direct };
+			const responseChannel = { id: "dc_id", type: ChannelType.DIRECT };
 
 			const scope = mockApi("/channels/direct", "post", responseChannel, 201);
 

@@ -1,9 +1,11 @@
-export type RequestStatusOption =
-	| "not_started"
-	| "started"
-	| "success"
-	| "failure"
-	| "cancelled";
+export enum RequestStatusOption {
+	NOT_STARTED = "not_started",
+	STARTED = "started",
+	SUCCESS = "success",
+	FAILURE = "failure",
+	CANCELLED = "cancelled"
+}
+
 export type RequestStatusType = {
 	status: RequestStatusOption;
 	error: null | Record<string, unknown>;

@@ -2,30 +2,32 @@
  * @file Posts API Integration Tests
  * @description Tests posts methods against the real Loop API
  */
-/** biome-ignore-all lint/style/noNonNullAssertion: <jest> */
 
+import { describe } from "@jest/globals";
 import type { WebClient } from "../../../src/web-client";
+import { statusOkSchema } from "./schemas/common.zod";
+import { postListResponseSchema, postSchema } from "./schemas/posts.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
 	TestResultCategory,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jesting>
 describe("Posts API - Real API Tests", () => {
 	let client: WebClient;
-	let foundTeamId: string | undefined;
-	let foundChannelId: string | undefined;
-	let currentUserId: string | undefined;
-	let createdPostId: string | undefined;
+	let foundTeamId: string = "";
+	let foundChannelId: string = "";
+	let currentUserId: string = "";
+	let createdPostId: string = "";
 
 	beforeAll(async () => {
 		client = createRealApiClient();
 
 		// Get current user
 		try {
-			const me = await client.users.profile.me();
+			const me = await client.users.profile.get.me();
 			currentUserId = me.data.id;
 			console.log("Current user ID:", currentUserId);
 		} catch (error) {
@@ -84,20 +86,18 @@ describe("Posts API - Real API Tests", () => {
 				"POST /posts",
 				async () => {
 					const response = await client.posts.create({
-						channel_id: foundChannelId!,
+						channel_id: foundChannelId,
 						message: `Test post (API Integration Test) - ${new Date().toISOString()}`
 					});
 					createdPostId = response.data.id;
 					return response;
 				},
-				"Post"
+				postSchema
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
 				expect(result.responseData).toBeDefined();
 			}
-
-			console.log("posts.create result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -108,14 +108,12 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.get",
 				"GET /posts/:post_id",
-				() => client.posts.get({ post_id: createdPostId! }),
-				"Post"
+				() => client.posts.get({ post_id: createdPostId }),
+				postSchema
 			);
-
-			console.log("posts.get result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -126,18 +124,16 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.update",
 				"PUT /posts/:id",
 				() =>
 					client.posts.update({
-						id: createdPostId!,
+						id: createdPostId,
 						message: `Updated post - ${new Date().toISOString()}`
 					}),
-				"Post"
+				postSchema
 			);
-
-			console.log("posts.update result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -148,14 +144,12 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.getThread",
 				"GET /posts/:post_id/thread",
-				() => client.posts.getThread({ post_id: createdPostId! }),
-				"PostList"
+				() => client.posts.getThread({ post_id: createdPostId }),
+				postListResponseSchema
 			);
-
-			console.log("posts.getThread result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -166,21 +160,16 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.getForChannel",
 				"GET /channels/:channel_id/posts",
 				() =>
 					client.posts.getForChannel({
-						channel_id: foundChannelId!,
+						channel_id: foundChannelId,
 						page: 0,
 						per_page: 10
 					}),
-				"PostList"
-			);
-
-			console.log(
-				"posts.getForChannel result:",
-				JSON.stringify(result, null, 2)
+				postListResponseSchema
 			);
 		});
 	});
@@ -192,14 +181,12 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.pin",
 				"POST /posts/:post_id/pin",
-				() => client.posts.pin({ post_id: createdPostId! }),
-				"StatusOK"
+				() => client.posts.pin({ post_id: createdPostId }),
+				statusOkSchema
 			);
-
-			console.log("posts.pin result:", JSON.stringify(result, null, 2));
 		});
 	});
 
@@ -210,14 +197,12 @@ describe("Posts API - Real API Tests", () => {
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"posts.unpin",
 				"POST /posts/:post_id/unpin",
-				() => client.posts.unpin({ post_id: createdPostId! }),
-				"StatusOK"
+				() => client.posts.unpin({ post_id: createdPostId }),
+				statusOkSchema
 			);
-
-			console.log("posts.unpin result:", JSON.stringify(result, null, 2));
 		});
 	});
 });

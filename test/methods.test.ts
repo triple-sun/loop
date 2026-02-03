@@ -59,7 +59,7 @@ describe("Methods", () => {
 			await client.channels.create.regular({
 				name: "c1",
 				display_name: "c1",
-				type: ChannelType.Open,
+				type: ChannelType.OPEN,
 				team_id: ""
 			});
 			expect(client.apiCall).toHaveBeenCalledWith(

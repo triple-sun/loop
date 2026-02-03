@@ -9,6 +9,14 @@ export enum ErrorCode {
 	ServerError = "server_error"
 }
 
+const hasMessage = (obj: unknown): obj is { message: string } =>
+	Boolean(
+		obj &&
+			typeof obj === "object" &&
+			"message" in obj &&
+			typeof obj["message"] === "string"
+	);
+
 export class ServerError extends Error {
 	/**
 	 * @description Error id
@@ -77,7 +85,9 @@ export class WebAPIRequestError extends WebClientCodedError {
 	original: unknown;
 
 	constructor(original: unknown) {
-		super(`A request error occurred: ${JSON.stringify(original)}`);
+		super(
+			`A request error occurred: ${hasMessage(original) ? original.message : JSON.stringify(original, null, 2)}`
+		);
 		this.original = original;
 	}
 }

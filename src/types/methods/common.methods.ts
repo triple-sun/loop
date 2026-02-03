@@ -1,9 +1,9 @@
 // Reusable mixins or extensions that Method Arguments types can extend from
 
 export interface Paginated {
-	/** @description Number of items to return per page. Defaults to `20` */
+	/** @description Number of items to return per page` */
 	per_page?: number;
-	/** @description Page number of results to return. Defaults to `1`. */
+	/** @description Page number of results to return. */
 	page?: number;
 }
 
@@ -85,6 +85,8 @@ export interface AppID {
 }
 
 export interface FileID {
-	/** @description Encoded file ID. */
+	/**
+	 * @description The ID of the file to get
+	 */
 	file_id: string;
 }

@@ -1,4 +1,4 @@
-import type { PostMetadata, PostPriorityMetadata } from "./posts/posts";
+import type { PostMetadata, PostPriorityMetadata } from "./posts";
 
 export type Draft = {
 	create_at: number;

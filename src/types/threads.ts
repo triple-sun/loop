@@ -1,12 +1,6 @@
-import type { Channel } from "./channels/channels";
-import type { Post } from "./posts/posts";
-import type { Team } from "./teams";
+import type { Channel } from "./channels";
+import type { Post } from "./posts";
 import type { UserProfile } from "./users";
-import type {
-	IDMappedObjects,
-	RelationOneToMany,
-	RelationOneToOne
-} from "./utilities";
 
 type SyntheticMissingKeys =
 	| "unread_replies"
@@ -46,28 +40,4 @@ export type UserThreadList = {
 	total_unread_mentions: number;
 	total_unread_urgent_mentions?: number;
 	threads: UserThreadWithPost[];
-};
-
-export type ThreadsState = {
-	threadsInTeam: RelationOneToMany<Team, UserThread>;
-	unreadThreadsInTeam: RelationOneToMany<Team, UserThread>;
-	threads: IDMappedObjects<UserThread>;
-	counts: RelationOneToOne<
-		Team,
-		{
-			total: number;
-			total_unread_threads: number;
-			total_unread_mentions: number;
-			total_unread_urgent_mentions?: number;
-		}
-	>;
-	countsIncludingDirect: RelationOneToOne<
-		Team,
-		{
-			total: number;
-			total_unread_threads: number;
-			total_unread_mentions: number;
-			total_unread_urgent_mentions?: number;
-		}
-	>;
 };

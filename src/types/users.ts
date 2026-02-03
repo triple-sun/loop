@@ -1,52 +1,54 @@
-import type { Audit } from "./audits";
-import type { Channel } from "./channels/channels";
-import type { Group } from "./groups";
-import type { Session } from "./sessions";
-import type { Team } from "./teams";
-import type {
-	IDMappedObjects,
-	RelationOneToManyUnique,
-	RelationOneToOne,
-	StringBool
-} from "./utilities";
+import type { TeamMembership } from "./teams";
+import type { STRING_NULL, StringBool } from "./utilities";
 
-export enum Notify {
-	Default = "default",
-	All = "all",
-	Mention = "mention",
-	None = "none"
+export enum UserNotify {
+	DEFAULT = "default",
+	ALL = "all",
+	MENTION = "mention",
+	NONE = "none"
 }
 
-export enum NotifyDesktopSound {
-	Bing = "Bing",
-	Crackle = "Crackle",
-	Down = "Down",
-	Hello = "Hello",
-	Ripple = "Ripple",
-	Upstairs = "Upstairs"
+export enum UserNotifyComments {
+	NEVER = "never",
+	ROOT = "root",
+	ANY = "any"
 }
 
-export enum CallSound {
-	Dynamic = "Dynamic",
-	Calm = "Calm",
-	Urgent = "Urgent",
-	Cheerful = "Cheerful",
-	None = ""
+export enum UserNotifyDesktopSound {
+	BING = "Bing",
+	CRACKLE = "Crackle",
+	DOWN = "Down",
+	HELLO = "Hello",
+	RIPPLE = "Ripple",
+	UPSTAIRS = "Upstairs"
+}
+
+export enum UserNotifyMarkUnread {
+	ALL = "all",
+	MENTION = "mention"
+}
+
+export enum UserCallSound {
+	DYNAMIC = "Dynamic",
+	CALM = "Calm",
+	URGENT = "Urgent",
+	CHEERFUL = "Cheerful",
+	NULL = ""
 }
 
 export enum PushStatus {
-	Ooo = "ooo",
-	Offline = "offline",
-	Away = "away",
-	DnD = "dnd",
-	Online = "online"
+	OOO = "ooo",
+	OFFLINE = "offline",
+	AWAY = "away",
+	DND = "dnd",
+	ONLINE = "online"
 }
 
 export enum UserStatusValue {
-	Onlines = "online",
-	Away = "away",
-	Offline = "offline",
-	DnD = "dnd"
+	ONLINE = "online",
+	AWAY = "away",
+	OFFLINE = "offline",
+	DND = "dnd"
 }
 
 export enum CustomStatusDuration {
@@ -60,38 +62,27 @@ export enum CustomStatusDuration {
 	CUSTOM_DATE_TIME = "custom_date_time"
 }
 
-export enum NotifyComments {
-	Never = "never",
-	Root = "root",
-	Any = "any"
-}
-
-export enum MarkUnread {
-	All = "all",
-	Mention = "mention"
-}
-
 export interface NotifyProps {
 	channel: StringBool;
-	comments: NotifyComments;
-	desktop: Notify;
+	comments: UserNotifyComments;
+	desktop: UserNotify;
 	desktop_sound: StringBool;
-	desktop_threads?: Notify;
+	desktop_threads?: UserNotify;
 	email: StringBool;
-	email_threads?: Notify;
+	email_threads?: UserNotify;
 	first_name: StringBool;
 	/** @version Loop only */
-	loop_mobile_push_reactions?: Notify;
+	loop_mobile_push_reactions?: UserNotify;
 	/** @version Loop only */
 	loop_mobile_push_reactions_sound?: StringBool;
 	/** @version Loop only */
-	loop_push_reactions?: Notify;
+	loop_push_reactions?: UserNotify;
 	/** @version Loop only */
 	loop_push_reactions_sound?: StringBool;
 	mention_keys: string;
-	push: Notify;
+	push: UserNotify;
 	push_status: PushStatus;
-	push_threads?: Notify;
+	push_threads?: UserNotify;
 
 	/**
 	 * @deprecated
@@ -104,14 +95,14 @@ export interface NotifyProps {
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	desktop_notification_sound?: NotifyDesktopSound;
+	desktop_notification_sound?: UserNotifyDesktopSound;
 
 	/**
 	 * @deprecated
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	calls_notification_sound?: CallSound;
+	calls_notification_sound?: UserCallSound;
 
 	/**
 	 * @deprecated
@@ -132,14 +123,14 @@ export interface NotifyProps {
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	calls_mobile_sound?: StringBool | "";
+	calls_mobile_sound?: StringBool | STRING_NULL;
 
 	/**
 	 * @deprecated
 	 * @version Mattermost only
 	 * @todo verify
 	 */
-	calls_mobile_notification_sound?: CallSound;
+	calls_mobile_notification_sound?: UserCallSound;
 }
 
 export interface UserProfile {
@@ -259,25 +250,19 @@ export interface UserProfileWithLastViewAt extends UserProfile {
 	last_viewed_at: number;
 }
 
-export interface UsersState {
-	currentUserId: string;
-	isManualStatus: RelationOneToOne<UserProfile, boolean>;
-	mySessions: Session[];
-	myAudits: Audit[];
-	profiles: IDMappedObjects<UserProfile>;
-	profilesInTeam: RelationOneToManyUnique<Team, UserProfile>;
-	profilesNotInTeam: RelationOneToManyUnique<Team, UserProfile>;
-	profilesWithoutTeam: Set<string>;
-	profilesInChannel: RelationOneToManyUnique<Channel, UserProfile>;
-	profilesNotInChannel: RelationOneToManyUnique<Channel, UserProfile>;
-	profilesInGroup: RelationOneToManyUnique<Group, UserProfile>;
-	profilesNotInGroup: RelationOneToManyUnique<Group, UserProfile>;
-	statuses: RelationOneToOne<UserProfile, string>;
-	stats: Partial<UsersStats>;
-	filteredStats: Partial<UsersStats>;
-	myUserAccessTokens: Record<string, UserAccessToken>;
-	lastActivity: RelationOneToOne<UserProfile, number>;
-	dndEndTimes: RelationOneToOne<UserProfile, number>;
+export interface UserSession {
+	id: string;
+	token: string;
+	create_at: number;
+	expires_at: number;
+	last_activity_at: number;
+	user_id: string;
+	device_id: string;
+	roles: string;
+	is_oauth: boolean;
+	props: Record<string, unknown>;
+	team_members: TeamMembership[];
+	local: boolean;
 }
 
 export interface UserTimezone {

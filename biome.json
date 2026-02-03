@@ -23,7 +23,8 @@
 			"!**/.sanity",
 			"!**/dist",
 			"!**/.next",
-			"!**/oldsrc"
+			"!**/oldsrc",
+			"!**/test/integration/real-api/schemas"
 		]
 	},
 	"formatter": {
@@ -115,13 +116,19 @@
 				"useArrayLiterals": "error"
 			},
 			"suspicious": {
+				"noImportAssign": "error",
 				"noVar": "error",
 				"noAssignInExpressions": "error",
 				"noEmptyBlockStatements": "error",
 				"useAwait": "error",
 				"noEvolvingTypes": "error",
 				"noExplicitAny": "error"
-			}
+			},
+			"nursery": { "recommended": true, "noImportCycles": "error" },
+			"a11y": {
+				"recommended": true
+			},
+			"security": { "recommended": true }
 		}
 	},
 	"javascript": {

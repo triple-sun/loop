@@ -119,7 +119,7 @@ export class WebClient extends Methods {
 	/**
 	 * @description If true the client will set its userID if it was fetched while
 	 * useCurrentUserForDirectChannels=true, useCurrentUserForPostCreation=true
-	 * or via users.profile.me()
+	 * or via users.profile.get.me()
 	 *
 	 * @default false
 	 */
@@ -513,7 +513,7 @@ export class WebClient extends Methods {
 
 		if (opts.token || !this.userID) {
 			/** if token overridable or no userID - fetch userID from server  */
-			const me = await this.users.profile.me(opts);
+			const me = await this.users.profile.get.me(opts);
 
 			/** save if needed */
 			if (this.saveFetchedUserID) {
@@ -554,6 +554,21 @@ export class WebClient extends Methods {
 			}
 
 			config.data = channelIDs;
+		}
+
+		if (
+			config.url?.endsWith("/api/v4/roles/names") &&
+			config.method === "post"
+		) {
+			const roles = data.roles;
+
+			if (!Array.isArray(roles)) {
+				throw new WebClientOptionsError(
+					`Expected data.channel_ids to be an array`
+				);
+			}
+
+			config.data = roles;
 		}
 
 		return config;

@@ -238,12 +238,12 @@ describe("WebClient", () => {
 
 			it("should fetch my ID if data.length is 1 and useCurrentUserForDirectChannels is true", async () => {
 				client = new WebClient("https://api.example.com");
-				// Mock users.profile.me
+				// Mock users.profile.get.me
 				const meMock = jest
 					.fn(async () => ({ ok: true, data: { id: "my_id" } }))
 					.mockResolvedValue({ ok: true, data: { id: "my_id" } });
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
-				(client as any).users = { profile: { me: meMock } };
+				(client as any).users = { profile: { get: { me: meMock } } };
 
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
@@ -264,10 +264,10 @@ describe("WebClient", () => {
 				client = new WebClient("https://api.example.com", {
 					userID: "cached_id"
 				});
-				// Ensure users.profile.me is NOT called
+				// Ensure users.profile.get.me is NOT called
 				const meMock = jest.fn();
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
-				(client as any).users = { profile: { me: meMock } };
+				(client as any).users = { profile: { get: { me: meMock } } };
 
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",

@@ -1,6 +1,14 @@
 import type { ServerError } from "./errors";
-import type { UserProfile } from "./users";
-import type { RelationOneToOne } from "./utilities";
+
+export enum TeamType {
+	O = "O",
+	I = "I"
+}
+
+export interface TeamsUsageResponse {
+	active: number;
+	cloud_archived: number;
+}
 
 export interface TeamMembership extends TeamUnread {
 	user_id: string;
@@ -15,11 +23,6 @@ export interface TeamMemberWithError {
 	member: TeamMembership;
 	user_id: string;
 	error: ServerError;
-}
-
-export enum TeamType {
-	O = "O",
-	I = "I"
 }
 
 export interface Team {
@@ -40,19 +43,6 @@ export interface Team {
 	group_constrained: boolean;
 	policy_id?: string | null;
 	last_team_icon_update?: number;
-}
-
-export interface TeamsState {
-	currentTeamId: string;
-	teams: Record<string, Team>;
-	myMembers: Record<string, TeamMembership>;
-	membersInTeam: RelationOneToOne<
-		Team,
-		RelationOneToOne<UserProfile, TeamMembership>
-	>;
-	stats: RelationOneToOne<Team, TeamStats>;
-	groupsAssociatedToTeam: unknown;
-	totalCount: number;
 }
 
 export interface TeamUnread {

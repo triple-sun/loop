@@ -3,12 +3,14 @@
  * @description Tests bots methods against the real Loop API
  */
 
+import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
+import { botSchema } from "./schemas/bots.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 describe("Bots API - Real API Tests", () => {
 	let client: WebClient;
@@ -23,14 +25,12 @@ describe("Bots API - Real API Tests", () => {
 
 	describe("bots.list", () => {
 		it("should return list of bots", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"bots.list",
 				"GET /bots",
 				() => client.bots.list({ page: 0, per_page: 20 }),
-				"Bot[]"
+				z.array(botSchema)
 			);
-
-			console.log("bots.list result:", JSON.stringify(result, null, 2));
 		});
 	});
 });

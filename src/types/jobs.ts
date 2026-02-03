@@ -1,22 +1,23 @@
-import type { IDMappedObjects } from "./utilities";
+export enum JobType {
+	DATA_RETENTION = "data_retention",
+	ELASTIC_POST_INDEXING = "elasticsearch_post_indexing",
+	BLEVE_POST_INDEXING = "bleve_post_indexing",
+	LDAP_SYNC = "ldap_sync",
+	MESSAGE_EXPORT = "message_export"
+}
 
-export type JobType =
-	| "data_retention"
-	| "elasticsearch_post_indexing"
-	| "bleve_post_indexing"
-	| "ldap_sync"
-	| "message_export";
+export enum JobStatus {
+	PENDING = "pending",
+	IN_PROGRESS = "in_progress",
+	SUCCESS = "success",
+	ERROR = "error",
+	CANCEL_REQUESTED = "cancel_requested",
+	CANCELLED = "canceled",
+	WARNING = "warning"
+}
 
-export type JobStatus =
-	| "pending"
-	| "in_progress"
-	| "success"
-	| "error"
-	| "cancel_requested"
-	| "canceled"
-	| "warning";
-
-export type Job = JobTypeBase & {
+export interface Job {
+	type: JobType;
 	id: string;
 	priority: number;
 	create_at: number;
@@ -25,17 +26,4 @@ export type Job = JobTypeBase & {
 	status: JobStatus;
 	progress: number;
 	data: unknown;
-};
-
-export type JobsByType = {
-	[x in JobType]?: Job[];
-};
-
-export type JobsState = {
-	jobs: IDMappedObjects<Job>;
-	jobsByTypeList: JobsByType;
-};
-
-export type JobTypeBase = {
-	type: JobType;
-};
+}

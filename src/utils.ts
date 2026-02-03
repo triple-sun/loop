@@ -6,7 +6,7 @@ import FormData from "form-data";
 import { isStream } from "is-stream";
 import { DEFAULT_FILE_NAME, WEBSOCKET_HELLO } from "./const";
 import {
-	type Address,
+	type CloudCustomerAddress,
 	type UserThread,
 	type UserThreadSynthetic,
 	UserThreadType,
@@ -152,7 +152,7 @@ export const warnIfFallbackIsMissing = (
 };
 
 export const areShippingDetailsValid = (
-	address: Address | null | undefined
+	address: CloudCustomerAddress | null | undefined
 ): boolean => {
 	if (!address) return false;
 

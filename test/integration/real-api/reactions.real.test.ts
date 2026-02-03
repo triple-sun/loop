@@ -3,28 +3,31 @@
  * @description Tests reactions methods against the real Loop API
  */
 
-// biome-ignore-all lint/style/noNonNullAssertion: <jest>
+import { describe } from "@jest/globals";
+import { z } from "zod";
+// import { ChannelType } from "../../../src/types";
 import type { WebClient } from "../../../src/web-client";
+import { statusOkSchema } from "./schemas/common.zod";
+import { reactionSchema } from "./schemas/reactions.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Reactions API - Real API Tests", () => {
 	let client: WebClient;
-	let foundTeamId: string | undefined;
-	let foundChannelId: string | undefined;
-	let testPostId: string | undefined;
-	let currentUserId: string | undefined;
+	let foundTeamId: string = "";
+	let foundChannelId: string = "";
+	let currentUserId: string = "";
+	let createdPostId: string = "";
 
 	beforeAll(async () => {
 		client = createRealApiClient();
 
 		// Get current user
 		try {
-			const me = await client.users.profile.me();
+			const me = await client.users.profile.get.me();
 			currentUserId = me.data.id;
 		} catch (error) {
 			console.error("Failed to get current user:", error);
@@ -54,15 +57,15 @@ describe("Reactions API - Real API Tests", () => {
 			}
 		}
 
-		// Create a test post for reactions
+		// Create a post for reactions
 		if (foundChannelId) {
 			try {
 				const post = await client.posts.create({
 					channel_id: foundChannelId,
-					message: `Reaction test post - ${new Date().toISOString()}`
+					message: `Test post for reactions - ${new Date().toISOString()}`
 				});
-				testPostId = post.data.id;
-				console.log("Created test post for reactions:", testPostId);
+				createdPostId = post.data.id;
+				console.log("Created test post:", createdPostId);
 			} catch (error) {
 				console.error("Failed to create test post:", error);
 			}
@@ -70,13 +73,12 @@ describe("Reactions API - Real API Tests", () => {
 	});
 
 	afterAll(async () => {
-		// Cleanup: Delete test post
-		if (testPostId) {
+		// Cleanup: Delete created post
+		if (createdPostId) {
 			try {
-				await client.posts.delete({ post_id: testPostId });
-				console.log("Cleaned up test post:", testPostId);
+				await client.posts.delete({ post_id: createdPostId });
 			} catch (error) {
-				console.error("Failed to cleanup test post:", error);
+				console.error("Failed to cleanup post:", error);
 			}
 		}
 		printReportSummary();
@@ -84,69 +86,62 @@ describe("Reactions API - Real API Tests", () => {
 
 	describe("reactions.create", () => {
 		it("should add a reaction to a post", async () => {
-			if (!testPostId || !currentUserId) {
-				console.log("Skipping: No post or user ID available");
+			if (!createdPostId || !currentUserId) {
+				console.log("Skipping: No post ID or user ID available");
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"reactions.create",
 				"POST /reactions",
-				() =>
-					client.reactions.create({
-						user_id: currentUserId!,
-						post_id: testPostId!,
-						emoji_name: "thumbsup",
+				async () => {
+					const response = await client.reactions.create({
+						user_id: currentUserId,
+						post_id: createdPostId,
+						emoji_name: "+1",
 						create_at: Date.now()
-					}),
-				"Reaction"
+					});
+					return response;
+				},
+				reactionSchema
 			);
-
-			console.log("reactions.create result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("reactions.getForPost", () => {
 		it("should return reactions for a post", async () => {
-			if (!testPostId) {
+			if (!createdPostId) {
 				console.log("Skipping: No post ID available");
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"reactions.getForPost",
 				"GET /posts/:post_id/reactions",
-				() => client.reactions.getForPost({ post_id: testPostId! }),
-				"Reaction[]"
-			);
-
-			console.log(
-				"reactions.getForPost result:",
-				JSON.stringify(result, null, 2)
+				() => client.reactions.getForPost({ post_id: createdPostId }),
+				z.array(reactionSchema)
 			);
 		});
 	});
 
 	describe("reactions.delete", () => {
-		it("should delete a reaction from a post", async () => {
-			if (!testPostId || !currentUserId) {
-				console.log("Skipping: No post or user ID available");
+		it("should remove a reaction from a post", async () => {
+			if (!createdPostId || !currentUserId) {
+				console.log("Skipping: No post ID or user ID available");
 				return;
 			}
 
-			const result = await testMethod(
+			await testMethod(
 				"reactions.delete",
-				"DELETE /users/:user_id/posts/:post_id/reactions/:emoji_name",
+				"POST /users/:user_id/posts/:post_id/reactions/:emoji_name",
 				() =>
 					client.reactions.delete({
-						user_id: currentUserId!,
-						post_id: testPostId!,
-						emoji_name: "thumbsup"
+						user_id: currentUserId,
+						post_id: createdPostId,
+						emoji_name: "+1"
 					}),
-				"StatusOK"
+				statusOkSchema
 			);
-
-			console.log("reactions.delete result:", JSON.stringify(result, null, 2));
 		});
 	});
 });

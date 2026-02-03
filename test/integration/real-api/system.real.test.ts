@@ -3,13 +3,15 @@
  * @description Tests system methods against the real Loop API
  */
 
+import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
+import { statusOkSchema } from "./schemas/common.zod";
 import {
 	createRealApiClient,
 	printReportSummary,
 	TestResultCategory,
 	testMethod
-} from "./real-api-utils";
+} from "./utils.ts/real-api.utils";
 
 describe("System API - Real API Tests", () => {
 	let client: WebClient;
@@ -28,21 +30,18 @@ describe("System API - Real API Tests", () => {
 				"system.getPing",
 				"GET /system/ping",
 				() => client.system.getPing({}),
-				"{ status: string }"
+				statusOkSchema
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
 				expect(result.responseData).toBeDefined();
 			}
-
-			// Log for documentation
-			console.log("system.getPing result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("system.getLogs", () => {
 		it("should return server logs (may require admin)", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"system.getLogs",
 				"GET /logs",
 				() =>
@@ -54,27 +53,18 @@ describe("System API - Real API Tests", () => {
 						page: 0,
 						logs_per_page: 10
 					}),
-				"string[]"
+				z.array(z.string())
 			);
-
-			// May fail with permission denied for non-admin users
-			console.log("system.getLogs result:", JSON.stringify(result, null, 2));
 		});
 	});
 
 	describe("system.getAnalytics", () => {
 		it("should return analytics data (may require admin)", async () => {
-			const result = await testMethod(
+			await testMethod(
 				"system.getAnalytics",
 				"GET /analytics/old",
 				() => client.system.getAnalytics({ name: "standard" }),
-				"AnalyticsRow[]"
-			);
-
-			// May fail with permission denied for non-admin users
-			console.log(
-				"system.getAnalytics result:",
-				JSON.stringify(result, null, 2)
+				z.array(z.any()) // AnalyticsRow[] was string, assuming array of any for now as schema isn't generated
 			);
 		});
 	});
