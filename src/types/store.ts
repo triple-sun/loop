@@ -1,6 +1,6 @@
 import type { Bot } from "./bots";
 import type { CloudUsage } from "./cloud";
-import type { PreferenceType } from "./preferences";
+import type { Preference } from "./preferences";
 import type {
 	AdminRequestsStatuses,
 	ChannelsRequestsStatuses,
@@ -51,7 +51,7 @@ export type GlobalState = {
 		};
 		preferences: {
 			myPreferences: {
-				[x: string]: PreferenceType;
+				[x: string]: Preference;
 			};
 		};
 		admin: AdminState;

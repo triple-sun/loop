@@ -117,7 +117,7 @@ import type {
 	ChannelsUpdatePrivacyArguments,
 	ChannelsViewArguments,
 	SidebarCategory
-} from "./types/methods/channel.methods";
+} from "./types/methods/channels.methods";
 import type {
 	CloudConfirmCustomerPaymentArguments,
 	CloudUpdateAddressArguments,
@@ -156,7 +156,7 @@ import type {
 	EmojisGetImageArguments,
 	EmojisGetListArguments,
 	EmojisSearchArguments
-} from "./types/methods/emoji.methods";
+} from "./types/methods/emojis.methods";
 import type {
 	FilesGetArguments,
 	FilesGetMetadataArguments,
@@ -166,7 +166,7 @@ import type {
 	FilesGetThumbnailArguments,
 	FilesSearchArguments,
 	FilesUploadArguments
-} from "./types/methods/file.methods";
+} from "./types/methods/files.methods";
 import type {
 	GroupsAddSyncableArguments,
 	GroupsChannelsGetArguments,
@@ -220,10 +220,6 @@ import type {
 	InteractiveSubmitDialogArguments
 } from "./types/methods/interactive.methods";
 import type {
-	MethodWithOptionalArgument,
-	MethodWithRequiredArgument
-} from "./types/methods/internal.methods";
-import type {
 	JobsCancelArguments,
 	JobsCreateArguments,
 	JobsGetArguments,
@@ -272,18 +268,18 @@ import type {
 	PostsSetReminderArguments,
 	PostsUnpinArguments,
 	PostsUpdateArguments
-} from "./types/methods/post.methods";
+} from "./types/methods/posts.methods";
 import type {
 	PreferencesDeleteArguments,
 	PreferencesGetArguments,
 	PreferencesSaveArguments
-} from "./types/methods/preference.methods";
+} from "./types/methods/preferences.methods";
 import type {
 	ReactionsCreateArguments,
 	ReactionsDeleteArguments,
 	ReactionsGetBulkArguments,
 	ReactionsGetForPostArguments
-} from "./types/methods/reaction.methods";
+} from "./types/methods/reactions.methods";
 import type {
 	RolesGetArguments,
 	RolesGetByNameArguments,
@@ -334,7 +330,7 @@ import type {
 	TeamsSearchArguments,
 	TeamsSetIconArguments,
 	TeamsUpdateArguments
-} from "./types/methods/team.methods";
+} from "./types/methods/teams.methods";
 import type {
 	TermsOfServiceCreateArguments,
 	TermsOfServiceGetArguments,
@@ -360,14 +356,14 @@ import type {
 	UsersStatusGetAruments,
 	UsersStatusSetAruments,
 	UsersUpdateRolesArguments
-} from "./types/methods/user.methods";
+} from "./types/methods/users.methods";
 import type {
 	PluginManifest,
 	PluginStatus,
 	PluginsGetResponse
 } from "./types/plugins";
 import type { Post } from "./types/posts";
-import type { PreferenceType } from "./types/preferences";
+import type { Preference } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
 import type { StatusOKResponse } from "./types/responses/common.responses";
 import type {
@@ -401,6 +397,20 @@ import {
 	type WebApiCallConfig,
 	type WebClientEvent
 } from "./types/web-client";
+
+type MethodWithRequiredArgument<
+	METHOD_ARGS,
+	METHOD_RESULT_DATA = unknown,
+	METHOD_RESULT extends
+		WebAPICallResult<METHOD_RESULT_DATA> = WebAPICallResult<METHOD_RESULT_DATA>
+> = (options: METHOD_ARGS) => Promise<METHOD_RESULT>;
+
+type MethodWithOptionalArgument<
+	METHOD_ARGS,
+	METHOD_RESULT_DATA = unknown,
+	METHOD_RESULT extends
+		WebAPICallResult<METHOD_RESULT_DATA> = WebAPICallResult<METHOD_RESULT_DATA>
+> = (options?: METHOD_ARGS) => Promise<METHOD_RESULT>;
 
 /**
  *  Binds a certain `method` and its (required) arguments and result types to the `apiCall` method in `LoopClient`.
@@ -2810,7 +2820,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			})
 		},
 		preferences: {
-			get: bindApiCall<PreferencesGetArguments, PreferenceType[]>(this, {
+			get: bindApiCall<PreferencesGetArguments, Preference[]>(this, {
 				method: "GET",
 				path: "users/:user_id/preferences",
 				type: ContentType.URLEncoded

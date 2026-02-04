@@ -1,11 +1,5 @@
+import type { Preference } from "../preferences";
 import type { TokenOverridable, UserID } from "./common.methods";
-
-export interface Preference {
-	user_id: string;
-	category: string;
-	name: string;
-	value: string;
-}
 
 export interface PreferencesGetArguments extends TokenOverridable, UserID {
 	category?: string;
