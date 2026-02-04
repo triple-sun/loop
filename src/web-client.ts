@@ -247,7 +247,7 @@ export class WebClient extends Methods {
 		this.axios.interceptors.request.use(this.serializeApiCallData.bind(this));
 
 		/** test connection if needed */
-		if (testConnectionOnInit) this.system.getPing();
+		if (testConnectionOnInit) this.system.checkHealth();
 
 		this.logger.debug("initialized");
 	}

@@ -1,3 +1,7 @@
+export interface StatusOKResponse {
+	status: "OK";
+}
+
 export interface PaginatedListResponse<T> {
 	/**
 	 * @description The total number of playbooks in the list, regardless of the paging.

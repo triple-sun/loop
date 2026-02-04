@@ -30,7 +30,7 @@ describe("System API - Real API Tests", () => {
 			const result = await report.testMethod(
 				"system.getPing",
 				"GET /system/ping",
-				() => client.system.getPing({}),
+				() => client.system.checkHealth(),
 				statusOkSchema
 			);
 
