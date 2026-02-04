@@ -5,13 +5,14 @@
 
 import { describe } from "@jest/globals";
 import type { WebClient } from "../../../src/web-client";
-import { statusOkSchema } from "./schemas/common.zod";
-import { postListResponseSchema, postSchema } from "./schemas/posts.zod";
+import { statusOkResponseSchema } from "./schemas/common.responses.zod";
+import { postListResponseSchema } from "./schemas/posts.responses.zod";
+import { postSchema } from "./schemas/posts.zod";
 import {
 	createRealApiClient,
 	TestReport,
 	TestResultCategory
-} from "./utils.ts/real-api.utils";
+} from "./utils/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jesting>
 describe("Posts API - Real API Tests", () => {
@@ -38,8 +39,8 @@ describe("Posts API - Real API Tests", () => {
 		// Get a team
 		try {
 			const teams = await client.teams.list();
-			if (teams.data.length > 0) {
-				foundTeamId = teams.data[0]?.id;
+			if (teams.data[0]?.id) {
+				foundTeamId = teams.data[0].id;
 				console.log("Found team ID:", foundTeamId);
 			}
 		} catch (error) {
@@ -52,8 +53,8 @@ describe("Posts API - Real API Tests", () => {
 				const channels = await client.channels.list.inTeam({
 					team_id: foundTeamId
 				});
-				if (channels.data.length > 0) {
-					foundChannelId = channels.data[0]?.id;
+				if (channels.data[0]?.id) {
+					foundChannelId = channels.data[0].id;
 					console.log("Found channel ID:", foundChannelId);
 				}
 			} catch (error) {
@@ -187,7 +188,7 @@ describe("Posts API - Real API Tests", () => {
 				"posts.pin",
 				"POST /posts/:post_id/pin",
 				() => client.posts.pin({ post_id: createdPostId }),
-				statusOkSchema
+				statusOkResponseSchema
 			);
 		});
 	});
@@ -203,7 +204,7 @@ describe("Posts API - Real API Tests", () => {
 				"posts.unpin",
 				"POST /posts/:post_id/unpin",
 				() => client.posts.unpin({ post_id: createdPostId }),
-				statusOkSchema
+				statusOkResponseSchema
 			);
 		});
 	});

@@ -7,13 +7,13 @@
 import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
 import { channelSchema } from "./schemas/channels.zod";
-import { preferenceTypeSchema } from "./schemas/preferences.zod";
+import { preferenceSchema } from "./schemas/preferences.zod";
 import { userProfileSchema, userStatusSchema } from "./schemas/users.zod";
 import {
 	createRealApiClient,
 	TestReport,
 	TestResultCategory
-} from "./utils.ts/real-api.utils";
+} from "./utils/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Users API - Real API Tests", () => {
@@ -107,8 +107,8 @@ describe("Users API - Real API Tests", () => {
 				"GET /users/autocomplete",
 				() => client.users.autocomplete({ name: "a" }),
 				z.object({
-					users: z.array(userProfileSchema),
-					out_of_channel: z.array(userProfileSchema).optional()
+					out_of_channel: z.array(userProfileSchema).optional(),
+					users: z.array(userProfileSchema)
 				})
 			);
 		});
@@ -157,7 +157,7 @@ describe("Users API - Real API Tests", () => {
 				"users.preferences.get",
 				"GET /users/:user_id/preferences",
 				() => client.users.preferences.get({ user_id: currentUserId! }),
-				z.array(preferenceTypeSchema)
+				z.array(preferenceSchema)
 			);
 		});
 	});

@@ -16,7 +16,7 @@ import {
 	createRealApiClient,
 	TestReport,
 	TestResultCategory
-} from "./utils.ts/real-api.utils";
+} from "./utils/real-api.utils";
 
 // biome-ignore lint/complexity/noExcessiveLinesPerFunction: <jest>
 describe("Channels API - Real API Tests", () => {
@@ -44,7 +44,7 @@ describe("Channels API - Real API Tests", () => {
 		try {
 			const teams = await client.teams.list();
 			if (teams.data.length > 0) {
-				foundTeamId = teams.data[0]?.id;
+				foundTeamId = teams.data[0].id;
 				console.log("Found team ID:", foundTeamId);
 			}
 		} catch (error) {
@@ -58,8 +58,10 @@ describe("Channels API - Real API Tests", () => {
 					team_id: foundTeamId
 				});
 				if (channels.data.length > 0) {
-					foundChannelId = channels.data[0]?.id;
-					console.log("Found channel ID:", foundChannelId);
+					foundChannelId = channels.data[0].id;
+
+					if (channels.data[0]?.id)
+						console.log("Found channel ID:", foundChannelId);
 				}
 			} catch (error) {
 				console.error("Failed to get channels:", error);
@@ -143,7 +145,7 @@ describe("Channels API - Real API Tests", () => {
 			await report.testMethod(
 				"channels.autocomplete",
 				"GET /teams/:team_id/channels/autocomplete",
-				() => client.channels.autocomplete({ team_id: foundTeamId, name: "a" }),
+				() => client.channels.autocomplete({ name: "a", team_id: foundTeamId }),
 				z.array(channelSchema)
 			);
 		});
@@ -215,9 +217,9 @@ describe("Channels API - Real API Tests", () => {
 				"POST /channels",
 				async () => {
 					const response = await client.channels.create.regular({
-						team_id: foundTeamId,
-						name: testChannelName,
 						display_name: "Test Channel (API Test)",
+						name: testChannelName,
+						team_id: foundTeamId,
 						type: ChannelType.OPEN
 					});
 					createdChannelId = response.data.id;

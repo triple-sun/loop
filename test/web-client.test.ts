@@ -2,12 +2,13 @@ import { jest } from "@jest/globals";
 import * as againTs from "again-ts";
 import axios, {
 	type AxiosInstance,
+	type AxiosRequestConfig,
 	type AxiosStatic,
 	type RawAxiosRequestHeaders
 } from "axios";
 
 import { WebAPIServerError } from "../src/errors";
-import { ContentType } from "../src/types";
+import { ContentType, type PostsCreateArguments } from "../src/types";
 import { WebClient } from "../src/web-client";
 
 // Mocking axios
@@ -339,11 +340,11 @@ describe("WebClient", () => {
 					get: jest.fn(() => ({ create: { direct: createDirectMock } }))
 				});
 
-				const config = {
+				const config: AxiosRequestConfig<PostsCreateArguments> = {
 					url: "https://api.example.com/api/v4/posts",
 					headers: {} as RawAxiosRequestHeaders,
 					method: "post",
-					data: { user_id: "other" }
+					data: { to_user_id: "other", message: "" }
 				};
 
 				// biome-ignore lint/suspicious/noExplicitAny: <jesting>

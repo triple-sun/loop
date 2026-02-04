@@ -42,8 +42,8 @@ export function validateType(
 
 	if (result.success) {
 		return {
-			matches: true,
-			differences: []
+			differences: [],
+			matches: true
 		};
 	}
 
@@ -85,8 +85,8 @@ export function validateType(
 	});
 
 	return {
-		matches: false,
-		differences
+		differences,
+		matches: false
 	};
 }
 

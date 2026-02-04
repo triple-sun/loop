@@ -12,34 +12,65 @@ import type { UserProfile } from "./users";
  * @description Posts main object
  * ===============================================
  */
-export interface Post<METADATA = undefined> {
+export interface Post<PROP_METADATA = Record<string, unknown>> {
 	id: string;
+
+	/** dates */
+	/** @description The time in milliseconds a post was created */
 	create_at: number;
+	/** @description The time in milliseconds a post was last updated */
 	update_at: number;
-	edit_at: number;
+	/** @description */
 	delete_at: number;
-	is_pinned: boolean;
-	user_id: string;
-	channel_id: string;
+	edit_at: number;
+
+	/** ids */
 	root_id: string;
+	channel_id: string;
+	user_id: string;
 	original_id: string;
+	pending_post_id: string;
+
+	/** message data */
 	message: string;
 	type: PostType;
-	props?: PostProps<METADATA>;
-	hashtags: string;
-	pending_post_id: string;
-	reply_count: number;
-	file_ids?: string[];
 	metadata: PostMetadata;
-	failed?: boolean;
-	user_activity_posts?: Post[];
+	props?: PostProps<PROP_METADATA>;
+	file_ids?: string[];
+	hashtag?: string;
+
+	/** interactions */
+	reply_count: number;
+	last_reply_at: number;
+	participants: (UserProfile | string /** userID */)[] | null;
+
+	/**
+	 * @description ???
+	 * @deprecated
+	 * @todo verify
+	 */
 	state?: PostState;
+
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
 	filenames?: string[];
-	last_reply_at?: number;
-	participants?: (UserProfile | string /** userID */)[];
-	message_source?: string;
+
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
+	is_pinned?: boolean;
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
+	message_source?: string /**
+	 * @deprecated ?
+	 * @todo verify
+	 */;
 	is_following?: boolean;
-	exists?: boolean;
 }
 
 /**
@@ -131,10 +162,10 @@ export interface PostPreviewMetadata {
 }
 
 export interface PostMetadata {
-	embeds: PostEmbed[];
-	emojis: CustomEmoji[];
-	files: FileInfo[];
-	images: Record<string, PostImage>;
+	embeds?: PostEmbed[];
+	emojis?: CustomEmoji[];
+	files?: FileInfo[];
+	images?: Record<string, PostImage>;
 	reactions?: Reaction[];
 	priority?: PostPriorityMetadata;
 	acknowledgements?: PostAcknowledgement[];
@@ -145,11 +176,14 @@ export interface PostMetadata {
  * @description Posts props
  * ===============================================
  */
-export interface PostProps<METADATA = Record<string, unknown>> {
+export interface PostProps<PROP_METADATA = Record<string, unknown>> {
 	app_bindings?: AppBinding[];
 	attachments?: PostAttachment[];
 	from_bot?: "true" | "false";
-	metadata?: METADATA;
+	metadata?: PROP_METADATA;
+	disable_group_highlight?: boolean;
+	locationReplyMessage?: "CENTER" | string;
+	replyMessage?: string;
 }
 
 /**
@@ -234,7 +268,9 @@ export interface PostAttachment {
 	/**
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
-	actions?: Array<PostActionButton | PostActionSelect>;
+	actions?: Array<
+		PostActionButton | PostActionStaticSelect | PostActionDynamicSelect
+	>;
 
 	/**
 	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
@@ -320,7 +356,7 @@ export interface PostActionOption {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-interface PostAction<CONTEXT = Record<string, unknown>> {
+interface PostActionBase<CONTEXT = Record<string, unknown>> {
 	/**
 	 * @description Action type - button or select
 	 */
@@ -361,8 +397,8 @@ interface PostAction<CONTEXT = Record<string, unknown>> {
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
 export interface PostActionButton<CONTEXT = Record<string, unknown>>
-	extends PostAction<CONTEXT> {
-	type: PostActionType.BUTTON;
+	extends PostActionBase<CONTEXT> {
+	readonly type: PostActionType.BUTTON;
 
 	/**
 	 * @description Button text
@@ -381,26 +417,24 @@ export interface PostActionButton<CONTEXT = Record<string, unknown>>
 }
 
 /**
- * Message menus
+ * Message static select
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionSelect<CONTEXT = Record<string, unknown>>
-	extends PostAction<CONTEXT> {
-	type: PostActionType.SELECT;
+export interface PostActionStaticSelect<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT> {
+	readonly type: PostActionType.SELECT;
+	options: PostActionOption[];
+}
 
-	/**
-	 * @description Select text
-	 */
-	name: string;
-
-	/**
-	 * @description Select color
-	 */
-	style?: PostActionStyle | string;
-
-	options?: PostActionOption[];
-
+/**
+ * Message dynamic user/channel select
+ *
+ * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
+ */
+export interface PostActionDynamicSelect<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT> {
+	readonly type: PostActionType.SELECT;
 	/**
 	 * @description Data source for options
 	 *
@@ -410,8 +444,13 @@ export interface PostActionSelect<CONTEXT = Record<string, unknown>>
 	 * Similar to channels, you can also provide a list of users for message menus.
 	 * The user can choose the user who is part of the Mattermost system.
 	 */
-	data_source?: PostActionDataSource;
+	data_source: PostActionDataSource;
 }
+
+export type PostAction =
+	| PostActionButton
+	| PostActionStaticSelect
+	| PostActionDynamicSelect;
 
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	post_id: string;
@@ -421,8 +460,8 @@ export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	context: CONTEXT;
 }
 
-export interface PostActionResponse<METADATA = Record<string, unknown>> {
-	update?: Partial<Post<METADATA>>;
+export interface PostActionResponse<PROP_METADATA = Record<string, unknown>> {
+	update?: Partial<Post<PROP_METADATA>>;
 	ephemeral_text?: string;
 }
 

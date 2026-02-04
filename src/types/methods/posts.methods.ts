@@ -1,10 +1,5 @@
 import type { Post, PostProps } from "../posts";
-import type {
-	ChannelID,
-	Paginated,
-	TokenOverridable,
-	UserID
-} from "./common.methods";
+import type { ChannelID, Paginated, TokenOverridable } from "./common.methods";
 
 export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 	/** The message to be included in the post */
@@ -23,12 +18,14 @@ export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 
 export interface PostCreateWithUserIDArguments
 	extends TokenOverridable,
-		UserID,
-		PostBaseArguments {}
+		PostBaseArguments {
+	to_user_id: string;
+}
 export interface PostCreateWithChannelIDArguments
 	extends TokenOverridable,
-		ChannelID,
-		PostBaseArguments {}
+		PostBaseArguments {
+	channel_id: string;
+}
 
 /**
  * Arguments for creating a new post.
@@ -40,9 +37,9 @@ export type PostsCreateArguments =
 /**
  * Arguments for updating a post.
  */
-export interface PostsUpdateArguments
+export interface PostsUpdateArguments<PROP_METADATA = Record<string, unknown>>
 	extends TokenOverridable,
-		Omit<Partial<Post>, "id"> {
+		Omit<Partial<Post<PROP_METADATA>>, "id"> {
 	/** ID of the post to update */
 	id: string;
 }

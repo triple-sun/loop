@@ -48,7 +48,7 @@ export const postActionOptionSchema = z.object({
     value: z.string()
 });
 
-const postActionSchema = z.object({
+const postActionBaseSchema = z.object({
     type: postActionTypeSchema.describe("Action type - button or select"),
     id: z.string().describe("A per post unique identifier.\nMust not contain \"_\" or \"-\""),
     name: z.string().describe("Give your action a descriptive name."),
@@ -58,19 +58,23 @@ const postActionSchema = z.object({
     }).describe("Integration params")
 });
 
-export const postActionButtonSchema = postActionSchema.extend({
+export const postActionButtonSchema = postActionBaseSchema.extend({
     type: z.literal(PostActionType.BUTTON),
     name: z.string().describe("Button text"),
     style: postActionStyleSchema.optional().describe("Button color\n\nButton actions support a style parameter to change the color of the button.\nThe possible values for style are: good, warning, danger, default, primary, and success.\n\nIt's also possible to pass a theme variable or a hex color, but we discourage this approach because it won't be resilient against theme changes.")
 });
 
-export const postActionSelectSchema = postActionSchema.extend({
+export const postActionStaticSelectSchema = postActionBaseSchema.extend({
     type: z.literal(PostActionType.SELECT),
-    name: z.string().describe("Select text"),
-    style: z.union([postActionStyleSchema, z.string()]).optional().describe("Select color"),
-    options: z.array(postActionOptionSchema).optional(),
-    data_source: postActionDataSourceSchema.optional().describe("Data source for options\n\nYou can provide a list of channels for message menus for users to select from.\nUsers can only select from public channels in their teams.\n\nSimilar to channels, you can also provide a list of users for message menus.\nThe user can choose the user who is part of the Mattermost system.")
+    options: z.array(postActionOptionSchema)
 });
+
+export const postActionDynamicSelectSchema = postActionBaseSchema.extend({
+    type: z.literal(PostActionType.SELECT),
+    data_source: postActionDataSourceSchema.describe("Data source for options\n\nYou can provide a list of channels for message menus for users to select from.\nUsers can only select from public channels in their teams.\n\nSimilar to channels, you can also provide a list of users for message menus.\nThe user can choose the user who is part of the Mattermost system.")
+});
+
+export const postActionSchema = z.union([postActionButtonSchema, postActionStaticSelectSchema, postActionDynamicSelectSchema]);
 
 export const postActionPayloadSchema = z.object({
     post_id: z.string(),
@@ -141,7 +145,7 @@ export const postAttachmentSchema = z.object({
     title: z.string().optional().describe("An optional title displayed below the author information in the attachment."),
     title_link: z.string().optional().describe("An optional URL used to hyperlink the title. If no title is specified, this field does nothing."),
     fields: z.array(postAttachmentFieldSchema).optional().describe("Fields can be included as an optional array within attachments,\nand are used to display information in a table format inside the attachment."),
-    actions: z.array(z.union([postActionButtonSchema, postActionSelectSchema])).optional().describe("Post action array (buttons/selects) used in interactive messages"),
+    actions: z.array(z.union([postActionButtonSchema, postActionStaticSelectSchema, postActionDynamicSelectSchema])).optional().describe("Post action array (buttons/selects) used in interactive messages"),
     image_url: z.string().optional().describe("An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)\nthat is displayed inside a message attachment."),
     thumb_url: z.string().optional().describe("An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG) that is displayed as\na 75x75 pixel thumbnail on the right side of an attachment.\n\nWe recommend using an image that is already 75x75 pixels, but larger images will be scaled down with the aspect ratio maintained."),
     footer: z.string().optional().describe("An optional line of text that will be displayed at the bottom of the attachment.\nFooters with more than 300 characters will be truncated with an ellipsis (\u2026)."),
@@ -152,44 +156,44 @@ export const postPropsSchema = z.object({
     app_bindings: z.array(z.any()).optional(),
     attachments: z.array(postAttachmentSchema).optional(),
     from_bot: z.union([z.literal("true"), z.literal("false")]).optional(),
-    metadata: z.unknown().optional()
+    metadata: z.unknown().optional(),
+    disable_group_highlight: z.boolean().optional(),
+    locationReplyMessage: z.union([z.literal("CENTER"), z.string()]).optional(),
+    replyMessage: z.string().optional()
 });
 
 export const postSchema: z.ZodSchema<Post> = z.lazy(() => z.object({
     id: z.string(),
-    create_at: z.number(),
-    update_at: z.number(),
-    edit_at: z.number(),
+    create_at: z.number().describe("The time in milliseconds a post was created"),
+    update_at: z.number().describe("The time in milliseconds a post was last updated"),
     delete_at: z.number(),
-    is_pinned: z.boolean(),
-    user_id: z.string(),
-    channel_id: z.string(),
+    edit_at: z.number(),
     root_id: z.string(),
+    channel_id: z.string(),
+    user_id: z.string(),
     original_id: z.string(),
+    pending_post_id: z.string(),
     message: z.string(),
     type: postTypeSchema,
-    props: postPropsSchema.optional(),
-    hashtags: z.string(),
-    pending_post_id: z.string(),
-    reply_count: z.number(),
-    file_ids: z.array(z.string()).optional(),
     metadata: postMetadataSchema,
-    failed: z.boolean().optional(),
-    user_activity_posts: z.array(postSchema).optional(),
-    state: postStateSchema.optional(),
+    props: postPropsSchema.optional(),
+    file_ids: z.array(z.string()).optional(),
+    hashtag: z.string().optional(),
+    reply_count: z.number(),
+    last_reply_at: z.number(),
+    participants: z.array(z.union([z.any(), z.string()])).nullable(),
+    state: postStateSchema.optional().describe("???"),
     filenames: z.array(z.string()).optional(),
-    last_reply_at: z.number().optional(),
-    participants: z.array(z.union([z.any(), z.string()])).optional(),
+    is_pinned: z.boolean().optional(),
     message_source: z.string().optional(),
-    is_following: z.boolean().optional(),
-    exists: z.boolean().optional()
+    is_following: z.boolean().optional()
 }));
 
 export const postMetadataSchema: z.ZodSchema<PostMetadata> = z.lazy(() => z.object({
-    embeds: z.array(postEmbedSchema),
-    emojis: z.array(customEmojiSchema),
-    files: z.array(fileInfoSchema),
-    images: z.record(z.string(), postImageSchema),
+    embeds: z.array(postEmbedSchema).optional(),
+    emojis: z.array(customEmojiSchema).optional(),
+    files: z.array(fileInfoSchema).optional(),
+    images: z.record(z.string(), postImageSchema).optional(),
     reactions: z.array(reactionSchema).optional(),
     priority: postPriorityMetadataSchema.optional(),
     acknowledgements: z.array(postAcknowledgementSchema).optional()
@@ -211,6 +215,6 @@ export const postPreviewMetadataSchema: z.ZodSchema<PostPreviewMetadata> = z.laz
 }));
 
 export const postActionResponseSchema: z.ZodSchema<PostActionResponse> = z.lazy(() => z.object({
-    update: postSchema.partial().optional(),
+    update: postSchema.optional(),
     ephemeral_text: z.string().optional()
 }));

@@ -88,10 +88,10 @@ export const createRealApiClient = (): WebClient => {
 	validateTestEnv();
 
 	return new WebClient(TEST_LOOP_URL, {
-		token: TEST_LOOP_TOKEN,
 		logLevel: LogLevel.ERROR,
 		retryConfig: { retries: 2 },
-		saveFetchedUserID: true
+		saveFetchedUserID: true,
+		token: TEST_LOOP_TOKEN
 	});
 };
 
@@ -112,12 +112,12 @@ export class TestReport {
 	apiUrl: string = TEST_LOOP_URL;
 	totalMethods: number = 0;
 	testResultCounts: MethodTestResultCounts = {
-		success: 0,
-		permissionDenied: 0,
-		notFound: 0,
 		invalidRequest: 0,
-		serverError: 0,
+		notFound: 0,
 		notImplemented: 0,
+		permissionDenied: 0,
+		serverError: 0,
+		success: 0,
 		typeMismatch: 0,
 		unknownError: 0
 	};
@@ -224,18 +224,18 @@ export class TestReport {
 			const validation = validateType(data, schema);
 
 			const result: MethodTestResult = {
-				methodPath,
-				endpoint,
+				actualType: typeof data,
 				category: validation.matches
 					? TestResultCategory.SUCCESS
 					: TestResultCategory.TYPE_MISMATCH,
-				responseData: this.truncateResponse(data),
-				expectedType: describeSchema(schema),
-				actualType: typeof data,
 				durationMs,
+				endpoint,
+				expectedType: describeSchema(schema),
+				methodPath,
+				responseData: this.truncateResponse(data),
 				typeValidation: {
-					matches: validation.matches,
-					differences: validation.differences
+					differences: validation.differences,
+					matches: validation.matches
 				}
 			};
 
@@ -246,12 +246,12 @@ export class TestReport {
 			const category = this.categorizeError(error);
 
 			const result: MethodTestResult = {
-				methodPath,
-				endpoint,
 				category,
+				durationMs,
+				endpoint,
 				errorMessage: error instanceof Error ? error.message : String(error),
 				expectedType: describeSchema(schema),
-				durationMs
+				methodPath
 			};
 
 			this.saveResult(result);

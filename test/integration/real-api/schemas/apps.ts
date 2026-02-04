@@ -111,10 +111,10 @@ export interface AppCallRequest extends AppCall {
 	query?: string;
 }
 
-export interface AppCallResponse<RESPONSE = unknown> {
+export interface AppCallResponse {
 	type: string;
 	text?: string;
-	data?: RESPONSE;
+	data?: any;
 	navigate_to_url?: string;
 	use_external_browser?: boolean;
 	call?: AppCall;
@@ -267,7 +267,7 @@ export enum AppFormFieldSubType {
  *
  * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
  */
-interface AppFormField<T> {
+interface AppFormField {
 	/**
 	 *  @description The type of the field.
 	 */
@@ -369,7 +369,7 @@ export interface AppFormFieldOption {
  * @description A boolean selector represented as a checkbox.
  */
 export interface AppFormBooleanField
-	extends AppFormField<boolean>,
+	extends AppFormField,
 		Multiselectable {
 	type: AppFormFieldType.BOOLEAN;
 }
@@ -378,7 +378,7 @@ export interface AppFormBooleanField
  * @description A dropdown to select channels.
  */
 export interface AppFormChannelsField
-	extends AppFormField<string>,
+	extends AppFormField,
 		Multiselectable {
 	type: AppFormFieldType.CHANNEL;
 }
@@ -387,7 +387,7 @@ export interface AppFormChannelsField
  * @description A dropdown to select users.
  */
 export interface AppFormUsersField
-	extends AppFormField<string>,
+	extends AppFormField,
 		Multiselectable {
 	type: AppFormFieldType.USER;
 }
@@ -398,7 +398,7 @@ export interface AppFormUsersField
  * Read-only.
  */
 export interface AppFormMarkdownField
-	extends AppFormField<string>,
+	extends AppFormField,
 		Multiselectable {
 	type: AppFormFieldType.MARKDOWN;
 }
@@ -407,7 +407,7 @@ export interface AppFormMarkdownField
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends AppFormField<AppFormFieldOption>,
+	extends AppFormField,
 		Multiselectable,
 		Refreshable {
 	type: AppFormFieldType.STATIC_SELECT;
@@ -421,7 +421,7 @@ export interface AppFormStaticSelectField
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends AppFormField<AppFormFieldOption>,
+	extends AppFormField,
 		Multiselectable,
 		Refreshable {
 	type: AppFormFieldType.DYNAMIC_SELECT;
@@ -434,7 +434,7 @@ export interface AppFormDynamicSelectField
 /**
  * @description A plain text field.
  */
-export interface AppFormTextField extends AppFormField<string> {
+export interface AppFormTextField  {
 	type: AppFormFieldType.TEXT;
 
 	/**

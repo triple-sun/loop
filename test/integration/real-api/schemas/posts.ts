@@ -14,39 +14,63 @@ import type {} from "./users";
  */
 export interface Post {
 	id: string;
+
+	/** dates */
+	/** @description The time in milliseconds a post was created */
 	create_at: number;
+	/** @description The time in milliseconds a post was last updated */
 	update_at: number;
-	edit_at: number;
+	/** @description */
 	delete_at: number;
-	is_pinned: boolean;
-	user_id: string;
-	channel_id: string;
+	edit_at: number;
+
+	/** ids */
 	root_id: string;
+	channel_id: string;
+	user_id: string;
 	original_id: string;
+	pending_post_id: string;
+
+	/** message data */
 	message: string;
 	type: PostType;
-	props?: PostProps;
-	hashtags: string;
-	pending_post_id: string;
-	reply_count: number;
-	file_ids?: string[];
 	metadata: PostMetadata;
-	failed?: boolean;
-	user_activity_posts?: Post[];
-	state?: PostState;
-	filenames?: string[];
-	last_reply_at?: number;
-	participants?: (any | string /** userID */)[];
-	message_source?: string;
-	is_following?: boolean;
-	exists?: boolean;
-}
+	props?: PostProps;
+	file_ids?: string[];
+	hashtag?: string;
 
-export interface PostProps {
-	app_bindings?: any[];
-	attachments?: PostAttachment[];
-	from_bot?: "true" | "false";
-	metadata?: unknown;
+	/** interactions */
+	reply_count: number;
+	last_reply_at: number;
+	participants: (any | string /** userID */)[] | null;
+
+	/**
+	 * @description ???
+	 * @deprecated
+	 * @todo verify
+	 */
+	state?: PostState;
+
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
+	filenames?: string[];
+
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
+	is_pinned?: boolean;
+	/**
+	 * @deprecated ?
+	 * @todo verify
+	 */
+	message_source?: string /**
+	 * @deprecated ?
+	 * @todo verify
+	 */;
+	is_following?: boolean;
 }
 
 /**
@@ -138,13 +162,28 @@ export interface PostPreviewMetadata {
 }
 
 export interface PostMetadata {
-	embeds: PostEmbed[];
-	emojis: CustomEmoji[];
-	files: FileInfo[];
-	images: Record<string, PostImage>;
+	embeds?: PostEmbed[];
+	emojis?: CustomEmoji[];
+	files?: FileInfo[];
+	images?: Record<string, PostImage>;
 	reactions?: Reaction[];
 	priority?: PostPriorityMetadata;
 	acknowledgements?: PostAcknowledgement[];
+}
+
+/**
+ * ===============================================
+ * @description Posts props
+ * ===============================================
+ */
+export interface PostProps {
+	app_bindings?: any[];
+	attachments?: PostAttachment[];
+	from_bot?: "true" | "false";
+	metadata?: unknown;
+	disable_group_highlight?: boolean;
+	locationReplyMessage?: "CENTER" | string;
+	replyMessage?: string;
 }
 
 /**
@@ -229,7 +268,9 @@ export interface PostAttachment {
 	/**
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
-	actions?: Array<PostActionButton | PostActionSelect>;
+	actions?: Array<
+		PostActionButton | PostActionStaticSelect | PostActionDynamicSelect
+	>;
 
 	/**
 	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
@@ -315,7 +356,7 @@ export interface PostActionOption {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-interface PostAction {
+interface PostActionBase {
 	/**
 	 * @description Action type - button or select
 	 */
@@ -355,8 +396,9 @@ interface PostAction {
  *
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionButton extends PostAction {
-	type: PostActionType.BUTTON;
+export interface PostActionButton
+	extends PostActionBase {
+	readonly type: PostActionType.BUTTON;
 
 	/**
 	 * @description Button text
@@ -375,25 +417,24 @@ export interface PostActionButton extends PostAction {
 }
 
 /**
- * Message menus
+ * Message static select
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionSelect extends PostAction {
-	type: PostActionType.SELECT;
+export interface PostActionStaticSelect
+	extends PostActionBase {
+	readonly type: PostActionType.SELECT;
+	options: PostActionOption[];
+}
 
-	/**
-	 * @description Select text
-	 */
-	name: string;
-
-	/**
-	 * @description Select color
-	 */
-	style?: PostActionStyle | string;
-
-	options?: PostActionOption[];
-
+/**
+ * Message dynamic user/channel select
+ *
+ * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
+ */
+export interface PostActionDynamicSelect
+	extends PostActionBase {
+	readonly type: PostActionType.SELECT;
 	/**
 	 * @description Data source for options
 	 *
@@ -403,10 +444,15 @@ export interface PostActionSelect extends PostAction {
 	 * Similar to channels, you can also provide a list of users for message menus.
 	 * The user can choose the user who is part of the Mattermost system.
 	 */
-	data_source?: PostActionDataSource;
+	data_source: PostActionDataSource;
 }
 
-export interface PostActionPayload  {
+export type PostAction =
+	| PostActionButton
+	| PostActionStaticSelect
+	| PostActionDynamicSelect;
+
+export interface PostActionPayload {
 	post_id: string;
 	channel_id: string;
 	user_id: string;

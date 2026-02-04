@@ -11,7 +11,7 @@ import {
 	teamSchema,
 	teamStatsSchema
 } from "./schemas/teams.zod";
-import { createRealApiClient, TestReport } from "./utils.ts/real-api.utils";
+import { createRealApiClient, TestReport } from "./utils/real-api.utils";
 
 describe("Teams API - Real API Tests", () => {
 	let client: WebClient;

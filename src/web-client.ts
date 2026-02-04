@@ -191,18 +191,18 @@ export class WebClient extends Methods {
 		}
 
 		this.axios = axios.create({
-			timeout,
 			baseURL: this.url,
+			headers: { ...headers, "User-Agent": getUserAgent() },
 			httpAgent: agent,
 			httpsAgent: agent,
-			headers: { ...headers, "User-Agent": getUserAgent() },
-			validateStatus: () => true, // all HTTP status codes should result in a resolved promise (as opposed to only 2xx)
 			maxRedirects: 0,
 			// disabling axios' automatic proxy support:
 			// axios would read from envvars to configure a proxy automatically, but it doesn't support TLS destinations.
 			// for compatibility and for a larger set of possible proxies (SOCKS or other
 			// protocols), users of this package should use the `agent` option to configure a proxy.
-			proxy: false
+			proxy: false,
+			timeout,
+			validateStatus: () => true // all HTTP status codes should result in a resolved promise (as opposed to only 2xx)
 		});
 
 		/** config.type and serializeApiCallData will set ContentType automatically */
@@ -293,9 +293,9 @@ export class WebClient extends Methods {
 		const url = this.fillRequestUrl(config, options);
 
 		const response = await this.makeRequest<T>(url, {
+			data: options,
 			headers,
-			method: config.method,
-			data: options
+			method: config.method
 		});
 
 		const result = this.buildResult<T>(url, response);
@@ -403,7 +403,7 @@ export class WebClient extends Methods {
 			}
 		}
 
-		return Object.freeze({ data: result.value.data, ctx });
+		return Object.freeze({ ctx, data: result.value.data });
 	}
 
 	private fillRequestUrl(
@@ -480,16 +480,16 @@ export class WebClient extends Methods {
 				);
 			}
 			/** throw if we don't even have options required to fetch missing data */
-			if (!data.user_id && !data.channel_id) {
+			if (!data.to_user_id && !data.channel_id) {
 				throw new WebClientOptionsError(
 					"To create a post you need to provide either a channel_id or user_id"
 				);
 			}
 
-			if (typeof data.user_id === "string" && !data.channel_id) {
+			if (typeof data.to_user_id === "string" && !data.channel_id) {
 				const opts: ChannelsCreateDirectArguments = {
 					token: data["token"],
-					user_ids: [data.user_id, await this.getCurrentUserID(data)]
+					user_ids: [data.to_user_id, await this.getCurrentUserID(data)]
 				};
 
 				/** if token overridable or no userID - fetch channel_id from server  */

@@ -6,10 +6,10 @@
 
 import type { Post } from "../posts";
 
-export interface PostListResponse<PROP_METADATA = Record<string, unknown>> {
+export interface PostListResponse {
 	order: string[];
 	posts: {
-		[postId: string]: Post<PROP_METADATA>;
+		[postId: string]: Post;
 	};
 	next_post_id: string;
 	prev_post_id: string;

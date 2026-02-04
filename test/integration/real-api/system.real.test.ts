@@ -5,12 +5,12 @@
 
 import { z } from "zod";
 import type { WebClient } from "../../../src/web-client";
-import { statusOkSchema } from "./schemas/common.zod";
+import { statusOkResponseSchema } from "./schemas/common.responses.zod";
 import {
 	createRealApiClient,
 	TestReport,
 	TestResultCategory
-} from "./utils.ts/real-api.utils";
+} from "./utils/real-api.utils";
 
 describe("System API - Real API Tests", () => {
 	let client: WebClient;
@@ -31,7 +31,7 @@ describe("System API - Real API Tests", () => {
 				"system.getPing",
 				"GET /system/ping",
 				() => client.system.checkHealth(),
-				statusOkSchema
+				statusOkResponseSchema
 			);
 
 			if (result.category === TestResultCategory.SUCCESS) {
@@ -47,12 +47,12 @@ describe("System API - Real API Tests", () => {
 				"GET /logs",
 				() =>
 					client.system.getLogs({
-						serverNames: [],
-						logLevels: [],
 						dateFrom: "0",
 						dateTo: String(Date.now()),
+						logLevels: [],
+						logs_per_page: 10,
 						page: 0,
-						logs_per_page: 10
+						serverNames: []
 					}),
 				z.array(z.string())
 			);
