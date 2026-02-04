@@ -12,7 +12,7 @@ import type { UserProfile } from "./users";
  * @description Posts main object
  * ===============================================
  */
-export interface Post<PROPS_TYPE = Record<string, unknown>> {
+export interface Post<METADATA = undefined> {
 	id: string;
 	create_at: number;
 	update_at: number;
@@ -25,11 +25,7 @@ export interface Post<PROPS_TYPE = Record<string, unknown>> {
 	original_id: string;
 	message: string;
 	type: PostType;
-	props?: PROPS_TYPE & {
-		app_bindings?: AppBinding[];
-		attachments?: PostAttachment[];
-		from_bot?: "true" | "false";
-	};
+	props?: PostProps<METADATA>;
 	hashtags: string;
 	pending_post_id: string;
 	reply_count: number;
@@ -44,6 +40,13 @@ export interface Post<PROPS_TYPE = Record<string, unknown>> {
 	message_source?: string;
 	is_following?: boolean;
 	exists?: boolean;
+}
+
+export interface PostProps<METADATA = Record<string, unknown>> {
+	app_bindings?: AppBinding[];
+	attachments?: PostAttachment[];
+	from_bot?: "true" | "false";
+	metadata?: METADATA;
 }
 
 /**
