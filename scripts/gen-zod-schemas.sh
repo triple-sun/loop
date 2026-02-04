@@ -53,8 +53,13 @@ for FILE in \
 	# posts fix
 	if [ "$FILENAME" = "posts" ]; then
 		echo "Fixing posts generics"
-		sed -i '' 's/<PROPS_TYPE = Record<string, unknown>>//g' "$TYPEFILE"
-		sed -i '' 's/PROPS_TYPE &/''/g' "$TYPEFILE"
+		sed -i '' 's/<METADATA = undefined>//g' "$TYPEFILE"
+		sed -i '' 's/<METADATA>//g' "$TYPEFILE"
+		sed -i '' 's/<METADATA = Record<string, unknown>>//g' "$TYPEFILE"
+		sed -i '' 's/METADATA/unknown/g' "$TYPEFILE"
+		
+		sed -i '' 's/<CONTEXT = Record<string, unknown>>//g' "$TYPEFILE"
+		sed -i '' 's/CONTEXT/unknown/g' "$TYPEFILE"
 
 		sed -i '' 's/{ AppBinding }/{}/g' "$TYPEFILE"
 		sed -i '' 's/AppBinding/any/g' "$TYPEFILE"

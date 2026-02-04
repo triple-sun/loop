@@ -1,5 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
+
 	"assist": {
 		"enabled": true,
 		"actions": {

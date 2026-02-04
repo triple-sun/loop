@@ -10,7 +10,7 @@
 		"test": "jest",
 		"build": "rimraf ./build && tsc -p tsconfig.json",
 		"format": "biome format ./ --write",
-		"gen:schemas:res": "./scripts/generate-response-schemas.sh",
+		"gen:zod": "./scripts/gen-zod-schemas.sh",
 		"lint": "biome lint ./src",
 		"prepare": "husky",
 		"prepublishOnly": "rimraf build && tsc && husky && jest",

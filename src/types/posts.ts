@@ -42,13 +42,6 @@ export interface Post<METADATA = undefined> {
 	exists?: boolean;
 }
 
-export interface PostProps<METADATA = Record<string, unknown>> {
-	app_bindings?: AppBinding[];
-	attachments?: PostAttachment[];
-	from_bot?: "true" | "false";
-	metadata?: METADATA;
-}
-
 /**
  * ===============================================
  * @description Posts main enums
@@ -149,6 +142,18 @@ export interface PostMetadata {
 
 /**
  * ===============================================
+ * @description Posts props
+ * ===============================================
+ */
+export interface PostProps<METADATA = Record<string, unknown>> {
+	app_bindings?: AppBinding[];
+	attachments?: PostAttachment[];
+	from_bot?: "true" | "false";
+	metadata?: METADATA;
+}
+
+/**
+ * ===============================================
  * @description Posts attachments
  * ===============================================
  */
@@ -161,30 +166,122 @@ export enum PostAttachmentColor {
 	GRAY = "#808080"
 }
 
+/**
+ * Post attachment
+ *
+ * @see {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
+ */
 export interface PostAttachment {
-	id: number;
-	fallback: string;
-	color: PostAttachmentColor | string;
-	pretext: string;
-	author_name: string;
-	author_link: string;
-	author_icon: string;
-	title: string;
-	title_link: string;
+	/**
+	 * @description A required plain-text summary of the attachment.
+	 * This is used in notifications, and in clients that don't support formatted text (e.g. IRC).
+	 */
+	fallback?: string;
+
+	/**
+	 * @description A hex color code that will be used as the left border color for the attachment.
+	 * If not specified, it will default to match the channel sidebar header background color.
+	 */
+	color?: PostAttachmentColor | string;
+
+	/**
+	 * @description An optional line of text that will be shown above the attachment.
+	 * Supports @mentions.
+	 */
+	pretext?: string;
+
+	/**
+	 * @description The text to be included in the attachment.
+	 * It can be formatted using {@link https://docs.mattermost.com/help/messaging/formatting-text.html | Markdown}.
+	 * For long texts, the message is collapsed and a 'Show More' link is added to expand the message.
+	 * Supports @mentions.
+	 */
 	text: string;
-	fields: PostAttachmentField[];
-	actions?: PostAction[];
-	image_url: string;
-	thumb_url: string;
-	footer: string;
-	footer_icon: string;
-	timestamp: number | string;
+
+	/**
+	 * @description An optional name used to identify the author.
+	 * It will be included in a small section at the top of the attachment.
+	 */
+	author_name?: string;
+
+	/**
+	 * @description An optional URL used to hyperlink the author_name.
+	 * If no author_name is specified, this field does nothing.
+	 */
+	author_link?: string;
+
+	/**
+	 * @description An optional URL used to display a 16x16 pixel icon beside the author_name.
+	 */
+	author_icon?: string;
+
+	/**
+	 * @description An optional title displayed below the author information in the attachment.
+	 */
+	title?: string;
+
+	/**
+	 * @description An optional URL used to hyperlink the title. If no title is specified, this field does nothing.
+	 */
+	title_link?: string;
+
+	/**
+	 * @description Fields can be included as an optional array within attachments,
+	 * and are used to display information in a table format inside the attachment.
+	 */
+	fields?: PostAttachmentField[];
+
+	/**
+	 * @description Post action array (buttons/selects) used in interactive messages
+	 */
+	actions?: Array<PostActionButton | PostActionSelect>;
+
+	/**
+	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+	 * that is displayed inside a message attachment.
+	 */
+	image_url?: string;
+
+	/**
+	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG) that is displayed as
+	 * a 75x75 pixel thumbnail on the right side of an attachment.
+	 *
+	 * We recommend using an image that is already 75x75 pixels, but larger images will be scaled down with the aspect ratio maintained.
+	 */
+	thumb_url?: string;
+
+	/**
+	 * @description An optional line of text that will be displayed at the bottom of the attachment.
+	 * Footers with more than 300 characters will be truncated with an ellipsis (…).
+	 */
+	footer?: string;
+
+	/**
+	 * @description  An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG) that
+	 * is displayed as a 16x16 pixel thumbnail before the footer text.
+	 */
+	footer_icon?: string;
 }
 
 export interface PostAttachmentField {
+	/**
+	 * @description A title shown in the table above the value.
+	 * As of @version 5.14 a title will render emojis properly.
+	 */
 	title: string;
-	value: unknown;
-	short: boolean;
+
+	/**
+	 * @description The text value of the field.
+	 * It can be formatted using Markdown.
+	 * Supports @mentions.
+	 */
+	value: string;
+
+	/**
+	 * @description Optionally set to true or false (boolean) to
+	 * indicate whether the value is short enough to be displayed beside other values.
+	 */
+	short?: boolean;
 }
 
 /**
@@ -216,44 +313,115 @@ export interface PostActionOption {
 	text: string;
 	value: string;
 }
-export interface PostActionIntegration {
-	url: string;
-	context?: PostContext;
-}
-export interface PostAction {
-	id: string;
-	name: string;
-	integration: PostActionIntegration;
+
+/**
+ * @description Use interactive messages to simplify complex workflows by allowing users
+ * to take quick actions directly through your integration post.
+ *
+ * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
+ */
+interface PostAction<CONTEXT = Record<string, unknown>> {
+	/**
+	 * @description Action type - button or select
+	 */
 	type: PostActionType;
-	options?: PostActionOption[];
-	style?: PostActionStyle;
-	data_source?: PostActionDataSource;
+
+	/**
+	 * @description A per post unique identifier.
+	 * Must not contain "_" or "-"
+	 */
+	id: string;
+
+	/**
+	 * @description Give your action a descriptive name.
+	 */
+	name: string;
+
+	/**
+	 * @description Integration params
+	 */
+	integration: {
+		/**
+		 * @description The actions are backed by an integration that handles HTTP POST requests when users select the message button.
+		 * The URL parameter determines where this action is sent. The request contains an application/json JSON string.
+		 * As of @version 5.14, relative URLs are accepted, simplifying the workflow when a plugin handles the action.
+		 */
+		url: string;
+
+		/**
+		 * @description The requests sent to the specified URL contain the user ID, post ID, channel ID, team ID, and any context that was provided in the action definition. If the post was of type Message Menus, then context also contains the selected_option field with the user-selected option value. The post ID can be used to, for example, delete or edit the post after selecting a message button.
+		 */
+		context?: CONTEXT;
+	};
 }
 
 /**
- * ===============================================
- * @description Posts context
- * ===============================================
+ * Message buttons
+ *
+ * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
+export interface PostActionButton extends PostAction {
+	type: PostActionType.BUTTON;
 
-export type PostContextProps = {
-	[name: string]: string;
-};
+	/**
+	 * @description Button text
+	 */
+	name: string;
 
-export interface PostContext {
-	app_id?: string;
-	location?: string;
-	acting_user_id?: string;
-	user_id?: string;
-	channel_id?: string;
+	/**
+	 * @description Button color
+	 *
+	 * Button actions support a style parameter to change the color of the button.
+	 * The possible values for style are: good, warning, danger, default, primary, and success.
+	 *
+	 * It's also possible to pass a theme variable or a hex color, but we discourage this approach because it won't be resilient against theme changes.
+	 */
+	style?: PostActionStyle;
+}
+
+/**
+ * Message menus
+ *
+ * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
+ */
+export interface PostActionSelect extends PostAction {
+	type: PostActionType.SELECT;
+
+	/**
+	 * @description Select text
+	 */
+	name: string;
+
+	/**
+	 * @description Select color
+	 */
+	style?: PostActionStyle | string;
+
+	options?: PostActionOption[];
+
+	/**
+	 * @description Data source for options
+	 *
+	 * You can provide a list of channels for message menus for users to select from.
+	 * Users can only select from public channels in their teams.
+	 *
+	 * Similar to channels, you can also provide a list of users for message menus.
+	 * The user can choose the user who is part of the Mattermost system.
+	 */
+	data_source?: PostActionDataSource;
+}
+
+export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
+	post_id: string;
+	channel_id: string;
+	user_id: string;
 	team_id?: string;
-	post_id?: string;
-	root_id?: string;
-	props?: PostContextProps;
-	user_agent?: string;
-	track_as_submit?: boolean;
-	acting_user?: { id: string };
-	[key: string]: unknown;
+	context: CONTEXT;
+}
+
+export interface PostActionResponse<METADATA = Record<string, unknown>> {
+	update?: Partial<Post<METADATA>>;
+	ephemeral_text?: string;
 }
 
 /**

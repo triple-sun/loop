@@ -2,6 +2,12 @@
 import { z } from "zod";
 import { UserNotify, UserCallSound, UserStatusValue, CustomStatusDuration } from "./users";
 
+export const userTimezoneSchema = z.object({
+    useAutomaticTimezone: z.union([z.boolean(), z.literal("true"), z.literal("false")]),
+    automaticTimezone: z.string(),
+    manualTimezone: z.string()
+});
+
 export const userNotifySchema = z.enum(UserNotify);
 
 export const userCallSoundSchema = z.enum(UserCallSound);
@@ -16,6 +22,7 @@ export const notifyPropsSchema = z.object({
     desktop: userNotifySchema,
     desktop_sound: z.union([z.literal("true"), z.literal("false")]),
     desktop_threads: userNotifySchema.optional(),
+    desktop_notification_sound: z.union([z.literal("Bing"), z.literal("Crackle"), z.literal("Down"), z.literal("Hello"), z.literal("Ripple"), z.literal("Upstairs")]).optional(),
     email: z.union([z.literal("true"), z.literal("false")]),
     email_threads: userNotifySchema.optional(),
     first_name: z.union([z.literal("true"), z.literal("false")]),
@@ -27,53 +34,39 @@ export const notifyPropsSchema = z.object({
     push: userNotifySchema,
     push_status: z.union([z.literal("ooo"), z.literal("offline"), z.literal("away"), z.literal("dnd"), z.literal("online")]),
     push_threads: userNotifySchema.optional(),
-    calls_desktop_sound: z.union([z.literal("true"), z.literal("false")]).optional(),
-    desktop_notification_sound: z.union([z.literal("Bing"), z.literal("Crackle"), z.literal("Down"), z.literal("Hello"), z.literal("Ripple"), z.literal("Upstairs")]).optional(),
-    calls_notification_sound: userCallSoundSchema.optional(),
     auto_responder_active: z.union([z.literal("true"), z.literal("false")]).optional(),
     auto_responder_message: z.string().optional(),
+    calls_notification_sound: userCallSoundSchema.optional(),
+    calls_desktop_sound: z.union([z.literal("true"), z.literal("false")]).optional(),
     calls_mobile_sound: z.union([z.literal("true"), z.literal("false"), z.literal("")]).optional(),
     calls_mobile_notification_sound: userCallSoundSchema.optional()
 });
 
-export const userCustomStatusSchema = z.object({
-    emoji: z.string(),
-    text: z.string(),
-    duration: customStatusDurationSchema,
-    expires_at: z.string().optional()
-});
-
-export const userTimezoneSchema = z.object({
-    useAutomaticTimezone: z.union([z.boolean(), z.literal("true"), z.literal("false")]),
-    automaticTimezone: z.string(),
-    manualTimezone: z.string()
-});
-
 export const userProfileSchema = z.object({
     id: z.string(),
-    create_at: z.number().describe("unix format"),
-    update_at: z.number().describe("unix format"),
-    delete_at: z.number().describe("unix format"),
-    username: z.string().default("''"),
-    auth_data: z.string().default("''"),
-    auth_service: z.string().default("''"),
+    username: z.union([z.string(), z.literal("")]).default(""),
+    auth_data: z.union([z.string(), z.literal("")]).default(""),
+    auth_service: z.union([z.string(), z.literal("")]).default(""),
     email: z.string(),
     email_verified: z.boolean().optional(),
-    nickname: z.string().default("''"),
-    first_name: z.string().default("''"),
-    last_name: z.string().default("''"),
-    position: z.string().default("''"),
+    nickname: z.string().default(""),
+    first_name: z.string().default(""),
+    last_name: z.string().default(""),
+    position: z.string().default(""),
     password: z.string().optional().describe("excluded from responses"),
+    create_at: z.number().describe("Creation date unix timestamp"),
+    update_at: z.number().describe("Update date unix timestamp"),
+    delete_at: z.union([z.number(), z.literal(0)]).optional().describe("Deletion date unix timestamp\nWill be zero if user is active").default(0),
     roles: z.string().describe("User roles in string format"),
     props: z.record(z.string(), z.unknown()).and(z.object({
-        customStatus: userCustomStatusSchema.optional()
-    })).optional(),
-    notify_props: notifyPropsSchema,
-    last_password_update: z.number(),
+        customStatus: z.string().optional().describe("User custom status in stringified format")
+    })).optional().describe("User profile props"),
+    notify_props: notifyPropsSchema.describe("Notification settings"),
+    last_password_update: z.number().optional().describe("Last password update timestamp"),
     last_picture_update: z.number().optional().describe("Will be undefined if no picture was set"),
     locale: z.string().default("'en'"),
     timezone: userTimezoneSchema.optional(),
-    remote_id: z.string().optional().default("''"),
+    remote_id: z.union([z.string(), z.literal("")]).optional().default(""),
     disable_welcome_email: z.boolean().optional(),
     status: z.string().optional(),
     mfa_active: z.boolean().optional(),
@@ -91,6 +84,13 @@ export const userStatusSchema = z.object({
     last_activity_at: z.number().optional(),
     active_channel: z.string().optional(),
     dnd_end_time: z.number().optional()
+});
+
+export const userCustomStatusSchema = z.object({
+    emoji: z.string(),
+    text: z.string(),
+    duration: customStatusDurationSchema,
+    expires_at: z.string().optional()
 });
 
 export const userAccessTokenSchema = z.object({
@@ -122,7 +122,7 @@ export const authChangeResponseSchema = z.object({
 
 const teamMembershipSchema = z.any();
 
-export const userProfileWithLastViewAtSchema = userProfileSchema.extend({
+export const userProfileWithLastViewedAtSchema = userProfileSchema.extend({
     last_viewed_at: z.number()
 });
 

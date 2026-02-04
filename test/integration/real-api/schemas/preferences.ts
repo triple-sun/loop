@@ -1,4 +1,4 @@
-export type PreferenceType = {
+export type Preference = {
 	user_id: string;
 	category: string;
 	name: string;
