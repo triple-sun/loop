@@ -29,6 +29,7 @@ export * from "./products";
 export * from "./reactions";
 export * from "./reports";
 export * from "./requests";
+export * from "./responses";
 export * from "./roles";
 export * from "./saml";
 export * from "./schemes";
