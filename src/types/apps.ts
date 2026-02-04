@@ -35,7 +35,7 @@ export interface AppManifest {
 
 /**
  * =======================================
- * @description Apps Call Types
+ * @description Apps Context Types
  * =======================================
  */
 
@@ -81,6 +81,12 @@ export interface AppExpand {
 	user?: AppExpandLevel;
 	locale?: AppExpandLevel;
 }
+
+/**
+ * =======================================
+ * @description Apps Call Types
+ * =======================================
+ */
 
 export interface AppCallValues {
 	[name: string]: unknown;
@@ -176,30 +182,6 @@ export interface AppBinding {
  * =======================================
  */
 
-/** Тип поля формы  mattermost apps */
-export enum AppFormFieldType {
-	BOOLEAN = "boolean" /**   A boolean selector represented as a checkbox. */,
-	CHANNEL = "channel" /**    A dropdown to select channels. */,
-	DYNAMIC_SELECT = "dynamic_select" /** A dropdown select that loads the elements dynamically. */,
-	MARKDOWN = "markdown" /**  An arbitrary markdown text; only visible in modal dialogs. Read-only. */,
-	STATIC_SELECT = "static_select" /**  A dropdown select with static elements. */,
-	TEXT = "text" /**   A plain text field. */,
-	USER = "user" /**   A dropdown to select users. */
-}
-
-/** The text field subtypes, except textarea, map to the types of the HTML input form element */
-export enum AppFormFieldSubType {
-	INPUT = "input" /**  A single-line text input field. */,
-	TEXT_AREA = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
-	EMAIL = "email" /**  A field for editing an email address. */,
-	NUMBER = "number" /** A field for entering a number; includes a spinner component. */,
-	PASSWORD = "password" /** A single-line text input field whose value is obscured. */,
-	TELEPHONE = "tel" /**  A field for entering a telephone number. */,
-	URL = "url" /**  A field for entering a URL. */
-}
-
-export type AppFormValue = string | AppFormSelectOption | boolean | null;
-
 export interface AppFormValues {
 	[name: string]: string | AppFormSelectOption | boolean | null;
 }
@@ -228,7 +210,15 @@ export interface AppForm {
 	submit_buttons?: string;
 	cancel_button?: boolean;
 	submit_on_cancel?: boolean;
-	fields?: AppFormField[];
+	fields?: Array<
+		| AppFormBooleanField
+		| AppFormChannelsField
+		| AppFormDynamicSelectField
+		| AppFormMarkdownField
+		| AppFormStaticSelectField
+		| AppFormTextField
+		| AppFormUsersField
+	>;
 
 	// source is used in 2 cases:
 	//   - if submit is not set, it is used to fetch the submittable form from
@@ -244,28 +234,221 @@ export interface AppForm {
 	depends_on?: string[];
 }
 
-// This should go in mattermost-redux
-export interface AppFormField {
-	// Name is the name of the JSON field to use.
-	name: string;
+/**
+ * =======================================
+ * @description App Form Field Internal Types
+ * =======================================
+ */
+
+/** Тип поля формы  mattermost apps */
+export enum AppFormFieldType {
+	BOOLEAN = "boolean" /**   A boolean selector represented as a checkbox. */,
+	CHANNEL = "channel" /**    A dropdown to select channels. */,
+	DYNAMIC_SELECT = "dynamic_select" /** A dropdown select that loads the elements dynamically. */,
+	MARKDOWN = "markdown" /**  An arbitrary markdown text; only visible in modal dialogs. Read-only. */,
+	STATIC_SELECT = "static_select" /**  A dropdown select with static elements. */,
+	TEXT = "text" /**   A plain text field. */,
+	USER = "user" /**   A dropdown to select users. */
+}
+
+/** The text field subtypes, except textarea, map to the types of the HTML input form element */
+export enum AppFormFieldSubType {
+	INPUT = "input" /**  A single-line text input field. */,
+	TEXT_AREA = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
+	EMAIL = "email" /**  A field for editing an email address. */,
+	NUMBER = "number" /** A field for entering a number; includes a spinner component. */,
+	PASSWORD = "password" /** A single-line text input field whose value is obscured. */,
+	TELEPHONE = "tel" /**  A field for entering a telephone number. */,
+	URL = "url" /**  A field for entering a URL. */
+}
+
+/**
+ * @description The basic structure of a form field
+ *
+ * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
+ */
+interface AppFormField<T> {
+	/**
+	 *  @description The type of the field.
+	 */
 	type: AppFormFieldType;
-	is_required?: boolean;
-	readonly?: boolean;
-	value?: AppFormValue;
-	description?: string;
+
+	/**
+	 * @description Key to use in the values field of the call.
+	 * Cannot include spaces or tabs.
+	 */
+	name: string;
+
+	/**
+	 * @description The label of the flag parameter; used with autocomplete.
+	 * Ignored for positional parameters.
+	 */
 	label?: string;
-	hint?: string;
-	position?: number;
+
+	/**
+	 * @description Label of the field in modal dialogs.
+	 * Defaults to label if not defined.
+	 */
 	modal_label?: string;
 
-	// Select props
-	refresh?: boolean;
-	options?: AppFormSelectOption[];
-	multiselect?: boolean;
-	lookup?: AppCall;
+	/**
+	 * @description Short description of the field, displayed beneath the field in modal dialogs
+	 */
+	description?: string;
 
-	// Text props
+	/**
+	 * @description The hint text for the field; used with autocomplete.
+	 */
+	hint?: string;
+
+	/**
+	 * @description The field's default value.
+	 */
+	value?: T;
+
+	/**
+	 * @description Whether the field has a mandatory value.
+	 */
+	is_required?: boolean;
+
+	/**
+	 * @description Whether a field's value is read-only.
+	 */
+	readonly?: boolean;
+
+	/**
+	 * @description The index of the positional argument.
+	 * A value greater than zero indicates the position this field is in.
+	 * A value of -1 indicates the last argument.
+	 */
+	position?: number;
+}
+
+interface Multiselectable {
+	/**
+	 * @description Whether a select field allows multiple values to be selected.
+	 */
+	multiselect?: boolean;
+}
+
+interface Refreshable {
+	/**
+	 * @description Allows the form to be refreshed when the value of the field has changed.
+	 */
+	refresh?: boolean;
+}
+
+/**
+ * =======================================
+ * @description App Form Field Actual Types
+ * =======================================
+ */
+
+/**
+ * @description The data structure of an option in a select field
+ */
+export interface AppFormFieldOption {
+	/**
+	 * @description User-facing string.
+	 * Defaults to value and must be unique on this field.
+	 */
+	label?: string;
+
+	/**
+	 * @description Machine-facing value. Must be unique on this field.
+	 */
+	value: string;
+
+	/**
+	 * @description Either a fully-qualified URL, or a path for an app's static asset
+	 */
+	icon_data?: string;
+}
+
+/**
+ * @description A boolean selector represented as a checkbox.
+ */
+export interface AppFormBooleanField
+	extends AppFormField<boolean>,
+		Multiselectable {
+	type: AppFormFieldType.BOOLEAN;
+}
+
+/**
+ * @description A dropdown to select channels.
+ */
+export interface AppFormChannelsField
+	extends AppFormField<string>,
+		Multiselectable {
+	type: AppFormFieldType.CHANNEL;
+}
+
+/**
+ * @description A dropdown to select users.
+ */
+export interface AppFormUsersField
+	extends AppFormField<string>,
+		Multiselectable {
+	type: AppFormFieldType.USER;
+}
+
+/**
+ * @description An arbitrary markdown text; only visible in modal dialogs.
+ *
+ * Read-only.
+ */
+export interface AppFormMarkdownField
+	extends AppFormField<string>,
+		Multiselectable {
+	type: AppFormFieldType.MARKDOWN;
+}
+
+/**
+ * @description A dropdown select with static elements.
+ */
+export interface AppFormStaticSelectField
+	extends AppFormField<AppFormFieldOption>,
+		Multiselectable,
+		Refreshable {
+	type: AppFormFieldType.STATIC_SELECT;
+	/**
+	 * @description A list of options for static select fields.
+	 */
+	options?: AppFormFieldOption[];
+}
+
+/**
+ * @description A dropdown select that loads the elements dynamically.
+ */
+export interface AppFormDynamicSelectField
+	extends AppFormField<AppFormFieldOption>,
+		Multiselectable,
+		Refreshable {
+	type: AppFormFieldType.DYNAMIC_SELECT;
+	/**
+	 * @description A call that returns a list of options for dynamic select fields.
+	 */
+	lookup?: AppCall;
+}
+
+/**
+ * @description A plain text field.
+ */
+export interface AppFormTextField extends AppFormField<string> {
+	type: AppFormFieldType.TEXT;
+
+	/**
+	 * @description The subtype of text field that will be shown.
+	 */
 	subtype?: AppFormFieldSubType;
+
+	/**
+	 * @description The minimum length of text field input.
+	 */
 	min_length?: number;
+
+	/**
+	 * @description The maximum length of text field input.
+	 */
 	max_length?: number;
 }
