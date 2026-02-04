@@ -21,11 +21,11 @@ export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 	set_online?: boolean;
 }
 
-interface PostCreateWithUserIDArguments
+export interface PostCreateWithUserIDArguments
 	extends TokenOverridable,
 		UserID,
 		PostBaseArguments {}
-interface PostCreateWithChannelIDArguments
+export interface PostCreateWithChannelIDArguments
 	extends TokenOverridable,
 		ChannelID,
 		PostBaseArguments {}

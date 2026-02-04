@@ -360,7 +360,8 @@ interface PostAction<CONTEXT = Record<string, unknown>> {
  *
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionButton extends PostAction {
+export interface PostActionButton<CONTEXT = Record<string, unknown>>
+	extends PostAction<CONTEXT> {
 	type: PostActionType.BUTTON;
 
 	/**
@@ -384,7 +385,8 @@ export interface PostActionButton extends PostAction {
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionSelect extends PostAction {
+export interface PostActionSelect<CONTEXT = Record<string, unknown>>
+	extends PostAction<CONTEXT> {
 	type: PostActionType.SELECT;
 
 	/**

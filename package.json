@@ -1,6 +1,6 @@
 {
 	"name": "loop-client",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"main": "build/index.js",
 	"description": "\"Loop/Mattermost TypeScript client\"",
 	"engines": {
@@ -9,11 +9,11 @@
 	"scripts": {
 		"test": "jest",
 		"build": "rimraf ./build && tsc -p tsconfig.json",
-		"format": "biome format ./ --write",
+		"format": "biome format --write",
 		"gen:zod": "./scripts/gen-zod-schemas.sh",
 		"lint": "biome lint ./src",
 		"prepare": "husky",
-		"prepublishOnly": "rimraf build && tsc && husky && jest",
+		"prepublishOnly": "biome format --write && lint-staged --allow-empty && husky && jest && rimraf ./build && tsc -p tsconfig.json",
 		"test:real:base": "jest --testPathIgnorePatterns=null",
 		"test:real:only": "jest --testPathIgnorePatterns=null --testMatch=\"**/test/integration/real-api/*.test.ts\""
 	},
@@ -35,12 +35,10 @@
 		"@triple-sun/logger": "^0.0.1",
 		"again-ts": "^1.0.5",
 		"axios": "^1.13.3",
-		"breadline-ts": "^1.0.0",
+		"breadline-ts": "^1.1.0",
 		"eventemitter3": "^5.0.4",
 		"form-data": "^4.0.5",
-		"is-stream": "^4.0.1",
-		"qs": "^6.14.1",
-		"ws": "^8.19.0"
+		"is-stream": "^4.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.10",
@@ -48,8 +46,6 @@
 		"@types/jest": "^30.0.0",
 		"@types/nock": "^10.0.3",
 		"@types/node": "^25.0.10",
-		"@types/qs": "^6.14.0",
-		"@types/ws": "^8.5.11",
 		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
 		"jest": "^30.2.0",
