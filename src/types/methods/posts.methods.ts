@@ -1,4 +1,4 @@
-import type { Post } from "../posts";
+import type { Post, PostProps } from "../posts";
 import type {
 	ChannelID,
 	Paginated,
@@ -6,7 +6,7 @@ import type {
 	UserID
 } from "./common.methods";
 
-interface PostArguments {
+export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 	/** The message to be included in the post */
 	message: string;
 	/** The ID of the root post, if this is a reply */
@@ -14,7 +14,7 @@ interface PostArguments {
 	/** A list of file IDs to be attached to the post */
 	file_ids?: string[];
 	/** A general JSON property bag to attach to the post */
-	props?: Record<string, unknown>;
+	props?: PostProps<METADATA>;
 	/**
 	 * @description Whether to set the user status as online or not.
 	 */
@@ -24,11 +24,11 @@ interface PostArguments {
 interface PostCreateWithUserIDArguments
 	extends TokenOverridable,
 		UserID,
-		PostArguments {}
+		PostBaseArguments {}
 interface PostCreateWithChannelIDArguments
 	extends TokenOverridable,
 		ChannelID,
-		PostArguments {}
+		PostBaseArguments {}
 
 /**
  * Arguments for creating a new post.
