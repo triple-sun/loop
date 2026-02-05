@@ -35,7 +35,7 @@ export interface Post<PROP_METADATA = Record<string, unknown>> {
 	message: string;
 	type: PostType;
 	metadata: PostMetadata;
-	props?: PostProps<PROP_METADATA>;
+	props: PostProps<PROP_METADATA>;
 	file_ids?: string[];
 	hashtag?: string;
 
