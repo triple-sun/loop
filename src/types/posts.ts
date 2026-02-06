@@ -263,14 +263,12 @@ export interface PostAttachment {
 	 * @description Fields can be included as an optional array within attachments,
 	 * and are used to display information in a table format inside the attachment.
 	 */
-	fields?: PostAttachmentField[];
+	fields?: PostAttachmentField[] | null;
 
 	/**
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
-	actions?: Array<
-		PostActionButton | PostActionStaticSelect | PostActionSourcedSelect
-	>;
+	actions?: Array<PostAction>;
 
 	/**
 	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
@@ -297,6 +295,11 @@ export interface PostAttachment {
 	 * is displayed as a 16x16 pixel thumbnail before the footer text.
 	 */
 	footer_icon?: string;
+
+	/**
+	 * @todo check purpose?
+	 */
+	ts?: number | null;
 }
 
 export interface PostAttachmentField {
@@ -342,7 +345,8 @@ export enum PostActionType {
 
 export enum PostActionDataSource {
 	CHANNELS = "channels",
-	USERS = "users"
+	USERS = "users",
+	NULL = ""
 }
 
 export interface PostActionOption {
@@ -356,7 +360,7 @@ export interface PostActionOption {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-export interface PostAction<CONTEXT = Record<string, unknown>> {
+export interface PostAction {
 	/**
 	 * @description Action type - button or select
 	 */
@@ -387,7 +391,7 @@ export interface PostAction<CONTEXT = Record<string, unknown>> {
 		/**
 		 * @description The requests sent to the specified URL contain the user ID, post ID, channel ID, team ID, and any context that was provided in the action definition. If the post was of type Message Menus, then context also contains the selected_option field with the user-selected option value. The post ID can be used to, for example, delete or edit the post after selecting a message button.
 		 */
-		context?: CONTEXT;
+		context?: Record<string, unknown>;
 	};
 	options?: PostActionOption[];
 	data_source?: PostActionDataSource;
@@ -398,9 +402,10 @@ export interface PostAction<CONTEXT = Record<string, unknown>> {
  *
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionButton<CONTEXT = Record<string, unknown>>
-	extends PostAction<CONTEXT> {
+export interface PostActionButton extends Required<PostAction> {
 	readonly type: PostActionType.BUTTON;
+	readonly data_source: PostActionDataSource.NULL;
+	readonly options: never[];
 
 	/**
 	 * @description Button text
@@ -423,9 +428,9 @@ export interface PostActionButton<CONTEXT = Record<string, unknown>>
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionStaticSelect<CONTEXT = Record<string, unknown>>
-	extends PostAction<CONTEXT> {
+export interface PostActionStaticSelect extends Required<PostAction> {
 	readonly type: PostActionType.SELECT;
+	readonly data_source: PostActionDataSource.NULL;
 	options: PostActionOption[];
 }
 
@@ -434,9 +439,9 @@ export interface PostActionStaticSelect<CONTEXT = Record<string, unknown>>
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionSourcedSelect<CONTEXT = Record<string, unknown>>
-	extends PostAction<CONTEXT> {
+export interface PostActionSourcedSelect extends Required<PostAction> {
 	readonly type: PostActionType.SELECT;
+	readonly options: never[];
 	/**
 	 * @description Data source for options
 	 *
@@ -457,7 +462,9 @@ export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	context: CONTEXT;
 }
 
-export interface PostActionResponse<PROP_METADATA = Record<string, unknown>> {
+export interface PostActionResponsePayload<
+	PROP_METADATA = Record<string, unknown>
+> {
 	update?: Partial<Post<PROP_METADATA>>;
 	ephemeral_text?: string;
 }

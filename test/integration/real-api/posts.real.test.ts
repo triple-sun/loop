@@ -4,6 +4,7 @@
  */
 
 import { describe } from "@jest/globals";
+import { PostActionDataSource, PostActionType } from "../../../src/types/posts";
 import type { WebClient } from "../../../src/web-client";
 import { statusOkResponseSchema } from "./schemas/common.responses.zod";
 import { postListResponseSchema } from "./schemas/posts.responses.zod";
@@ -90,7 +91,27 @@ describe("Posts API - Real API Tests", () => {
 				async () => {
 					const response = await client.posts.create({
 						channel_id: foundChannelId,
-						message: `Test post (API Integration Test) - ${new Date().toISOString()}`
+						message: `Test post (API Integration Test) - ${new Date().toISOString()}`,
+						props: {
+							attachments: [
+								{
+									text: "testin'",
+									actions: [
+										{
+											type: PostActionType.SELECT,
+											options: [{ text: "test", value: "testing" }],
+											id: "one",
+											name: "test",
+											data_source: PostActionDataSource.CHANNELS,
+											integration: {
+												url: "",
+												context: {}
+											}
+										}
+									]
+								}
+							]
+						}
 					});
 					createdPostId = response.data.id;
 					return response;

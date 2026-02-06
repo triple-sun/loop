@@ -4,12 +4,38 @@
  * ===============================================
  */
 
-import type { Post } from "../posts";
+import type {
+	Post,
+	PostAction,
+	PostAttachment,
+	PostAttachmentField,
+	PostProps
+} from "../posts";
+
+export interface PostActionResponse extends PostAction {
+	integration: never;
+}
+
+export interface PostAttachmentResponse extends PostAttachment {
+	actions: PostActionResponse[];
+	fields: PostAttachmentField[] | null;
+}
+
+export interface PostPropsResponse<PROP_METADATA = Record<string, unknown>>
+	extends PostProps<PROP_METADATA> {
+	attachments?: PostAttachment[];
+}
+
+export interface PostResponse<PROP_METADATA = Record<string, unknown>>
+	extends Post<PROP_METADATA> {
+	props: PostProps<PROP_METADATA>;
+	ts: number | null;
+}
 
 export interface PostListResponse<PROP_METADATA = Record<string, unknown>> {
 	order: string[];
 	posts: {
-		[postId: string]: Post<PROP_METADATA>;
+		[postId: string]: PostResponse<PROP_METADATA>;
 	};
 	next_post_id: string;
 	prev_post_id: string;

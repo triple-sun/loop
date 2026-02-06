@@ -173,6 +173,7 @@ export interface PostsGetAroundLastUnreadArguments extends TokenOverridable {
 /**
  * Arguments for searching posts.
  * @description Search posts in the specified team.
+ * Must be authenticated and have the `view_team` permission.
  */
 export interface PostsSearchArguments extends TokenOverridable {
 	/** The ID of the team to search in */
@@ -194,6 +195,7 @@ export interface PostsSearchArguments extends TokenOverridable {
 /**
  * Arguments for performing a post action.
  * @description Perform a post action (e.g., clicking an interactive button).
+ * Must be authenticated and have the `read_channel` permission to the channel the post is in.
  */
 export interface PostsDoActionArguments extends TokenOverridable {
 	/** The ID of the post */
@@ -207,6 +209,7 @@ export interface PostsDoActionArguments extends TokenOverridable {
 /**
  * Arguments for setting a reminder on a post.
  * @description Set a reminder for the specified user on the specified post.
+ * Must have `read_channel` permission for the channel the post is in.
  */
 export interface PostsSetReminderArguments extends TokenOverridable {
 	/** The ID of the user */

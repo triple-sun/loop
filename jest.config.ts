@@ -21,6 +21,12 @@ const config: Config = {
 			lines: 90,
 			statements: 90
 		}
+	},
+	transform: {
+		"./test/integration/real-api/*": [
+			"ts-jest",
+			{ tsconfig: "./test/integration/real-api/tsconfig.real.json" }
+		]
 	}
 };
 

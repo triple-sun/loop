@@ -365,7 +365,6 @@ import type {
 	PluginStatus,
 	PluginsGetResponse
 } from "./types/plugins";
-import type { Post } from "./types/posts";
 import type { Preference } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
 import type { CommandExecuteResponse } from "./types/responses/commands.responses";
@@ -381,6 +380,7 @@ import type {
 } from "./types/responses/playbooks.responses";
 import type {
 	PostListResponse,
+	PostResponse,
 	PostSearchResponse
 } from "./types/responses/posts.responses";
 import type {
@@ -2356,7 +2356,12 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	 * ============================================================================
 	 */
 	public readonly posts = {
-		create: bindApiCall<PostsCreateArguments, Post>(this, {
+		get: bindApiCall<PostsGetArguments, PostResponse>(this, {
+			method: "GET",
+			path: "posts/:post_id",
+			type: ContentType.URLEncoded
+		}),
+		create: bindApiCall<PostsCreateArguments, PostResponse>(this, {
 			method: "POST",
 			path: "posts",
 			type: ContentType.JSON
@@ -2365,11 +2370,14 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 * @description Create an ephemeral post.
 		 * Creates a new ephemeral post that is visible only to the specified user.
 		 */
-		createEphemeral: bindApiCall<PostsCreateEphemeralArguments, Post>(this, {
-			method: "POST",
-			path: "posts/ephemeral",
-			type: ContentType.JSON
-		}),
+		createEphemeral: bindApiCall<PostsCreateEphemeralArguments, PostResponse>(
+			this,
+			{
+				method: "POST",
+				path: "posts/ephemeral",
+				type: ContentType.JSON
+			}
+		),
 		delete: bindApiCall<PostsDeleteArguments, StatusOKResponse>(this, {
 			method: "DELETE",
 			path: "posts/:post_id",
@@ -2379,16 +2387,13 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		/**
 		 * @description Perform a post action.
 		 * Perform an action on a post, such as clicking an interactive button.
+		 *
+		 * Must be authenticated and have the `read_channel` permission to the channel the post is in.
 		 */
 		doAction: bindApiCall<PostsDoActionArguments, StatusOKResponse>(this, {
 			method: "POST",
 			path: "posts/:post_id/actions/:action_id",
 			type: ContentType.JSON
-		}),
-		get: bindApiCall<PostsGetArguments, Post>(this, {
-			method: "GET",
-			path: "posts/:post_id",
-			type: ContentType.URLEncoded
 		}),
 
 		/**
@@ -2408,7 +2413,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 * @description Get posts by IDs.
 		 * Get a list of posts based on a provided list of post IDs.
 		 */
-		getByIds: bindApiCall<PostsGetByIdsArguments, Post[]>(this, {
+		getByIds: bindApiCall<PostsGetByIdsArguments, PostResponse[]>(this, {
 			method: "POST",
 			path: "posts/ids",
 			type: ContentType.JSON
@@ -2456,7 +2461,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 * @description Partially update a post.
 		 * Updates a post by providing only the fields that need to change.
 		 */
-		patch: bindApiCall<PostsPatchArguments, Post>(this, {
+		patch: bindApiCall<PostsPatchArguments, PostResponse>(this, {
 			method: "PUT",
 			path: "posts/:post_id/patch",
 			type: ContentType.JSON
@@ -2504,7 +2509,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "posts/:post_id/unpin",
 			type: ContentType.URLEncoded
 		}),
-		update: bindApiCall<PostsUpdateArguments, Post>(this, {
+		update: bindApiCall<PostsUpdateArguments, PostResponse>(this, {
 			method: "PUT",
 			path: "posts/:id",
 			type: ContentType.JSON
