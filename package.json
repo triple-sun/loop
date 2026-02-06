@@ -1,6 +1,6 @@
 {
 	"name": "loop-client",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"main": "build/index.js",
 	"description": "\"Loop/Mattermost TypeScript client\"",
 	"engines": {
@@ -10,6 +10,7 @@
 		"test": "jest",
 		"build": "rimraf ./build && tsc -p tsconfig.json",
 		"format": "biome format --write",
+		"check": "biome check --write",
 		"gen:zod": "./scripts/gen-zod-schemas.sh",
 		"lint": "biome lint ./src",
 		"prepare": "husky",

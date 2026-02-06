@@ -1,4 +1,40 @@
-pnpm exec biome format --write ./
+RED=$(tput setaf 1)      # Set foreground color to RED
+GREEN=$(tput setaf 2)    # Set foreground color to GREEN
+YELLOW=$(tput setaf 3)   # Set foreground color to YELLOW
+BOLD=$(tput bold)        # Enable bold text
+RESET=$(tput sgr0)       # Reset all attributes
+
+PREFIX=*-*-*-*-*-*-*-*-*-*-*-*-
+SUFFIX=
+
+
+# Check if pnpm is available and use it, otherwise fallback to npm
+if  command -v bun > /dev/null; then
+  PM="bun"
+elif command -v pnpm > /dev/null; then
+  PM="pnpm"
+elif command -v yarn > /dev/null; then
+  PM="bun"
+elif command -v npm > /dev/null; then
+  PM="npm"
+else
+  echo "${RED}${BOLD}${PREFIX}Error: pnpm/yarn/bun/npm not found. What are you doing?${SUFFIX}${RESET}"
+  exit 1
+fi
+
+echo "${BOLD}${YELLOW}${PREFIX}Using $PM as package manager${SUFFIX}${RESET}"
+
+echo "${BOLD}${GREEN}${PREFIX}Running biome check...${SUFFIX}${RESET}"
+$PM run check
+
+echo "${BOLD}${GREEN}${PREFIX}Running tsc check...${SUFFIX}${RESET}"
 tsc --noEmit
-pnpm exec lint-staged --allow-empty
-pnpm run test
+
+echo "${BOLD}${GREEN}${PREFIX}Running biome lint...${SUFFIX}${RESET}"
+$PM run lint
+
+echo "${BOLD}${GREEN}${PREFIX}Running lint-staged...${SUFFIX}${RESET}"
+$PM lint-staged --allow-empty
+
+echo "${BOLD}${GREEN}${PREFIX}Running tests...${SUFFIX}${RESET}"
+$PM run test

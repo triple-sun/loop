@@ -18,6 +18,7 @@ import type {
 	CloudProduct,
 	CloudSubscription
 } from "./cloud";
+import type { Command } from "./commands";
 import type { ComplianceReport } from "./compliance";
 import type {
 	AdminConfig,
@@ -36,16 +37,10 @@ import type {
 	GroupTeam,
 	MixedUnlinkedGroupRedux
 } from "./groups";
-import type {
-	Command,
-	IncomingWebhook,
-	OAuthApp,
-	OutgoingOAuthConnection,
-	OutgoingWebhook
-} from "./integrations";
 import type { Job, JobType } from "./jobs";
 import type { ServerLimits } from "./limits";
 import type { OpenGraphMetadata } from "./metadata";
+import type { OAuthApp, OutgoingOAuthConnection } from "./oauth";
 import type { PluginRedux, PluginStatusRedux } from "./plugins";
 import type { MessageHistory, Post, PostOrderBlock } from "./posts";
 import type { Reaction } from "./reactions";
@@ -59,6 +54,7 @@ import type {
 	UserSession,
 	UsersStats
 } from "./users";
+import type { IncomingWebhook, OutgoingWebhook } from "./webhooks";
 
 /**
  * =======================================

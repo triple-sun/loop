@@ -25,6 +25,7 @@ import type {
 	CloudProduct,
 	CloudSubscription
 } from "./types/cloud";
+import type { Command } from "./types/commands";
 import type { ClientConfig } from "./types/config";
 import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
@@ -40,12 +41,6 @@ import type {
 	GroupStats,
 	GroupSyncable
 } from "./types/groups";
-import type {
-	Command,
-	IncomingWebhook,
-	OAuthApp,
-	OutgoingWebhook
-} from "./types/integrations";
 import type { Job } from "./types/jobs";
 import type {
 	BotsAssignArguments,
@@ -125,6 +120,18 @@ import type {
 	CloudValidateBusinessEmailArguments
 } from "./types/methods/cloud.methods";
 import type {
+	CommandsCreateArguments,
+	CommandsDeleteArguments,
+	CommandsExecuteArguments,
+	CommandsGetArguments,
+	CommandsListArguments,
+	CommandsListAutocompleteArguments,
+	CommandsListAutocompleteDataArguments,
+	CommandsMoveArguments,
+	CommandsRegenerateTokenArguments,
+	CommandsUpdateArguments
+} from "./types/methods/commands.methods";
+import type {
 	ComplianceCreateReportArguments,
 	ComplianceDownloadReportArguments,
 	ComplianceGetReportsArguments
@@ -189,33 +196,6 @@ import type {
 	GroupsUpdateArguments
 } from "./types/methods/groups.methods";
 import type {
-	CommandsCreateArguments,
-	CommandsDeleteArguments,
-	CommandsExecuteArguments,
-	CommandsListArguments,
-	CommandsListAutocompleteArguments,
-	CommandsRegenerateTokenArguments,
-	CommandsUpdateArguments,
-	IncomingWebhooksCreateArguments,
-	IncomingWebhooksDeleteArguments,
-	IncomingWebhooksGetArguments,
-	IncomingWebhooksListArguments,
-	IncomingWebhooksUpdateArguments,
-	OAuthAppsCreateArguments,
-	OAuthAppsDeleteArguments,
-	OAuthAppsGetArguments,
-	OAuthAppsGetInfoArguments,
-	OAuthAppsListArguments,
-	OAuthAppsRegenerateSecretArguments,
-	OAuthAppsUpdateArguments,
-	OutgoingWebhooksCreateArguments,
-	OutgoingWebhooksDeleteArguments,
-	OutgoingWebhooksGetArguments,
-	OutgoingWebhooksListArguments,
-	OutgoingWebhooksRegenerateTokenArguments,
-	OutgoingWebhooksUpdateArguments
-} from "./types/methods/integrations.methods";
-import type {
 	InteractiveOpenDialogArguments,
 	InteractiveSubmitDialogArguments
 } from "./types/methods/interactive.methods";
@@ -226,6 +206,15 @@ import type {
 	JobsListArguments,
 	JobsListByTypeArguments
 } from "./types/methods/jobs.methods";
+import type {
+	OAuthAppsCreateArguments,
+	OAuthAppsDeleteArguments,
+	OAuthAppsGetArguments,
+	OAuthAppsGetInfoArguments,
+	OAuthAppsListArguments,
+	OAuthAppsRegenerateSecretArguments,
+	OAuthAppsUpdateArguments
+} from "./types/methods/oauth.methods";
 import type {
 	PlaybookRunsCreateArguments,
 	PlaybookRunsGetArguments,
@@ -358,6 +347,20 @@ import type {
 	UsersUpdateRolesArguments
 } from "./types/methods/users.methods";
 import type {
+	IncomingWebhooksCreateArguments,
+	IncomingWebhooksDeleteArguments,
+	IncomingWebhooksGetArguments,
+	IncomingWebhooksListArguments,
+	IncomingWebhooksUpdateArguments,
+	OutgoingWebhooksCreateArguments,
+	OutgoingWebhooksDeleteArguments,
+	OutgoingWebhooksGetArguments,
+	OutgoingWebhooksListArguments,
+	OutgoingWebhooksRegenerateTokenArguments,
+	OutgoingWebhooksUpdateArguments
+} from "./types/methods/webhooks.methods";
+import type { OAuthApp } from "./types/oauth";
+import type {
 	PluginManifest,
 	PluginStatus,
 	PluginsGetResponse
@@ -365,6 +368,7 @@ import type {
 import type { Post } from "./types/posts";
 import type { Preference } from "./types/preferences";
 import type { Reaction } from "./types/reactions";
+import type { CommandExecuteResponse } from "./types/responses/commands.responses";
 import type { StatusOKResponse } from "./types/responses/common.responses";
 import type {
 	PlaybookRunsCreateResponse,
@@ -397,6 +401,7 @@ import {
 	type WebApiCallConfig,
 	type WebClientEvent
 } from "./types/web-client";
+import type { IncomingWebhook, OutgoingWebhook } from "./types/webhooks";
 
 type MethodWithRequiredArgument<
 	METHOD_ARGS,
@@ -449,7 +454,7 @@ function bindApiCallWithOptionalArg<ARGS, RESULT>(
  * @example { user_id: 'user_id_123456 } with path `users/:user_id/promote` will result in `users/user_id_123456/promote`
  *
  * Loop API reference:
- * @see {@link https://developers.loop.ru/category/loop-api | Loop API}
+ * @see {@link https://developers.loop.ru/category/loop-api|Loop API}
  */
 export abstract class Methods extends EventEmitter<WebClientEvent> {
 	protected constructor() {
@@ -1421,33 +1426,107 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		 */
 		commands: {
 			/**
+			 * Get a command
+			 *
+			 * @description Get a command definition based on command id string.
+			 *
+			 * Must have `manage_slash_commands` permission for the team the command is in.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/get-command-by-id|Get command}
+			 */
+			get: bindApiCall<CommandsGetArguments, Command>(this, {
+				method: "DELETE",
+				path: "commands/:command_id",
+				type: ContentType.URLEncoded
+			}),
+
+			/**
 			 * @description Create a command for a team.
-			 * `manage_slash_commands` for the team the command is in.
+			 *
+			 * Must have `manage_slash_commands` permission for the team the command is in.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/create-command|Create command}
 			 */
 			create: bindApiCall<CommandsCreateArguments, Command>(this, {
 				method: "POST",
 				path: "commands",
 				type: ContentType.JSON
 			}),
+
 			/**
-			 * @description List autocomplete commands in the team.
-			 * @permisstion `view_team` for the team.
+			 * @description List commands for a team.
+			 *
+			 * Must have `manage_slash_commands` permisson if need to list custom commands.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/update-command|Update command}
+			 */
+			update: bindApiCall<CommandsUpdateArguments, Command>(this, {
+				method: "PUT",
+				path: "commands/:id",
+				type: ContentType.JSON
+			}),
+
+			/**
+			 * Delete a command
+			 *
+			 * @description Delete a command based on command id string.
+			 *
+			 * Must have `manage_slash_commands` permission for the team the command is in.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/delete-command|Delete command}
 			 */
 			delete: bindApiCall<CommandsDeleteArguments, StatusOKResponse>(this, {
 				method: "DELETE",
 				path: "commands/:command_id",
 				type: ContentType.URLEncoded
 			}),
-			execute: bindApiCall<CommandsExecuteArguments, StatusOKResponse>(this, {
-				method: "POST",
-				path: "commands/execute",
-				type: ContentType.JSON
+
+			/**
+			 * Move a command
+			 * @description Move a command to a different team based on command id string.
+			 *
+			 * Must have manage_slash_commands permission for the team the command is currently in and the destination team.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/move-command|Move command}
+			 */
+			move: bindApiCall<CommandsMoveArguments, StatusOKResponse>(this, {
+				method: "DELETE",
+				path: "commands/:command_id/move",
+				type: ContentType.URLEncoded
 			}),
+
+			/**
+			 * Execute a command
+			 *
+			 * @description Execute a command on a team.
+			 *
+			 * Must have `use_slash_commands` permission for the team the command is in.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/execute-command|Execute command}
+			 */
+			execute: bindApiCall<CommandsExecuteArguments, CommandExecuteResponse>(
+				this,
+				{
+					method: "POST",
+					path: "commands/execute",
+					type: ContentType.JSON
+				}
+			),
+
+			/**
+			 * List commands for a team
+			 *
+			 * @description List commands for a team.
+			 *
+			 * Must have `manage_slash_commands` permission if need to list custom commands.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/list-commands|List commands}
+			 */
 			list: bindApiCall<CommandsListArguments, Command[]>(this, {
 				method: "GET",
 				path: "commands",
 				type: ContentType.URLEncoded
 			}),
+
+			/**
+			 * List autocomplete commands in the team.
+			 *
+			 * Must have `view_team` permission for the team.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/list-autocomplete-commands|List autocomplete commands}
+			 */
 			listAutocomplete: bindApiCall<
 				CommandsListAutocompleteArguments,
 				Command[]
@@ -1456,21 +1535,39 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 				path: "teams/:team_id/commands/autocomplete",
 				type: ContentType.URLEncoded
 			}),
+
+			/**
+			 * List autocomplete commands
+			 *
+			 * @description List autocomplete commands in the team.
+			 *
+			 * Must have `view_team` permission for the team.
+			 * @version 5.24+
+			 * @see {@link https://developers.loop.ru/API/4.0.0/list-command-autocomplete-suggestions|List autocomplete command data}
+			 */
+			listAutocompleteData: bindApiCall<
+				CommandsListAutocompleteDataArguments,
+				Command[]
+			>(this, {
+				method: "GET",
+				path: "teams/:team_id/commands/autocomplete_suggestions",
+				type: ContentType.URLEncoded
+			}),
+
+			/**
+			 * Generate a new token
+			 *
+			 * @description Generate a new token for the command based on command id string.
+			 *
+			 * Must have `manage_slash_commands` permission for the team the command is in.
+			 * @see {@link https://developers.loop.ru/API/4.0.0/regen-command-token|Regenerate command token}
+			 */
 			regenerateToken: bindApiCall<
 				CommandsRegenerateTokenArguments,
 				{ token: string }
 			>(this, {
 				method: "PUT",
 				path: "commands/:command_id/regen_token",
-				type: ContentType.JSON
-			}),
-			/**
-			 * @description List commands for a team.
-			 * @permission `manage_slash_commands` if need to list custom commands.
-			 */
-			update: bindApiCall<CommandsUpdateArguments, Command>(this, {
-				method: "PUT",
-				path: "commands/:id",
 				type: ContentType.JSON
 			})
 		},
@@ -1483,7 +1580,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			/**
 			 * @description Open an interactive dialog using a trigger ID provided
 			 * by a slash command, or some other action payload.
-			 * @see {@link https://docs.loop.ru/developer/interactive-dialogs.html | Interactive Dialogs}
+			 * @see {@link https://docs.loop.ru/developer/interactive-dialogs.html|Interactive Dialogs}
 			 * for more information on interactive dialogs.
 			 * Minimum server @version 5.6
 			 */
@@ -1497,7 +1594,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			),
 			/**
 			 * @description Endpoint used by the LOOP clients to submit a dialog.
-			 * @see {@link https://docs.loop.ru/developer/interactive-dialogs.html | Interactive Dialogs}
+			 * @see {@link https://docs.loop.ru/developer/interactive-dialogs.html|Interactive Dialogs}
 			 * for more information on interactive dialogs.
 			 * Minimum server @version 5.6
 			 */

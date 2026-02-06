@@ -269,7 +269,7 @@ export interface PostAttachment {
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
 	actions?: Array<
-		PostActionButton | PostActionStaticSelect | PostActionDynamicSelect
+		PostActionButton | PostActionStaticSelect | PostActionSourcedSelect
 	>;
 
 	/**
@@ -356,7 +356,7 @@ export interface PostActionOption {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-interface PostActionBase<CONTEXT = Record<string, unknown>> {
+export interface PostAction<CONTEXT = Record<string, unknown>> {
 	/**
 	 * @description Action type - button or select
 	 */
@@ -389,6 +389,8 @@ interface PostActionBase<CONTEXT = Record<string, unknown>> {
 		 */
 		context?: CONTEXT;
 	};
+	options?: PostActionOption[];
+	data_source?: PostActionDataSource;
 }
 
 /**
@@ -397,7 +399,7 @@ interface PostActionBase<CONTEXT = Record<string, unknown>> {
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
 export interface PostActionButton<CONTEXT = Record<string, unknown>>
-	extends PostActionBase<CONTEXT> {
+	extends PostAction<CONTEXT> {
 	readonly type: PostActionType.BUTTON;
 
 	/**
@@ -422,7 +424,7 @@ export interface PostActionButton<CONTEXT = Record<string, unknown>>
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
 export interface PostActionStaticSelect<CONTEXT = Record<string, unknown>>
-	extends PostActionBase<CONTEXT> {
+	extends PostAction<CONTEXT> {
 	readonly type: PostActionType.SELECT;
 	options: PostActionOption[];
 }
@@ -432,8 +434,8 @@ export interface PostActionStaticSelect<CONTEXT = Record<string, unknown>>
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionDynamicSelect<CONTEXT = Record<string, unknown>>
-	extends PostActionBase<CONTEXT> {
+export interface PostActionSourcedSelect<CONTEXT = Record<string, unknown>>
+	extends PostAction<CONTEXT> {
 	readonly type: PostActionType.SELECT;
 	/**
 	 * @description Data source for options
@@ -446,11 +448,6 @@ export interface PostActionDynamicSelect<CONTEXT = Record<string, unknown>>
 	 */
 	data_source: PostActionDataSource;
 }
-
-export type PostAction =
-	| PostActionButton
-	| PostActionStaticSelect
-	| PostActionDynamicSelect;
 
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	post_id: string;
@@ -508,7 +505,7 @@ export interface MessageHistory {
  */
 
 /**
- * @todo Find where its used
+ * @todo Find where it is used
  */
 export interface PostActivityEntry {
 	postType: PostType;
@@ -518,7 +515,7 @@ export interface PostActivityEntry {
 }
 
 /**
- * @todo Find where its used
+ * @todo Find where it is used
  */
 export interface PostInfo {
 	channel_id: string;
