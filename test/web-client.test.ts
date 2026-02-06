@@ -123,13 +123,16 @@ describe("WebClient", () => {
 
 			await client.apiCall(
 				{ path: "test", method: "GET", type: ContentType.JSON },
-				{ token: "override" }
+				{ token: "override-token" }
 			);
 
+			// Verify the Authorization header was set with the overridden token
 			expect(axiosInstance).toHaveBeenCalledWith(
 				expect.stringContaining("test"),
 				expect.objectContaining({
-					// If the bug exists about passed headers, this checks correct internal behavior
+					headers: expect.objectContaining({
+						Authorization: "Bearer override-token"
+					})
 				})
 			);
 		});

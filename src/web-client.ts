@@ -87,6 +87,16 @@ export class WebClient extends Methods {
 	private static loggerName = "LoopWebClient";
 
 	/**
+	 * Static regex for matching path parameters like :user_id
+	 */
+	private static readonly PATH_PARAM_REGEX = /:\w+/g;
+
+	/**
+	 * Maximum HTTP status code considered successful
+	 */
+	private static readonly HTTP_SUCCESS_MAX = 300;
+
+	/**
 	 * This object's logger instance
 	 */
 	private logger: Logger;
@@ -253,6 +263,15 @@ export class WebClient extends Methods {
 	}
 
 	/**
+	 * Cleanup method to remove all event listeners and prevent memory leaks.
+	 * Call this method when you're done with the WebClient instance.
+	 */
+	public destroy(): void {
+		this.removeAllListeners();
+		this.logger.debug("WebClient destroyed, all listeners removed");
+	}
+
+	/**
 	 * Generic method for calling a Web API method
 	 * @param path - the Web API path to call
 	 * @param options - method options
@@ -280,7 +299,7 @@ export class WebClient extends Methods {
 
 		/** and handle TokenOverridable */
 		if (typeof options["token"] === "string") {
-			headers["Authorization"] = `Bearer ${options[""]}`;
+			headers["Authorization"] = `Bearer ${options["token"]}`;
 			options["token"] = undefined;
 
 			this.logger.debug(`token has been overridden`);
@@ -350,14 +369,21 @@ export class WebClient extends Methods {
 				}
 
 				/** handle error status code */
-				if (response.status > 300) {
+				if (response.status > WebClient.HTTP_SUCCESS_MAX) {
 					this.logger.debug(
 						`http error: ${JSON.stringify(response.data, null, 2)}`
 					);
 
 					const { data } = response;
 					if (isServerError(data)) {
-						if (response.status === 429) throw new WebAPIRateLimitedError(data);
+						if (response.status === 429) {
+							// Parse Retry-After header for rate limit backoff
+							const retryAfter = response.headers["retry-after"];
+							const retryAfterSeconds = retryAfter
+								? Number.parseInt(retryAfter, 10)
+								: undefined;
+							throw new WebAPIRateLimitedError(data, retryAfterSeconds);
+						}
 
 						throw new WebAPIServerError(data);
 					}
@@ -393,14 +419,7 @@ export class WebClient extends Methods {
 		 * @todo check if it's actually needed
 		 */
 		if (typeof result.value.data === "string") {
-			try {
-				result.value.data = JSON.parse(result.value.data);
-			} catch (err) {
-				// failed to parse the string value as JSON data
-				throw err instanceof Error
-					? err
-					: new TypeError(`non-error type thrown: ${err}`);
-			}
+			result.value.data = JSON.parse(result.value.data);
 		}
 
 		return Object.freeze({ ctx, data: result.value.data });
@@ -410,13 +429,19 @@ export class WebClient extends Methods {
 		config: WebApiCallConfig,
 		options: Record<string, unknown>
 	): string {
-		let requestUrl = `${config.path}`;
+		let requestUrl = config.path;
 
-		/** fills :something with { something: "something" } from options */
-		if (requestUrl.match(new RegExp(/\/:\D*/))) {
-			for (const [k, v] of Object.entries(options)) {
-				this.logger.debug(`Replacing :${k} with ${v} in ${requestUrl}`);
-				requestUrl = requestUrl.replace(new RegExp(`:${k}`, "g"), String(v));
+		// Only process if there are path parameters
+		const pathParams = requestUrl.match(WebClient.PATH_PARAM_REGEX);
+		if (pathParams) {
+			for (const param of pathParams) {
+				const key = param.slice(1); // Remove ':'
+				if (key in options) {
+					this.logger.debug(
+						`Replacing ${param} with ${options[key]} in ${requestUrl}`
+					);
+					requestUrl = requestUrl.replace(param, String(options[key]));
+				}
 			}
 		}
 
@@ -568,9 +593,7 @@ export class WebClient extends Methods {
 			const roles = data.roles;
 
 			if (!Array.isArray(roles)) {
-				throw new WebClientOptionsError(
-					`Expected data.channel_ids to be an array`
-				);
+				throw new WebClientOptionsError(`Expected data.roles to be an array`);
 			}
 
 			config.data = roles;

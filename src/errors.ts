@@ -72,10 +72,15 @@ export class WebAPIServerError extends WebClientCodedError {
 export class WebAPIRateLimitedError extends WebAPIServerError {
 	override name = WebAPIRateLimitedError.name;
 	override code = ErrorCode.RateLimitedError;
+	/**
+	 * Number of seconds to wait before retrying (from Retry-After header)
+	 */
+	retryAfter?: number;
 
-	constructor(error: ServerError) {
+	constructor(error: ServerError, retryAfter?: number) {
 		super(error);
 		this.message = `Rate limited: ${error.message}`;
+		this.retryAfter = retryAfter;
 	}
 }
 

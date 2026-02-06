@@ -267,11 +267,11 @@ export enum AppFormFieldSubType {
  *
  * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
  */
-interface AppFormField<T> {
+export interface AppFormField<T extends AppFormFieldType, V> {
 	/**
 	 *  @description The type of the field.
 	 */
-	type: AppFormFieldType;
+	readonly type: T;
 
 	/**
 	 * @description Key to use in the values field of the call.
@@ -304,7 +304,7 @@ interface AppFormField<T> {
 	/**
 	 * @description The field's default value.
 	 */
-	value?: T;
+	value?: V;
 
 	/**
 	 * @description Whether the field has a mandatory value.
@@ -369,28 +369,22 @@ export interface AppFormFieldOption {
  * @description A boolean selector represented as a checkbox.
  */
 export interface AppFormBooleanField
-	extends AppFormField<boolean>,
-		Multiselectable {
-	type: AppFormFieldType.BOOLEAN;
-}
+	extends AppFormField<AppFormFieldType.BOOLEAN, boolean>,
+		Multiselectable {}
 
 /**
  * @description A dropdown to select channels.
  */
 export interface AppFormChannelsField
-	extends AppFormField<string>,
-		Multiselectable {
-	type: AppFormFieldType.CHANNEL;
-}
+	extends AppFormField<AppFormFieldType.CHANNEL, string>,
+		Multiselectable {}
 
 /**
  * @description A dropdown to select users.
  */
 export interface AppFormUsersField
-	extends AppFormField<string>,
-		Multiselectable {
-	type: AppFormFieldType.USER;
-}
+	extends AppFormField<AppFormFieldType.USER, string>,
+		Multiselectable {}
 
 /**
  * @description An arbitrary markdown text; only visible in modal dialogs.
@@ -398,49 +392,44 @@ export interface AppFormUsersField
  * Read-only.
  */
 export interface AppFormMarkdownField
-	extends AppFormField<string>,
-		Multiselectable {
-	type: AppFormFieldType.MARKDOWN;
-}
+	extends AppFormField<AppFormFieldType.MARKDOWN, string>,
+		Multiselectable {}
 
 /**
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends AppFormField<AppFormFieldOption>,
+	extends AppFormField<AppFormFieldType.STATIC_SELECT, AppFormFieldOption>,
 		Multiselectable,
 		Refreshable {
-	type: AppFormFieldType.STATIC_SELECT;
 	/**
 	 * @description A list of options for static select fields.
 	 */
-	options?: AppFormFieldOption[];
+	options: AppFormFieldOption[];
 }
 
 /**
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends AppFormField<AppFormFieldOption>,
+	extends AppFormField<AppFormFieldType.DYNAMIC_SELECT, AppFormFieldOption>,
 		Multiselectable,
 		Refreshable {
-	type: AppFormFieldType.DYNAMIC_SELECT;
 	/**
 	 * @description A call that returns a list of options for dynamic select fields.
 	 */
-	lookup?: AppCall;
+	lookup: AppCall;
 }
 
 /**
  * @description A plain text field.
  */
-export interface AppFormTextField extends AppFormField<string> {
-	type: AppFormFieldType.TEXT;
-
+export interface AppFormTextField
+	extends AppFormField<AppFormFieldType.TEXT, string> {
 	/**
 	 * @description The subtype of text field that will be shown.
 	 */
-	subtype?: AppFormFieldSubType;
+	readonly subtype: AppFormFieldSubType;
 
 	/**
 	 * @description The minimum length of text field input.

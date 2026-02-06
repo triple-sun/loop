@@ -360,11 +360,11 @@ export interface PostActionOption {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-export interface PostAction {
+export interface PostAction<T extends PostActionType = PostActionType> {
 	/**
 	 * @description Action type - button or select
 	 */
-	type: PostActionType;
+	type: T;
 
 	/**
 	 * @description A per post unique identifier.
@@ -402,8 +402,8 @@ export interface PostAction {
  *
  * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionButton extends Required<PostAction> {
-	readonly type: PostActionType.BUTTON;
+export interface PostActionButton
+	extends Required<PostAction<PostActionType.BUTTON>> {
 	readonly data_source: PostActionDataSource.NULL;
 	readonly options: never[];
 
@@ -428,8 +428,8 @@ export interface PostActionButton extends Required<PostAction> {
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionStaticSelect extends Required<PostAction> {
-	readonly type: PostActionType.SELECT;
+export interface PostActionStaticSelect
+	extends Required<PostAction<PostActionType.SELECT>> {
 	readonly data_source: PostActionDataSource.NULL;
 	options: PostActionOption[];
 }
@@ -439,8 +439,8 @@ export interface PostActionStaticSelect extends Required<PostAction> {
  *
  * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
  */
-export interface PostActionSourcedSelect extends Required<PostAction> {
-	readonly type: PostActionType.SELECT;
+export interface PostActionSourcedSelect
+	extends Required<PostAction<PostActionType.SELECT>> {
 	readonly options: never[];
 	/**
 	 * @description Data source for options

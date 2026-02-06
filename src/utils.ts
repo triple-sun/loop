@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/complexity/useLiteralKeys: <ts4111> */
+
 import { basename } from "node:path";
 import type { Logger } from "@triple-sun/logger";
 import type { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
@@ -12,7 +13,7 @@ import {
 	UserThreadType
 } from "./types";
 
-export const wait = (ms: number) => {
+export const wait = (ms: number): Promise<void> => {
 	return new Promise(resolve => setTimeout(resolve, ms));
 };
 
@@ -76,6 +77,13 @@ export const getFormDataConfig = (
 };
 
 /**
+ * Regex pattern to match sensitive keys that should be redacted
+ * Matches: token, authorization, password, secret, apikey, bearer (case-insensitive)
+ */
+const SENSITIVE_KEYS_REGEX =
+	/token|authorization|password|secret|apikey|bearer/i;
+
+/**
  * Takes an object and redacts specific items
  * @param data
  * @returns
@@ -91,8 +99,8 @@ export const redact = (data: unknown): string => {
 
 			let serializedValue = value;
 
-			// redact possible tokens
-			if (key.match(/.*token.*/) !== null || key.match(/[Aa]uthorization/)) {
+			// Redact sensitive keys using pre-compiled case-insensitive regex
+			if (SENSITIVE_KEYS_REGEX.test(key)) {
 				serializedValue = "[[REDACTED]]";
 			}
 
