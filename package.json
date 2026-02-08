@@ -1,6 +1,6 @@
 {
 	"name": "loop-client",
-	"version": "0.0.12",
+	"version": "0.0.14",
 	"main": "build/index.js",
 	"description": "\"Loop/Mattermost TypeScript client\"",
 	"engines": {

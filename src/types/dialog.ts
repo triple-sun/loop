@@ -124,7 +124,7 @@ export enum DialogSelectDataSource {
  * ===============================================
  */
 
-interface DialogElement {
+interface DialogElementBase {
 	/**
 	 * @description Display name of the field shown to the user in the dialog.
 	 *
@@ -199,7 +199,7 @@ interface TextSubtype {
  * @description Text elements are single-line plain text fields. Below is an example of a text element that asks for an email address.
  */
 export interface DialogTextElement
-	extends DialogElement,
+	extends DialogElementBase,
 		Placeholder,
 		Length,
 		TextSubtype {
@@ -208,7 +208,7 @@ export interface DialogTextElement
 
 /** Текстовое поле - многострочное */
 export interface DialogTextAreaElement
-	extends DialogElement,
+	extends DialogElementBase,
 		Placeholder,
 		Length,
 		TextSubtype {
@@ -216,7 +216,7 @@ export interface DialogTextAreaElement
 }
 
 /** Выпадающий список */
-export interface DialogSelectElement extends DialogElement, Placeholder {
+export interface DialogSelectElement extends DialogElementBase, Placeholder {
 	type: DialogElementType.SELECT;
 	/** One of 'users', or 'channels'. If none specified, assumes a manual list of options is provided by the integration. */
 	data_source?: DialogSelectDataSource;
@@ -225,16 +225,23 @@ export interface DialogSelectElement extends DialogElement, Placeholder {
 }
 
 /** Чекбоксы */
-export interface DialogCheckboxElement extends DialogElement, Placeholder {
+export interface DialogCheckboxElement extends DialogElementBase, Placeholder {
 	type: DialogElementType.CHECKBOX;
 }
 
 /** Радиокнопки */
-export interface DialogRadioElement extends DialogElement {
+export interface DialogRadioElement extends DialogElementBase {
 	type: DialogElementType.RADIO;
 	/** An array of options for the element. */
 	options?: Option[];
 }
+
+export type DialogElement =
+	| DialogCheckboxElement
+	| DialogTextElement
+	| DialogRadioElement
+	| DialogSelectElement
+	| DialogTextAreaElement;
 
 /**
  * ===============================================

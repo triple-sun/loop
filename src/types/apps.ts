@@ -89,24 +89,24 @@ export interface AppExpand {
  * =======================================
  */
 
-export interface AppCallValues {
-	[name: string]: unknown;
-}
-
 export interface AppCallMetadataForClient {
 	bot_user_id: string;
 	bot_username: string;
 }
 
-export interface AppCall {
+export interface AppCall<
+	STATE extends Record<string, unknown> = Record<string, unknown>
+> {
 	path: string;
 	expand?: AppExpand;
-	state?: unknown;
+	state?: STATE;
 }
 
-export interface AppCallRequest extends AppCall {
+export interface AppCallRequest<
+	VALUES extends Record<string, unknown> = Record<string, unknown>
+> extends AppCall {
 	context: AppContext;
-	values?: AppCallValues;
+	values?: VALUES;
 	raw_command?: string;
 	selected_field?: string;
 	query?: string;
@@ -143,7 +143,9 @@ export interface BindingsInfo {
 	forms: AppCommandFormMap;
 }
 
-export interface AppBinding {
+export interface AppBinding<
+	SUBMIT_STATE extends Record<string, unknown> = Record<string, unknown>
+> {
 	app_id: string;
 	location?: AppLocation;
 	supported_product_ids?: ProductScope;
@@ -174,7 +176,7 @@ export interface AppBinding {
 	// "container" for other locations - i.e. menu sub-items or subcommands.
 	bindings?: AppBinding[];
 	form?: AppForm;
-	submit?: AppCall;
+	submit?: AppCall<SUBMIT_STATE>;
 }
 
 /**
@@ -197,7 +199,10 @@ export interface AppFormResponseData {
 	};
 }
 
-export interface AppForm {
+export interface AppForm<
+	SOURCE_STATE extends Record<string, unknown> = Record<string, unknown>,
+	SUBMIT_STATE extends Record<string, unknown> = Record<string, unknown>
+> {
 	title?: string;
 	header?: string;
 	footer?: string;
@@ -205,26 +210,18 @@ export interface AppForm {
 	submit_buttons?: string;
 	cancel_button?: boolean;
 	submit_on_cancel?: boolean;
-	fields?: Array<
-		| AppFormBooleanField
-		| AppFormChannelsField
-		| AppFormDynamicSelectField
-		| AppFormMarkdownField
-		| AppFormStaticSelectField
-		| AppFormTextField
-		| AppFormUsersField
-	>;
+	fields?: Array<AppFormField>;
 
 	// source is used in 2 cases:
 	//   - if submit is not set, it is used to fetch the submittable form from
 	//     the app.
 	//   - if a select field change triggers a refresh, the form is refreshed
 	//     from source.
-	source?: AppCall;
+	source?: AppCall<SOURCE_STATE>;
 
 	// submit is called when one of the submit buttons is pressed, or the
 	// command is executed.
-	submit?: AppCall;
+	submit?: AppCall<SUBMIT_STATE>;
 
 	depends_on?: string[];
 }
@@ -262,7 +259,7 @@ export enum AppFormFieldSubType {
  *
  * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
  */
-export interface AppFormField<T extends AppFormFieldType, V> {
+interface FormFieldBase<T extends AppFormFieldType, V> {
 	/**
 	 *  @description The type of the field.
 	 */
@@ -342,21 +339,20 @@ interface Refreshable {
  * @description A boolean selector represented as a checkbox.
  */
 export interface AppFormBooleanField
-	extends AppFormField<AppFormFieldType.BOOLEAN, boolean>,
-		Multiselectable {}
+	extends FormFieldBase<AppFormFieldType.BOOLEAN, boolean> {}
 
 /**
  * @description A dropdown to select channels.
  */
 export interface AppFormChannelsField
-	extends AppFormField<AppFormFieldType.CHANNEL, string>,
+	extends FormFieldBase<AppFormFieldType.CHANNEL, string>,
 		Multiselectable {}
 
 /**
  * @description A dropdown to select users.
  */
 export interface AppFormUsersField
-	extends AppFormField<AppFormFieldType.USER, string>,
+	extends FormFieldBase<AppFormFieldType.USER, string>,
 		Multiselectable {}
 
 /**
@@ -365,14 +361,13 @@ export interface AppFormUsersField
  * Read-only.
  */
 export interface AppFormMarkdownField
-	extends AppFormField<AppFormFieldType.MARKDOWN, string>,
-		Multiselectable {}
+	extends FormFieldBase<AppFormFieldType.MARKDOWN, string> {}
 
 /**
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends AppFormField<AppFormFieldType.STATIC_SELECT, Option>,
+	extends FormFieldBase<AppFormFieldType.STATIC_SELECT, Option>,
 		Multiselectable,
 		Refreshable {
 	/**
@@ -385,7 +380,7 @@ export interface AppFormStaticSelectField
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends AppFormField<AppFormFieldType.DYNAMIC_SELECT, Option>,
+	extends FormFieldBase<AppFormFieldType.DYNAMIC_SELECT, Option>,
 		Multiselectable,
 		Refreshable {
 	/**
@@ -398,7 +393,7 @@ export interface AppFormDynamicSelectField
  * @description A plain text field.
  */
 export interface AppFormTextField
-	extends AppFormField<AppFormFieldType.TEXT, string> {
+	extends FormFieldBase<AppFormFieldType.TEXT, string> {
 	/**
 	 * @description The subtype of text field that will be shown.
 	 */
@@ -414,3 +409,12 @@ export interface AppFormTextField
 	 */
 	max_length?: number;
 }
+
+export type AppFormField =
+	| AppFormBooleanField
+	| AppFormChannelsField
+	| AppFormDynamicSelectField
+	| AppFormMarkdownField
+	| AppFormStaticSelectField
+	| AppFormUsersField
+	| AppFormTextField;

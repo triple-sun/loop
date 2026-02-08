@@ -389,8 +389,6 @@ export interface PostActionBase<T extends PostActionType = PostActionType> {
 		 */
 		context?: Record<string, unknown>;
 	};
-	data_source?: PostActionDataSource;
-	options?: Option[];
 }
 
 /**
