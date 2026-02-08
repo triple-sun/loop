@@ -1,5 +1,4 @@
-import type { Option } from "./option";
-import type { ProductScope } from "./products";
+import type { Option } from "./general";
 
 /**
  * ===============================================
@@ -135,6 +134,14 @@ export enum AppLocation {
 	IN_POST = "in_post",
 	EMBEDDED = "embedded"
 }
+/**
+ * - `null` - explicitly Channels
+ * - `string` - uuid - any other product
+ */
+export type ProductIdentifier = null | string;
+
+/** @see {@link ProductIdentifier} */
+export type ProductScope = ProductIdentifier | ProductIdentifier[];
 
 export interface AppCommandFormMap extends Record<AppLocation, AppForm> {}
 

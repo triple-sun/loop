@@ -1,4 +1,4 @@
-import type { ComplianceReport } from "../compliance";
+import type { ComplianceReport } from "../general";
 
 /**
  * Arguments for creating a compliance report.

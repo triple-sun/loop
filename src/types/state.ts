@@ -1,6 +1,5 @@
 import type { AnalyticsRow, ClusterInfo, LogObject } from "./admin";
 import type { AppCallRequest, AppForm, BindingsInfo } from "./apps";
-import type { Audit } from "./audits";
 import type {
 	Channel,
 	ChannelBookmark,
@@ -19,17 +18,25 @@ import type {
 	CloudSubscription
 } from "./cloud";
 import type { Command } from "./commands";
-import type { ComplianceReport } from "./compliance";
 import type {
 	AdminConfig,
 	ClientConfig,
 	ClientLicense,
 	EnvironmentConfig
 } from "./config";
-import type { DataRetentionCustomPolicies } from "./data-retention";
 import type { Dialog } from "./dialog";
 import type { CustomEmoji } from "./emojis";
 import type { FileInfo, FileSearchResultItem } from "./files";
+import type {
+	Audit,
+	ComplianceReport,
+	DataRetentionCustomPolicies,
+	Reaction,
+	SamlCertificateStatus,
+	SamlMetadataResponse,
+	Scheme,
+	ServerLimits
+} from "./general";
 import type {
 	Group,
 	GroupChannel,
@@ -38,14 +45,10 @@ import type {
 	MixedUnlinkedGroupRedux
 } from "./groups";
 import type { Job, JobType } from "./jobs";
-import type { ServerLimits } from "./limits";
 import type { OpenGraphMetadata } from "./metadata";
 import type { OAuthApp, OutgoingOAuthConnection } from "./oauth";
 import type { PluginRedux, PluginStatusRedux } from "./plugins";
 import type { MessageHistory, Post, PostOrderBlock } from "./posts";
-import type { Reaction } from "./reactions";
-import type { SamlCertificateStatus, SamlMetadataResponse } from "./saml";
-import type { Scheme } from "./schemes";
 import type { Team, TeamMembership, TeamStats } from "./teams";
 import type { UserThread } from "./threads";
 import type {

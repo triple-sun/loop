@@ -36,7 +36,7 @@ export interface BoardCardProperty {
 	options: BoardCardPropertyOption[];
 }
 
-export declare type Board = {
+export interface Board {
 	id: string;
 	teamId: string;
 	channelId?: string;
@@ -57,7 +57,7 @@ export declare type Board = {
 	createAt: number;
 	updateAt: number;
 	deleteAt: number;
-};
+}
 
 export interface CreateBoardResponse {
 	boards: Board[];

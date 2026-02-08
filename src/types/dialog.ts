@@ -1,14 +1,6 @@
-/**
- * ===============================================
- * @description Dialog  main object
- * ===============================================
- */
-
-import type { Option } from "./option";
+import type { Option } from "./general";
 
 /**
- * Интерфейс диалога (используется в слеш-командах и при нажатии кнопок интерактивного сообщения)
- *
  * Integrations open dialogs by sending an HTTP POST, containing some data in the request body, to an endpoint on the Mattermost server.
  * Integrations can use this endpoint to open dialogs when users click message buttons or select an option from a menu, or use a custom slash command.
  *
@@ -43,13 +35,7 @@ export interface Dialog {
 	 * Each element is required by default, otherwise the client will return an error as shown below.
 	 * Note that the error message will appear below the help text, if one is specified. To make an element optional, set the field "optional": "true"
 	 */
-	elements?: Array<
-		| DialogTextElement
-		| DialogTextAreaElement
-		| DialogSelectElement
-		| DialogCheckboxElement
-		| DialogRadioElement
-	>;
+	elements?: Array<DialogElement>;
 
 	/**
 	 * @description The URL of the icon used for your dialog.

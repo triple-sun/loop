@@ -1,77 +1,78 @@
-import type { BotPatch } from "../bots";
-import type { TokenOverridable, UserID } from "./common.methods";
+import type { Paginated, TokenOverridable, UserID } from "./common.methods";
 
+export interface BotUserID {
+	bot_user_id: string;
+}
 /**
  * Arguments for creating a bot.
  */
-export interface BotsCreateArguments extends BotPatch {}
+export interface BotsCreateArguments extends TokenOverridable {
+	username: string;
+	display_name?: string;
+	description?: string;
+}
 
 /**
  * Arguments for cleaning/updating a bot.
  */
-export interface BotsPatchArguments extends UserID, Partial<BotPatch> {}
+export interface BotsPatchArguments
+	extends TokenOverridable,
+		Partial<BotsCreateArguments>,
+		BotUserID {}
 
 /**
  * Arguments for getting a bot.
  */
-export interface BotsGetArguments extends UserID {}
+export interface BotsGetArguments extends TokenOverridable, UserID {}
 
 /**
  * Arguments for listing bots.
  */
-export interface BotsListArguments extends TokenOverridable {
-	page?: number;
-	per_page?: number;
+export interface BotsListArguments extends TokenOverridable, Paginated {
 	include_deleted?: boolean;
 }
 
 /**
  * Arguments for converting a user into a bot.
  */
-export interface BotsConvertUserArguments extends UserID {}
+export interface BotsConvertUserArguments extends TokenOverridable, UserID {}
 
 /**
  * Arguments for converting a bot into a user.
  */
-export interface BotsConvertBotToUserArguments {
-	bot_user_id: string;
+export interface BotsConvertBotToUserArguments
+	extends TokenOverridable,
+		BotUserID {
 	user_data?: Record<string, unknown>;
 }
 
 /**
  * Arguments for disabling a bot.
  */
-export interface BotsDisableArguments {
-	bot_user_id: string;
-}
+export interface BotsDisableArguments extends TokenOverridable, BotUserID {}
 
 /**
  * Arguments for enabling a bot.
  */
-export interface BotsEnableArguments {
-	bot_user_id: string;
-}
+export interface BotsEnableArguments extends TokenOverridable, BotUserID {}
 
 /**
  * Arguments for assigning a bot to a user.
  */
-export interface BotsAssignArguments {
-	bot_user_id: string;
-	user_id: string;
-}
+export interface BotsAssignArguments
+	extends TokenOverridable,
+		BotUserID,
+		UserID {}
 
 /**
  * Arguments for getting a bot's icon.
  */
-export interface BotsGetIconArguments {
-	bot_user_id: string;
-}
+export interface BotsGetIconArguments extends TokenOverridable, BotUserID {}
 
 /**
  * Arguments for setting a bot's icon.
  */
-export interface BotsSetIconArguments {
-	bot_user_id: string;
+export interface BotsSetIconArguments extends TokenOverridable, BotUserID {
 	/** The image data */
 	image: File | Blob;
 }
@@ -79,6 +80,4 @@ export interface BotsSetIconArguments {
 /**
  * Arguments for deleting a bot's icon.
  */
-export interface BotsDeleteIconArguments {
-	bot_user_id: string;
-}
+export interface BotsDeleteIconArguments extends TokenOverridable, BotUserID {}

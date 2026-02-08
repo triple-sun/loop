@@ -27,7 +27,7 @@ export enum RolePermission {
 	DELETE_PRIVATE_CHANNEL = "delete_private_channel"
 }
 
-export type Role = {
+export interface Role {
 	id: string;
 	name: string;
 	display_name: string;
@@ -38,4 +38,4 @@ export type Role = {
 	permissions: (RolePermission | string)[];
 	scheme_managed: boolean;
 	built_in: boolean;
-};
+}

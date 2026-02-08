@@ -3,11 +3,7 @@ import { expect, jest } from "@jest/globals";
 import type { Logger } from "@triple-sun/logger";
 import { AxiosHeaders } from "axios";
 import FormData from "form-data";
-import {
-	type UserThread,
-	type UserThreadSynthetic,
-	UserThreadType
-} from "../src/types";
+import type { UserThread, UserThreadSynthetic } from "../src/types";
 import {
 	areShippingDetailsValid,
 	checkForBinaryData,
@@ -240,7 +236,7 @@ describe("utils", () => {
 	describe("threadIsSynthetic", () => {
 		it("should return true for synthetic thread", () => {
 			const thread: UserThreadSynthetic = {
-				type: UserThreadType.Synthetic,
+				type: "S",
 				id: "thread-id"
 			} as UserThreadSynthetic;
 			expect(threadIsSynthetic(thread)).toBe(true);
@@ -248,7 +244,7 @@ describe("utils", () => {
 
 		it("should return false for non-synthetic thread", () => {
 			const thread: UserThread = {
-				type: "" as UserThreadType,
+				type: "",
 				id: "thread-id"
 			} as UserThread;
 			expect(threadIsSynthetic(thread)).toBe(false);

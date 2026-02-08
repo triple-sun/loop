@@ -11,7 +11,7 @@ export enum ServiceEnvironment {
 	DEV = "dev"
 }
 
-export type ClientConfig = {
+export interface ClientConfig {
 	AboutLink: string;
 	AllowBannerDismissal: string;
 	AllowCustomThemes: string;
@@ -221,9 +221,9 @@ export type ClientConfig = {
 	ServiceEnvironment: string;
 	UniqueEmojiReactionLimitPerPost: string;
 	UsersStatusAndProfileFetchingPollIntervalMilliseconds: string;
-};
+}
 
-export type License = {
+export interface License {
 	id: string;
 	issued_at: number;
 	starts_at: number;
@@ -232,16 +232,16 @@ export type License = {
 	features: LicenseFeatures;
 	sku_name: string;
 	short_sku_name: string;
-};
+}
 
-export type LicenseCustomer = {
+export interface LicenseCustomer {
 	id: string;
 	name: string;
 	email: string;
 	company: string;
-};
+}
 
-export type LicenseFeatures = {
+export interface LicenseFeatures {
 	users?: number;
 	ldap?: boolean;
 	ldap_groups?: boolean;
@@ -267,11 +267,11 @@ export type LicenseFeatures = {
 	lock_teammate_name_display?: boolean;
 	cloud?: boolean;
 	future_features?: boolean;
-};
+}
 
-export type ClientLicense = Record<string, string>;
+export interface ClientLicense extends Record<string, string> {}
 
-export type RequestLicenseBody = {
+export interface RequestLicenseBody {
 	users: number;
 	terms_accepted: boolean;
 	receive_emails_accepted: boolean;
@@ -280,18 +280,18 @@ export type RequestLicenseBody = {
 	company_name: string;
 	company_size: string;
 	company_country: string;
-};
+}
 
-export type DataRetentionPolicy = {
+export interface DataRetentionPolicy {
 	message_deletion_enabled: boolean;
 	file_deletion_enabled: boolean;
 	message_retention_cutoff: number;
 	file_retention_cutoff: number;
 	boards_retention_cutoff: number;
 	boards_deletion_enabled: boolean;
-};
+}
 
-export type ServiceSettings = {
+export interface ServiceSettings {
 	SiteURL: string;
 	WebsocketURL: string;
 	LicenseFileLocation: string;
@@ -405,9 +405,9 @@ export type ServiceSettings = {
 	UniqueEmojiReactionLimitPerPost: number;
 	RefreshPostStatsRunTime: string;
 	MaximumPayloadSizeBytes: number;
-};
+}
 
-export type TeamSettings = {
+export interface TeamSettings {
 	SiteName: string;
 	MaxUsersPerTeam: number;
 	EnableCustomUserStatuses: boolean;
@@ -431,16 +431,16 @@ export type TeamSettings = {
 	ExperimentalDefaultChannels: string[];
 	EnableLastActiveTime: boolean;
 	EnableJoinLeaveMessageByDefault: boolean;
-};
+}
 
-export type ClientRequirements = {
+export interface ClientRequirements {
 	AndroidLatestVersion: string;
 	AndroidMinVersion: string;
 	IosLatestVersion: string;
 	IosMinVersion: string;
-};
+}
 
-export type SqlSettings = {
+export interface SqlSettings {
 	DriverName: string;
 	DataSource: string;
 	DataSourceReplicas: string[];
@@ -456,9 +456,9 @@ export type SqlSettings = {
 	MigrationsStatementTimeoutSeconds: number;
 	ReplicaLagSettings: ReplicaLagSetting[];
 	ReplicaMonitorIntervalSeconds: number;
-};
+}
 
-export type LogSettings = {
+export interface LogSettings {
 	EnableConsole: boolean;
 	ConsoleLevel: string;
 	ConsoleJson: boolean;
@@ -474,9 +474,9 @@ export type LogSettings = {
 	AdvancedLoggingConfig: string;
 	AdvancedLoggingJSON: Record<string, unknown>;
 	MaxFieldSize: number;
-};
+}
 
-export type ExperimentalAuditSettings = {
+export interface ExperimentalAuditSettings {
 	FileEnabled: boolean;
 	FileName: string;
 	FileMaxSizeMB: number;
@@ -486,9 +486,9 @@ export type ExperimentalAuditSettings = {
 	FileMaxQueueSize: number;
 	AdvancedLoggingConfig: string;
 	AdvancedLoggingJSON: Record<string, unknown>;
-};
+}
 
-export type NotificationLogSettings = {
+export interface NotificationLogSettings {
 	EnableConsole: boolean;
 	ConsoleLevel: string;
 	ConsoleJson: boolean;
@@ -499,18 +499,18 @@ export type NotificationLogSettings = {
 	FileLocation: string;
 	AdvancedLoggingConfig: string;
 	AdvancedLoggingJSON: Record<string, unknown>;
-};
+}
 
-export type PasswordSettings = {
+export interface PasswordSettings {
 	MinimumLength: number;
 	Lowercase: boolean;
 	Number: boolean;
 	Uppercase: boolean;
 	Symbol: boolean;
 	EnableForgotLink: boolean;
-};
+}
 
-export type WranglerSettings = {
+export interface WranglerSettings {
 	PermittedWranglerRoles: string[];
 	AllowedEmailDomain: string[];
 	MoveThreadMaxCount: number;
@@ -518,9 +518,9 @@ export type WranglerSettings = {
 	MoveThreadFromPrivateChannelEnable: boolean;
 	MoveThreadFromDirectMessageChannelEnable: boolean;
 	MoveThreadFromGroupMessageChannelEnable: boolean;
-};
+}
 
-export type FileSettings = {
+export interface FileSettings {
 	EnableFileAttachments: boolean;
 	EnableMobileUpload: boolean;
 	EnableMobileDownload: boolean;
@@ -562,9 +562,9 @@ export type FileSettings = {
 	ExportAmazonS3RequestTimeoutMilliseconds: number;
 	ExportAmazonS3PresignExpiresSeconds: number;
 	ExportAmazonS3UploadPartSizeBytes: number;
-};
+}
 
-export type EmailSettings = {
+export interface EmailSettings {
 	EnableSignUpWithEmail: boolean;
 	EnableSignInWithEmail: boolean;
 	EnableSignInWithUsername: boolean;
@@ -597,9 +597,9 @@ export type EmailSettings = {
 	LoginButtonColor: string;
 	LoginButtonBorderColor: string;
 	LoginButtonTextColor: string;
-};
+}
 
-export type RateLimitSettings = {
+export interface RateLimitSettings {
 	Enable: boolean;
 	PerSec: number;
 	MaxBurst: number;
@@ -607,14 +607,14 @@ export type RateLimitSettings = {
 	VaryByRemoteAddr: boolean;
 	VaryByUser: boolean;
 	VaryByHeader: string;
-};
+}
 
-export type PrivacySettings = {
+export interface PrivacySettings {
 	ShowEmailAddress: boolean;
 	ShowFullName: boolean;
-};
+}
 
-export type SupportSettings = {
+export interface SupportSettings {
 	TermsOfServiceLink: string;
 	PrivacyPolicyLink: string;
 	AboutLink: string;
@@ -625,9 +625,9 @@ export type SupportSettings = {
 	CustomTermsOfServiceEnabled: boolean;
 	CustomTermsOfServiceReAcceptancePeriod: number;
 	EnableAskCommunityLink: boolean;
-};
+}
 
-export type AnnouncementSettings = {
+export interface AnnouncementSettings {
 	EnableBanner: boolean;
 	BannerText: string;
 	BannerColor: string;
@@ -638,16 +638,16 @@ export type AnnouncementSettings = {
 	NoticesURL: string;
 	NoticesFetchFrequency: number;
 	NoticesSkipCache: boolean;
-};
+}
 
-export type ThemeSettings = {
+export interface ThemeSettings {
 	EnableThemeSelection: boolean;
 	DefaultTheme: string;
 	AllowCustomThemes: boolean;
 	AllowedThemes: string[];
-};
+}
 
-export type SSOSettings = {
+export interface SSOSettings {
 	Enable: boolean;
 	Secret: string;
 	Id: string;
@@ -658,9 +658,9 @@ export type SSOSettings = {
 	DiscoveryEndpoint: string;
 	ButtonText: string;
 	ButtonColor: string;
-};
+}
 
-export type Office365Settings = {
+export interface Office365Settings {
 	Enable: boolean;
 	Secret: string;
 	Id: string;
@@ -670,9 +670,9 @@ export type Office365Settings = {
 	UserAPIEndpoint: string;
 	DiscoveryEndpoint: string;
 	DirectoryId: string;
-};
+}
 
-export type LdapSettings = {
+export interface LdapSettings {
 	Enable: boolean;
 	EnableSync: boolean;
 	LdapServer: string;
@@ -708,22 +708,22 @@ export type LdapSettings = {
 	LoginButtonBorderColor: string;
 	LoginButtonTextColor: string;
 	Trace: boolean;
-};
+}
 
-export type ComplianceSettings = {
+export interface ComplianceSettings {
 	Enable: boolean;
 	Directory: string;
 	EnableDaily: boolean;
 	BatchSize: number;
-};
+}
 
-export type LocalizationSettings = {
+export interface LocalizationSettings {
 	DefaultServerLocale: string;
 	DefaultClientLocale: string;
 	AvailableLocales: string;
-};
+}
 
-export type SamlSettings = {
+export interface SamlSettings {
 	Enable: boolean;
 	EnableSyncWithLdap: boolean;
 	EnableSyncWithLdapIncludeAuth: boolean;
@@ -758,16 +758,16 @@ export type SamlSettings = {
 	LoginButtonColor: string;
 	LoginButtonBorderColor: string;
 	LoginButtonTextColor: string;
-};
+}
 
-export type NativeAppSettings = {
+export interface NativeAppSettings {
 	AppCustomURLSchemes: string[];
 	AppDownloadLink: string;
 	AndroidAppDownloadLink: string;
 	IosAppDownloadLink: string;
-};
+}
 
-export type ClusterSettings = {
+export interface ClusterSettings {
 	Enable: boolean;
 	ClusterName: string;
 	OverrideHostname: string;
@@ -779,15 +779,15 @@ export type ClusterSettings = {
 	EnableExperimentalGossipEncryption: boolean;
 	ReadOnlyConfig: boolean;
 	GossipPort: number;
-};
+}
 
-export type MetricsSettings = {
+export interface MetricsSettings {
 	Enable: boolean;
 	BlockProfileRate: number;
 	ListenAddress: string;
-};
+}
 
-export type ExperimentalSettings = {
+export interface ExperimentalSettings {
 	ClientSideCertEnable: boolean;
 	ClientSideCertCheck: string;
 	LinkMetadataTimeoutMilliseconds: number;
@@ -797,13 +797,13 @@ export type ExperimentalSettings = {
 	DisableAppBar: boolean;
 	DisableRefetchingOnBrowserFocus: boolean;
 	DelayChannelAutocomplete: boolean;
-};
+}
 
-export type AnalyticsSettings = {
+export interface AnalyticsSettings {
 	MaxUsersForStatistics: number;
-};
+}
 
-export type ElasticsearchSettings = {
+export interface ElasticsearchSettings {
 	ConnectionURL: string;
 	Backend: string;
 	Username: string;
@@ -830,17 +830,17 @@ export type ElasticsearchSettings = {
 	ClientKey: string;
 	Trace: string;
 	IgnoredPurgeIndexes: string;
-};
+}
 
-export type BleveSettings = {
+export interface BleveSettings {
 	IndexDir: string;
 	EnableIndexing: boolean;
 	EnableSearching: boolean;
 	EnableAutocomplete: boolean;
 	BatchSize: number;
-};
+}
 
-export type DataRetentionSettings = {
+export interface DataRetentionSettings {
 	EnableMessageDeletion: boolean;
 	EnableFileDeletion: boolean;
 	MessageRetentionDays: number;
@@ -853,9 +853,9 @@ export type DataRetentionSettings = {
 	BoardsRetentionDays: number;
 	TimeBetweenBatchesMilliseconds: number;
 	RetentionIdsBatchSize: number;
-};
+}
 
-export type MessageExportSettings = {
+export interface MessageExportSettings {
 	EnableExport: boolean;
 	DownloadExportResults: boolean;
 	ExportFormat: string;
@@ -871,16 +871,16 @@ export type MessageExportSettings = {
 		CustomSMTPServerName: string;
 		CustomSMTPPort: string;
 	};
-};
+}
 
-export type JobSettings = {
+export interface JobSettings {
 	RunJobs: boolean;
 	RunScheduler: boolean;
 	CleanupJobsThresholdDays: number;
 	CleanupConfigThresholdDays: number;
-};
+}
 
-export type ProductSettings = Record<string, never>;
+export interface ProductSettings extends Record<string, never> {}
 
 export interface PluginSettings {
 	Enable: boolean;
@@ -913,33 +913,33 @@ export interface GuestAccountsSettings {
 	RestrictCreationToDomains: string;
 }
 
-export type ImageProxySettings = {
+export interface ImageProxySettings {
 	Enable: boolean;
 	ImageProxyType: string;
 	RemoteImageProxyURL: string;
 	RemoteImageProxyOptions: string;
-};
+}
 
-export type CloudSettings = {
+export interface CloudSettings {
 	CWSURL: string;
 	CWSAPIURL: string;
 	CWSMock: boolean;
 	Disable: boolean;
-};
+}
 
-export type FeatureFlags = Record<string, string | boolean>;
+export interface FeatureFlags extends Record<string, string | boolean> {}
 
-export type ImportSettings = {
+export interface ImportSettings {
 	Directory: string;
 	RetentionDays: number;
-};
+}
 
-export type ExportSettings = {
+export interface ExportSettings {
 	Directory: string;
 	RetentionDays: number;
-};
+}
 
-export type AdminConfig = {
+export interface AdminConfig {
 	ServiceSettings: ServiceSettings;
 	TeamSettings: TeamSettings;
 	ClientRequirements: ClientRequirements;
@@ -983,38 +983,36 @@ export type AdminConfig = {
 	ImportSettings: ImportSettings;
 	ExportSettings: ExportSettings;
 	WranglerSettings: WranglerSettings;
-};
+}
 
-export type ReplicaLagSetting = {
+export interface ReplicaLagSetting {
 	DataSource: string;
 	QueryAbsoluteLag: string;
 	QueryTimeLag: string;
-};
+}
 
 export type EnvironmentConfigSettings<T> = {
-	[P in keyof T]: boolean;
+	[key in keyof [T]]: boolean;
 };
 
 export type EnvironmentConfig = {
 	[P in keyof AdminConfig]: EnvironmentConfigSettings<AdminConfig[P]>;
 };
 
-export type WarnMetricStatus = {
+export interface WarnMetricStatus {
 	id: string;
 	limit: number;
 	acked: boolean;
 	store_status: string;
-};
+}
 
-export type AllowedIPRange = {
+export interface AllowedIPRange {
 	cidr_block: string;
 	description: string;
 	enabled: boolean;
 	owner_id: string;
-};
+}
 
-export type AllowedIPRanges = AllowedIPRange[];
-
-export type FetchIPResponse = {
+export interface FetchIPResponse {
 	ip: string;
-};
+}

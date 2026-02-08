@@ -1,9 +1,17 @@
-import type {
-	CreateDataRetentionCustomPolicy,
-	PatchDataRetentionCustomPolicy,
-	PatchDataRetentionCustomPolicyChannels,
-	PatchDataRetentionCustomPolicyTeams
-} from "../data-retention";
+import type { DataRetentionCustomPolicy } from "../general";
+
+export interface PatchDataRetentionCustomPolicyTeams {
+	team_ids: string[];
+}
+
+export interface PatchDataRetentionCustomPolicyChannels {
+	channel_ids: string[];
+}
+
+export interface PatchDataRetentionCustomPolicy {
+	display_name: string;
+	post_duration: number;
+}
 
 export interface DataRetentionGetPolicyArguments {
 	policy_id: string;
@@ -15,7 +23,7 @@ export interface DataRetentionGetPoliciesArguments {
 }
 
 export interface DataRetentionCreatePolicyArguments {
-	policy: CreateDataRetentionCustomPolicy;
+	policy: Omit<DataRetentionCustomPolicy, "id">;
 }
 
 export interface DataRetentionDeletePolicyArguments {
@@ -24,7 +32,7 @@ export interface DataRetentionDeletePolicyArguments {
 
 export interface DataRetentionUpdatePolicyArguments {
 	policy_id: string;
-	policy: CreateDataRetentionCustomPolicy;
+	policy: Omit<DataRetentionCustomPolicy, "id">;
 }
 
 export interface DataRetentionPatchPolicyArguments {

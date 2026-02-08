@@ -6,11 +6,10 @@ import type { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import { isStream } from "is-stream";
 import { DEFAULT_FILE_NAME } from "./const";
-import {
-	type CloudCustomerAddress,
-	type UserThread,
-	type UserThreadSynthetic,
-	UserThreadType
+import type {
+	CloudCustomerAddress,
+	UserThread,
+	UserThreadSynthetic
 } from "./types";
 
 export const wait = (ms: number): Promise<void> => {
@@ -182,4 +181,4 @@ export const areShippingDetailsValid = (
 
 export const threadIsSynthetic = (
 	thread: UserThread | UserThreadSynthetic
-): thread is UserThreadSynthetic => thread.type === UserThreadType.Synthetic;
+): thread is UserThreadSynthetic => thread.type === "S";

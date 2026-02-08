@@ -1,4 +1,4 @@
-import type { Scheme, SchemePatch } from "../schemes";
+import type { Scheme } from "../general";
 
 export interface SchemesCreateArguments {
 	scheme: Scheme;
@@ -20,7 +20,9 @@ export interface SchemesDeleteArguments {
 
 export interface SchemesPatchArguments {
 	scheme_id: string;
-	scheme: SchemePatch;
+	scheme: Partial<
+		Pick<Scheme, "name" | "display_name" | "description" | "scope">
+	>;
 }
 
 export interface SchemesGetTeamsArguments {

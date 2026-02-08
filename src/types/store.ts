@@ -1,6 +1,5 @@
-import type { Bot } from "./bots";
 import type { CloudUsage } from "./cloud";
-import type { Preference } from "./preferences";
+import type { Bot, Preference, Typing } from "./general";
 import type {
 	AdminRequestsStatuses,
 	ChannelsRequestsStatuses,
@@ -34,7 +33,6 @@ import type {
 	ThreadsState,
 	UsersState
 } from "./state";
-import type { Typing } from "./typing";
 
 export type GlobalState = {
 	entities: {

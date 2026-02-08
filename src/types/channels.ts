@@ -5,7 +5,7 @@ import type { FileInfo } from "./files";
  * @description Channel main object
  * ===============================================
  */
-export type Channel = {
+export interface Channel {
 	id: string;
 	create_at: number;
 	update_at: number;
@@ -28,7 +28,7 @@ export type Channel = {
 	total_msg_count_root: number;
 	policy_id: string | null;
 	last_root_post_at: number;
-};
+}
 
 /**
  * ===============================================
@@ -129,7 +129,7 @@ export enum ChannelBookmarkType {
 	FILE = "file"
 }
 
-export type ChannelBookmark = {
+export interface ChannelBookmark {
 	id: string;
 	create_at: number;
 	update_at: number;
@@ -146,7 +146,7 @@ export type ChannelBookmark = {
 	type: ChannelBookmarkType;
 	original_id?: string;
 	parent_id?: string;
-};
+}
 
 export interface ChannelBookmarkCreateLink {
 	type: ChannelBookmarkType.LINK;

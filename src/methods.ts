@@ -1,7 +1,8 @@
 import EventEmitter from "eventemitter3";
 import type { Stream } from "form-data";
 import type {
-	ComplianceReport,
+	FileSearchResponse,
+	FileUploadResponse,
 	TokenOverridable,
 	UserCustomStatus,
 	UserID,
@@ -10,7 +11,6 @@ import type {
 	WebAPICallResult
 } from "./types";
 import type { AnalyticsRow } from "./types/admin";
-import type { Bot } from "./types/bots";
 import type {
 	Channel,
 	ChannelMembership,
@@ -27,14 +27,17 @@ import type {
 } from "./types/cloud";
 import type { Command } from "./types/commands";
 import type { ClientConfig } from "./types/config";
-import type { DataRetentionCustomPolicies } from "./types/data-retention";
 import type { CustomEmoji } from "./types/emojis";
+import type { FileInfo, UploadSession } from "./types/files";
 import type {
-	FileInfo,
-	FileSearchResponse,
-	FileUploadResponse,
-	UploadSession
-} from "./types/files";
+	Bot,
+	ComplianceReport,
+	DataRetentionCustomPolicies,
+	Preference,
+	Reaction,
+	Scheme,
+	TermsOfService
+} from "./types/general";
 import type {
 	Group,
 	GroupMembership,
@@ -365,8 +368,6 @@ import type {
 	PluginStatus,
 	PluginsGetResponse
 } from "./types/plugins";
-import type { Preference } from "./types/preferences";
-import type { Reaction } from "./types/reactions";
 import type { CommandExecuteResponse } from "./types/responses/commands.responses";
 import type { StatusOKResponse } from "./types/responses/common.responses";
 import type {
@@ -388,14 +389,12 @@ import type {
 	SystemCheckHealthResponse
 } from "./types/responses/system.responses";
 import type { Role } from "./types/roles";
-import type { Scheme } from "./types/schemes";
 import type {
 	Team,
 	TeamMembership,
 	TeamMemberWithError,
 	TeamStats
 } from "./types/teams";
-import type { TermsOfService } from "./types/terms-of-service";
 import {
 	ContentType,
 	type WebApiCallConfig,
@@ -556,7 +555,7 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 		}),
 		patch: bindApiCall<BotsPatchArguments, Bot>(this, {
 			method: "PUT",
-			path: "bots/:user_id",
+			path: "bots/:id",
 			type: ContentType.JSON
 		})
 	} as const;

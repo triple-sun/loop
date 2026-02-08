@@ -2,9 +2,8 @@ import type { AppBinding } from "./apps";
 import type { ChannelType } from "./channels";
 import type { CustomEmoji } from "./emojis";
 import type { FileInfo } from "./files";
+import type { Option, Reaction } from "./general";
 import type { OpenGraphMetadata } from "./metadata";
-import type { Option } from "./option";
-import type { Reaction } from "./reactions";
 import type { TeamType } from "./teams";
 import type { UserProfile } from "./users";
 

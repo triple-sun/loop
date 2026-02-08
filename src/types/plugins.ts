@@ -1,15 +1,15 @@
 // Equivalent to MessageDescriptor from react-intl
-type MessageDescriptor = {
+interface MessageDescriptor {
 	id: string;
 	defaultMessage: string;
-};
+}
 
-export type PluginsGetResponse = {
+export interface PluginsGetResponse {
 	active: PluginManifest[];
 	inactive: PluginManifest[];
-};
+}
 
-export type PluginManifest = {
+export interface PluginManifest {
 	id: string;
 	name: string;
 	description?: string;
@@ -29,30 +29,30 @@ export type PluginManifest = {
 		enterprise: boolean;
 		experimental: boolean;
 	};
-};
+}
 
 export type PluginRedux = PluginManifest & { active: boolean };
 
-export type PluginManifestServer = {
+export interface PluginManifestServer {
 	executables?: {
 		"linux-amd64"?: string;
 		"darwin-amd64"?: string;
 		"windows-amd64"?: string;
 	};
 	executable: string;
-};
+}
 
-export type PluginManifestWebapp = {
+export interface PluginManifestWebapp {
 	bundle_path: string;
-};
+}
 
-export type PluginSettingsSchema = {
+export interface PluginSettingsSchema {
 	header: string;
 	footer: string;
 	settings: PluginSetting[];
-};
+}
 
-export type PluginSetting = {
+export interface PluginSetting {
 	key: string;
 	display_name: string;
 	type: string;
@@ -62,19 +62,19 @@ export type PluginSetting = {
 	default: unknown;
 	options?: PluginSettingOption[];
 	hosting?: "on-prem" | "cloud";
-};
+}
 
-export type PluginSettingOption = {
+export interface PluginSettingOption {
 	display_name: string;
 	value: string;
-};
+}
 
-export type PluginsResponse = {
+export interface PluginsResponse {
 	active: PluginManifest[];
 	inactive: PluginManifest[];
-};
+}
 
-export type PluginStatus = {
+export interface PluginStatus {
 	plugin_id: string;
 	cluster_id: string;
 	plugin_path: string;
@@ -82,7 +82,7 @@ export type PluginStatus = {
 	name: string;
 	description: string;
 	version: string;
-};
+}
 
 type PluginInstance = {
 	cluster_id: string;
@@ -90,7 +90,7 @@ type PluginInstance = {
 	state: number;
 };
 
-export type PluginStatusRedux = {
+export interface PluginStatusRedux {
 	id: string;
 	name: string;
 	description: string;
@@ -99,13 +99,13 @@ export type PluginStatusRedux = {
 	state: number;
 	error?: string;
 	instances: PluginInstance[];
-};
+}
 
-export type ClientPluginManifest = {
+export interface ClientPluginManifest {
 	id: string;
 	min_server_version?: string;
 	version: string;
 	webapp: {
 		bundle_path: string;
 	};
-};
+}

@@ -1,29 +1,29 @@
 import type { UserProfile } from "./users";
 
 export enum UserReportSortColumns {
-	username = "Username",
-	email = "Email",
-	createAt = "CreateAt",
-	firstName = "FirstName",
-	lastName = "LastName",
-	nickname = "Nickname"
+	USERNAME = "Username",
+	EMAIL = "Email",
+	CREATE_AT = "CreateAt",
+	FIRST_NAME = "FirstName",
+	LAST_NAME = "LastName",
+	NICKNAME = "Nickname"
 }
 
 export enum ReportSortDirection {
-	ascending = "asc",
-	descending = "desc"
+	ASC = "asc",
+	DESC = "desc"
 }
 
 export enum ReportDuration {
-	AllTime = "all_time",
-	Last30Days = "last_30_days",
-	PreviousMonth = "previous_month",
-	Last6Months = "last_6_months"
+	ALL_TIME = "all_time",
+	LAST_30_DAYS = "last_30_days",
+	PREV_MONTH = "previous_month",
+	LAST_6_MONTHS = "last_6_months"
 }
 
 export enum CursorPaginationDirection {
-	prev = "prev",
-	next = "next"
+	PREV = "prev",
+	NEXT = "next"
 }
 
 export type UserReportFilter = {
@@ -35,7 +35,7 @@ export type UserReportFilter = {
 	search_term?: string;
 };
 
-export type UserReportOptions = UserReportFilter & {
+export interface UserReportOptions extends UserReportFilter {
 	page_size?: number;
 
 	// Following are optional sort parameters
@@ -70,12 +70,12 @@ export type UserReportOptions = UserReportFilter & {
 	 * The duration to filter by. Use the ReportDuration enum.
 	 */
 	date_range?: ReportDuration;
-};
+}
 
-export type UserReport = UserProfile & {
+export interface UserReport extends UserProfile {
 	last_login_at: number;
 	last_status_at?: number;
 	last_post_date?: number;
 	days_active?: number;
 	total_posts?: number;
-};
+}

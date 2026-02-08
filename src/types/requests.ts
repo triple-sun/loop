@@ -6,67 +6,67 @@ export enum RequestStatusOption {
 	CANCELLED = "cancelled"
 }
 
-export type RequestStatusType = {
+export interface RequestStatusType {
 	status: RequestStatusOption;
 	error: null | Record<string, unknown>;
-};
+}
 
-export type ChannelsRequestsStatuses = {
+export interface ChannelsRequestsStatuses {
 	getChannels: RequestStatusType;
 	getAllChannels: RequestStatusType;
 	myChannels: RequestStatusType;
 	createChannel: RequestStatusType;
-};
+}
 
-export type GeneralRequestsStatuses = {
+export interface GeneralRequestsStatuses {
 	websocket: RequestStatusType;
-};
+}
 
-export type PostsRequestsStatuses = {
+export interface PostsRequestsStatuses {
 	createPost: RequestStatusType;
 	editPost: RequestStatusType;
 	getPostThread: RequestStatusType;
-};
+}
 
-export type ThreadsRequestStatuses = {
+export interface ThreadsRequestStatuses {
 	getThreads: RequestStatusType;
-};
+}
 
-export type TeamsRequestsStatuses = {
+export interface TeamsRequestsStatuses {
 	getMyTeams: RequestStatusType;
 	getTeams: RequestStatusType;
-};
+}
 
-export type UsersRequestsStatuses = {
+export interface UsersRequestsStatuses {
 	login: RequestStatusType;
 	logout: RequestStatusType;
 	autocompleteUsers: RequestStatusType;
 	updateMe: RequestStatusType;
-};
+}
 
-export type AdminRequestsStatuses = {
+export interface AdminRequestsStatuses {
 	createCompliance: RequestStatusType;
-};
+}
 
-export type EmojisRequestsStatuses = {
+export interface EmojisRequestsStatuses {
 	createCustomEmoji: RequestStatusType;
 	getCustomEmojis: RequestStatusType;
 	deleteCustomEmoji: RequestStatusType;
 	getCustomEmoji: RequestStatusType;
-};
+}
 
-export type FilesRequestsStatuses = {
+export interface FilesRequestsStatuses {
 	uploadFiles: RequestStatusType;
-};
+}
 
-export type RolesRequestsStatuses = {
+export interface RolesRequestsStatuses {
 	getRolesByNames: RequestStatusType;
 	getRoleByName: RequestStatusType;
 	getRole: RequestStatusType;
 	editRole: RequestStatusType;
-};
+}
 
-export type SearchRequestsStatuses = {
+export interface SearchRequestsStatuses {
 	flaggedPosts: RequestStatusType;
 	pinnedPosts: RequestStatusType;
-};
+}
