@@ -17,6 +17,15 @@ export const wait = (ms: number): Promise<void> => {
 	return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+export const isValidUrl = (string: string): boolean => {
+	try {
+		new URL(string);
+		return true;
+	} catch (_) {
+		return false;
+	}
+};
+
 /**
  * Checks request data for binary data
  */

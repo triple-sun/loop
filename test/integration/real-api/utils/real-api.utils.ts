@@ -61,7 +61,7 @@ export interface MethodTestResult {
 /**
  * Load environment variables from test.env
  */
-dotenv.config({ path: path.resolve(process.cwd(), "test.env") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.test.local") });
 
 /**
  * Real API test configuration from test.env
@@ -88,7 +88,7 @@ export const createRealApiClient = (): WebClient => {
 	validateTestEnv();
 
 	return new WebClient(TEST_LOOP_URL, {
-		logLevel: LogLevel.ERROR,
+		logLevel: LogLevel.DEBUG,
 		retryConfig: { retries: 2 },
 		saveFetchedUserID: true,
 		token: TEST_LOOP_TOKEN

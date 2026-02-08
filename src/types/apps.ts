@@ -1,3 +1,4 @@
+import type { Option } from "./option";
 import type { ProductScope } from "./products";
 
 /**
@@ -183,23 +184,17 @@ export interface AppBinding {
  */
 
 export interface AppFormValues {
-	[name: string]: string | AppFormSelectOption | boolean | null;
+	[name: string]: string | Option | boolean | null;
 }
 
 export interface AppFormLookupResponse {
-	items: AppFormSelectOption[];
+	items: Option[];
 }
 
 export interface AppFormResponseData {
 	errors?: {
 		[field: string]: string;
 	};
-}
-
-export interface AppFormSelectOption {
-	label: string;
-	value: string;
-	icon_data?: string;
 }
 
 export interface AppForm {
@@ -343,28 +338,6 @@ interface Refreshable {
  * @description App Form Field Actual Types
  * =======================================
  */
-
-/**
- * @description The data structure of an option in a select field
- */
-export interface AppFormFieldOption {
-	/**
-	 * @description User-facing string.
-	 * Defaults to value and must be unique on this field.
-	 */
-	label?: string;
-
-	/**
-	 * @description Machine-facing value. Must be unique on this field.
-	 */
-	value: string;
-
-	/**
-	 * @description Either a fully-qualified URL, or a path for an app's static asset
-	 */
-	icon_data?: string;
-}
-
 /**
  * @description A boolean selector represented as a checkbox.
  */
@@ -399,20 +372,20 @@ export interface AppFormMarkdownField
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends AppFormField<AppFormFieldType.STATIC_SELECT, AppFormFieldOption>,
+	extends AppFormField<AppFormFieldType.STATIC_SELECT, Option>,
 		Multiselectable,
 		Refreshable {
 	/**
 	 * @description A list of options for static select fields.
 	 */
-	options: AppFormFieldOption[];
+	options: Option[];
 }
 
 /**
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends AppFormField<AppFormFieldType.DYNAMIC_SELECT, AppFormFieldOption>,
+	extends AppFormField<AppFormFieldType.DYNAMIC_SELECT, Option>,
 		Multiselectable,
 		Refreshable {
 	/**

@@ -4,6 +4,8 @@
  * ===============================================
  */
 
+import type { Option } from "./option";
+
 /**
  * Интерфейс диалога (используется в слеш-командах и при нажатии кнопок интерактивного сообщения)
  *
@@ -185,23 +187,11 @@ interface Length {
 	 */
 	max_length?: number;
 }
-interface Options {
-	/** An array of options for the element. */
-	options?: DialogElementOption[];
-}
+
 interface TextSubtype {
 	/** One of text, email, number, password (as of v5.14), tel, or url.
 	 * @default text. Use this to set which keypad is presented to users on mobile when entering the field. */
 	subtype?: DialogTextSubType;
-}
-interface DataSource {
-	/** One of 'users', or 'channels'. If none specified, assumes a manual list of options is provided by the integration. */
-	data_source?: DialogSelectDataSource;
-}
-
-export interface DialogElementOption {
-	value: string;
-	text?: string;
 }
 
 /**
@@ -226,12 +216,12 @@ export interface DialogTextAreaElement
 }
 
 /** Выпадающий список */
-export interface DialogSelectElement
-	extends DialogElement,
-		Placeholder,
-		Options,
-		DataSource {
+export interface DialogSelectElement extends DialogElement, Placeholder {
 	type: DialogElementType.SELECT;
+	/** One of 'users', or 'channels'. If none specified, assumes a manual list of options is provided by the integration. */
+	data_source?: DialogSelectDataSource;
+	/** An array of options for the element. */
+	options?: Option[];
 }
 
 /** Чекбоксы */
@@ -240,8 +230,10 @@ export interface DialogCheckboxElement extends DialogElement, Placeholder {
 }
 
 /** Радиокнопки */
-export interface DialogRadioElement extends DialogElement, Options {
+export interface DialogRadioElement extends DialogElement {
 	type: DialogElementType.RADIO;
+	/** An array of options for the element. */
+	options?: Option[];
 }
 
 /**

@@ -29,7 +29,7 @@ export interface BoardCardPropertyOption {
 }
 
 // A template for card properties attached to a board
-export interface BoardCardPropertyTemplate {
+export interface BoardCardProperty {
 	id: string;
 	name: string;
 	type: BoardCardPropertyType;
@@ -52,7 +52,7 @@ export declare type Board = {
 	isTemplate: boolean;
 	templateVersion: number;
 	properties: Record<string, string | string[]>;
-	cardProperties: BoardCardPropertyTemplate[];
+	cardProperties: BoardCardProperty[];
 
 	createAt: number;
 	updateAt: number;

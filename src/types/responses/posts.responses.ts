@@ -6,13 +6,13 @@
 
 import type {
 	Post,
-	PostAction,
+	PostActionBase,
 	PostAttachment,
 	PostAttachmentField,
 	PostProps
 } from "../posts";
 
-export interface PostActionResponse extends PostAction {
+export interface PostActionResponse extends PostActionBase {
 	integration: never;
 }
 

@@ -43,6 +43,7 @@ import {
 import {
 	checkForBinaryData,
 	getFormDataConfig,
+	isValidUrl,
 	redact,
 	warnIfFallbackIsMissing
 } from "./utils";
@@ -50,8 +51,10 @@ import {
 export class WebClient extends Methods {
 	/**
 	 * @description The base URL for reaching Loop/Mattermost Web API
-	 * Must end with `api/v4/`
+	 *
+	 * Both formats are supported:
 	 * @example https://your-loop.loop.ru/api/v4/
+	 * @example https://your-loop.loop.ru/
 	 */
 	public url: string;
 
@@ -160,12 +163,17 @@ export class WebClient extends Methods {
 		}: WebClientOptions = {}
 	) {
 		super();
+		if (!isValidUrl(url)) {
+			throw new WebClientOptionsError(
+				"Invalid URL. See WebClient constructor docs for details."
+			);
+		}
 
-		this.token = token;
 		this.url = url;
 		if (!this.url.endsWith("/")) this.url += "/";
 		if (!this.url.endsWith(`api/v4/`)) this.url += `api/v4/`;
 
+		this.token = token;
 		this.userID = userID;
 
 		this.clusterId = "";
@@ -298,7 +306,7 @@ export class WebClient extends Methods {
 		};
 
 		/** and handle TokenOverridable */
-		if (typeof options["token"] === "string") {
+		if (typeof options["token"] === "string" && options["token"]) {
 			headers["Authorization"] = `Bearer ${options["token"]}`;
 			options["token"] = undefined;
 
@@ -449,6 +457,8 @@ export class WebClient extends Methods {
 		if (requestUrl.includes("users/:user_id")) {
 			requestUrl = requestUrl.replace(":user_id", "me");
 		}
+
+		this.logger.debug(`Request URL: ${this.axios.getUri()}${requestUrl}`);
 
 		return `${this.axios.getUri()}${requestUrl}`;
 	}

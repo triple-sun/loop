@@ -1,4 +1,4 @@
-import type { ProductScope } from "./products";
+import { Option } from "../../../../src/types/option";
 
 /**
  * ===============================================
@@ -183,11 +183,11 @@ export interface AppBinding {
  */
 
 export interface AppFormValues {
-	[name: string]: string | AppFormSelectOption | boolean | null;
+	[name: string]: string | Option | boolean | null;
 }
 
 export interface AppFormLookupResponse {
-	items: AppFormSelectOption[];
+	items: Option[];
 }
 
 export interface AppFormResponseData {
@@ -196,11 +196,6 @@ export interface AppFormResponseData {
 	};
 }
 
-export interface AppFormSelectOption {
-	label: string;
-	value: string;
-	icon_data?: string;
-}
 
 export interface AppForm {
 	title?: string;

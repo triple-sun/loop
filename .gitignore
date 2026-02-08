@@ -198,3 +198,4 @@ oldsrc
 # End of https://www.toptal.com/developers/gitignore/api/osx,visualstudiocode,node
 
 test/integration/real-api/reports/*
+**/*local.*

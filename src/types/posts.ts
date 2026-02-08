@@ -3,6 +3,7 @@ import type { ChannelType } from "./channels";
 import type { CustomEmoji } from "./emojis";
 import type { FileInfo } from "./files";
 import type { OpenGraphMetadata } from "./metadata";
+import type { Option } from "./option";
 import type { Reaction } from "./reactions";
 import type { TeamType } from "./teams";
 import type { UserProfile } from "./users";
@@ -268,7 +269,7 @@ export interface PostAttachment {
 	/**
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
-	actions?: Array<PostAction>;
+	actions?: Array<PostActionBase>;
 
 	/**
 	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
@@ -349,18 +350,13 @@ export enum PostActionDataSource {
 	NULL = ""
 }
 
-export interface PostActionOption {
-	text: string;
-	value: string;
-}
-
 /**
  * @description Use interactive messages to simplify complex workflows by allowing users
  * to take quick actions directly through your integration post.
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-export interface PostAction<T extends PostActionType = PostActionType> {
+export interface PostActionBase<T extends PostActionType = PostActionType> {
 	/**
 	 * @description Action type - button or select
 	 */
@@ -393,20 +389,19 @@ export interface PostAction<T extends PostActionType = PostActionType> {
 		 */
 		context?: Record<string, unknown>;
 	};
-	options?: PostActionOption[];
 	data_source?: PostActionDataSource;
+	options?: Option[];
 }
 
 /**
- * Message buttons
+ * Post buttons
  *
- * @description Add message buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
+ * @description Add buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
  */
 export interface PostActionButton
-	extends Required<PostAction<PostActionType.BUTTON>> {
-	readonly data_source: PostActionDataSource.NULL;
-	readonly options: never[];
-
+	extends PostActionBase<PostActionType.BUTTON> {
+	data_source?: never;
+	options?: never[];
 	/**
 	 * @description Button text
 	 */
@@ -424,24 +419,12 @@ export interface PostActionButton
 }
 
 /**
- * Message static select
+ * Post select
  *
- * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
+ * @description Similar to buttons, add menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
  */
-export interface PostActionStaticSelect
-	extends Required<PostAction<PostActionType.SELECT>> {
-	readonly data_source: PostActionDataSource.NULL;
-	options: PostActionOption[];
-}
-
-/**
- * Message dynamic user/channel select
- *
- * @description Similar to buttons, add message menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | message attachments}
- */
-export interface PostActionSourcedSelect
-	extends Required<PostAction<PostActionType.SELECT>> {
-	readonly options: never[];
+export interface PostActionSelect
+	extends PostActionBase<PostActionType.SELECT> {
 	/**
 	 * @description Data source for options
 	 *
@@ -450,8 +433,11 @@ export interface PostActionSourcedSelect
 	 *
 	 * Similar to channels, you can also provide a list of users for message menus.
 	 * The user can choose the user who is part of the Mattermost system.
+	 *
+	 * If not provided then options array is used
 	 */
-	data_source: PostActionDataSource;
+	data_source?: PostActionDataSource;
+	options?: Option[] | undefined;
 }
 
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {

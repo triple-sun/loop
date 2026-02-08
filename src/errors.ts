@@ -48,13 +48,12 @@ export class WebClientCodedError extends Error {
 	code!: ErrorCode;
 }
 
-export class WebClientOptionsError implements WebClientCodedError {
-	name = WebClientOptionsError.name;
-	code = ErrorCode.RequestError;
-	message: string;
+export class WebClientOptionsError extends WebClientCodedError {
+	override name = WebClientOptionsError.name;
+	override code = ErrorCode.OptionsError;
 
 	constructor(message: string) {
-		this.message = message;
+		super(message, { cause: { code: ErrorCode.OptionsError } });
 	}
 }
 
@@ -64,7 +63,7 @@ export class WebAPIServerError extends WebClientCodedError {
 	original: ServerError;
 
 	constructor(error: ServerError) {
-		super(error.message);
+		super(error.message, { cause: error.cause });
 		this.original = error;
 	}
 }
