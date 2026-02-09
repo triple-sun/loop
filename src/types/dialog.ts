@@ -211,6 +211,14 @@ export type DialogElement =
 	| DialogSelectElement
 	| DialogTextAreaElement;
 
+export interface DialogElementData
+	extends DialogElementBase,
+		Options,
+		DataSource,
+		Placeholder,
+		TextSubType,
+		MinMaxLentgh {}
+
 /**
  * ===============================================
  * @description Dialog submissions
