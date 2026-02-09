@@ -16,23 +16,25 @@ export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 	set_online?: boolean;
 }
 
-export interface PostCreateWithUserIDArguments
-	extends TokenOverridable,
-		PostBaseArguments {
+export interface PostCreateWithUserIDArguments<
+	METADATA = Record<string, unknown>
+> extends TokenOverridable,
+		PostBaseArguments<METADATA> {
 	to_user_id: string;
 }
-export interface PostCreateWithChannelIDArguments
-	extends TokenOverridable,
-		PostBaseArguments {
+
+export interface PostCreateWithChannelIDArguments<
+	METADATA = Record<string, unknown>
+> extends TokenOverridable,
+		PostBaseArguments<METADATA> {
 	channel_id: string;
 }
-
 /**
  * Arguments for creating a new post.
  */
-export type PostsCreateArguments =
-	| PostCreateWithChannelIDArguments
-	| PostCreateWithUserIDArguments;
+export type PostsCreateArguments<METADATA = Record<string, unknown>> =
+	| PostCreateWithChannelIDArguments<METADATA>
+	| PostCreateWithUserIDArguments<METADATA>;
 
 /**
  * Arguments for updating a post.

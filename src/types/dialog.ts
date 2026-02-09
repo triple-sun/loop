@@ -1,4 +1,4 @@
-import type { Option } from "./general";
+import type { DataSource, MinMaxLentgh, Options } from "./common";
 
 /**
  * Integrations open dialogs by sending an HTTP POST, containing some data in the request body, to an endpoint on the Mattermost server.
@@ -99,24 +99,32 @@ export enum DialogTextSubType {
 	URL = "url" /**  A field for entering a URL. */
 }
 
-export enum DialogSelectDataSource {
-	CHANNELS = "channels",
-	USERS = "users"
-}
-
 /**
  * ===============================================
  * @description Dialog elements interfaces
  * ===============================================
  */
 
+interface TextSubType {
+	/** One of text, email, number, password (as of v5.14), tel, or url.
+	 * @default text. Use this to set which keypad is presented to users on mobile when entering the field. */
+	subtype?: DialogTextSubType;
+}
+
+interface Placeholder {
+	/**
+	 * @description A string displayed to help guide users in completing the element.
+	 * Maximum 150 characters.
+	 */
+	placeholder?: string;
+}
+
 interface DialogElementBase {
 	/**
-	 * @description Display name of the field shown to the user in the dialog.
-	 *
-	 * Maximum 24 characters.
+	 * @description Element type
+	 * Set this value to `text` for a text element.
 	 */
-	display_name: string;
+	type: DialogElementType;
 
 	/**
 	 * @description Name of the field element used by the integration.
@@ -128,9 +136,11 @@ interface DialogElementBase {
 	name: string;
 
 	/**
-	 * @description Set this value to text for a text element.
+	 * @description Display name of the field shown to the user in the dialog.
+	 *
+	 * Maximum 24 characters.
 	 */
-	type: DialogElementType;
+	display_name: string;
 
 	/**
 	 * @description Set to true if this form element is not required.
@@ -146,38 +156,12 @@ interface DialogElementBase {
 	 */
 	help_text?: string;
 
-	/** @description Set a default value for this form element.
+	/**
+	 *  @description Set a default value for this form element.
 	 *
 	 * Maximum 150 characters.
 	 */
 	default?: string;
-}
-
-interface Placeholder {
-	/** A string displayed to help guide users in completing the element. Maximum 150 characters. */
-	placeholder?: string;
-}
-interface Length {
-	/**
-	 * @description Minimum input length allowed for an element.
-	 *
-	 * @default 0
-	 */
-	min_length?: number;
-	/**
-	 * @description Maximum input length allowed for an element.
-	 *
-	 * If you expect the input to be greater 150 characters, consider using a textarea type element instead.
-	 *
-	 * @default 150.
-	 */
-	max_length?: number;
-}
-
-interface TextSubtype {
-	/** One of text, email, number, password (as of v5.14), tel, or url.
-	 * @default text. Use this to set which keypad is presented to users on mobile when entering the field. */
-	subtype?: DialogTextSubType;
 }
 
 /**
@@ -186,40 +170,38 @@ interface TextSubtype {
  */
 export interface DialogTextElement
 	extends DialogElementBase,
-		Placeholder,
-		Length,
-		TextSubtype {
+		TextSubType,
+		MinMaxLentgh,
+		Placeholder {
 	type: DialogElementType.TEXT;
 }
 
 /** Текстовое поле - многострочное */
 export interface DialogTextAreaElement
 	extends DialogElementBase,
-		Placeholder,
-		Length,
-		TextSubtype {
+		TextSubType,
+		MinMaxLentgh,
+		Placeholder {
 	type: DialogElementType.TEXT_AREA;
 }
 
 /** Выпадающий список */
-export interface DialogSelectElement extends DialogElementBase, Placeholder {
+export interface DialogSelectElement
+	extends DialogElementBase,
+		DataSource,
+		Options,
+		Placeholder {
 	type: DialogElementType.SELECT;
-	/** One of 'users', or 'channels'. If none specified, assumes a manual list of options is provided by the integration. */
-	data_source?: DialogSelectDataSource;
-	/** An array of options for the element. */
-	options?: Option[];
 }
 
 /** Чекбоксы */
-export interface DialogCheckboxElement extends DialogElementBase, Placeholder {
+export interface DialogCheckboxElement extends DialogElementBase {
 	type: DialogElementType.CHECKBOX;
 }
 
 /** Радиокнопки */
-export interface DialogRadioElement extends DialogElementBase {
+export interface DialogRadioElement extends DialogElementBase, Options {
 	type: DialogElementType.RADIO;
-	/** An array of options for the element. */
-	options?: Option[];
 }
 
 export type DialogElement =
@@ -228,6 +210,14 @@ export type DialogElement =
 	| DialogRadioElement
 	| DialogSelectElement
 	| DialogTextAreaElement;
+
+export interface DialogElementData
+	extends DialogElementBase,
+		Placeholder,
+		Options,
+		DataSource,
+		TextSubType,
+		MinMaxLentgh {}
 
 /**
  * ===============================================

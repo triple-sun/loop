@@ -1,11 +1,60 @@
 import type { AppBinding } from "./apps";
 import type { ChannelType } from "./channels";
+import type { DataSource, Options } from "./common";
 import type { CustomEmoji } from "./emojis";
 import type { FileInfo } from "./files";
-import type { Option, Reaction } from "./general";
+import type { Reaction } from "./general";
 import type { OpenGraphMetadata } from "./metadata";
 import type { TeamType } from "./teams";
 import type { UserProfile } from "./users";
+
+/**
+ * ===============================================
+ * @description Posts main enums
+ * ===============================================
+ */
+
+export enum PostState {
+	DELETED = "DELETED",
+	NULL = ""
+}
+
+export enum PostPriority {
+	URGENT = "urgent",
+	IMPORTANT = "important",
+	NULL = ""
+}
+
+export enum PostEmbedType {
+	IMAGE = "image",
+	LINK = "link",
+	ATTACHMENT = "message_attachment",
+	OPEN_GRAPH = "opengraph",
+	PERMALINK = "permalink"
+}
+
+export enum PostType {
+	SYSTEM_ADD_REMOVE = "system_add_remove",
+	SYSTEM_ADD_TO_CHANNEL = "system_add_to_channel",
+	SYSTEM_ADD_TO_TEAM = "system_add_to_team",
+	SYSTEM_CHANNEL_DELETED = "system_channel_deleted",
+	SYSTEM_CHANNEL_RESTORED = "system_channel_restored",
+	SYSTEM_DISPLAY_NAME_CHANGE = "system_displayname_change",
+	SYSTEM_CONVERT_CHANNEL = "system_convert_channel",
+	SYSTEM_EPHEMERAL = "system_ephemeral",
+	SYSTEM_HEADER_CHANGE = "system_header_change",
+	SYSTEM_JOIN_CHANNEL = "system_join_channel",
+	SYSTEM_JOIN_LEAVE = "system_join_leave",
+	SYSTEM_LEAVE_CHANNEL = "system_leave_channel",
+	SYSTEM_PURPOSE_CHANGE = "system_purpose_change",
+	SYSTEM_REMOVE_FROM_CHANNEL = "system_remove_from_channel",
+	SYSTEM_COMBINED_USER_ACTIVITY = "system_combined_user_activity",
+	SYSTEM_FAKE_PARENT_DELETED = "system_fake_parent_deleted",
+	SYSTEM_GENERIC = "system_generic",
+	REMINDER = "reminder",
+	SYSTEM_WRANGLER = "system_wrangler",
+	NULL = ""
+}
 
 /**
  * ===============================================
@@ -75,50 +124,17 @@ export interface Post<PROP_METADATA = Record<string, unknown>> {
 
 /**
  * ===============================================
- * @description Posts main enums
+ * @description Posts props
  * ===============================================
  */
-
-export enum PostState {
-	DELETED = "DELETED",
-	NULL = ""
-}
-
-export enum PostPriority {
-	URGENT = "urgent",
-	IMPORTANT = "important",
-	NULL = ""
-}
-
-export enum PostEmbedType {
-	IMAGE = "image",
-	LINK = "link",
-	ATTACHMENT = "message_attachment",
-	OPEN_GRAPH = "opengraph",
-	PERMALINK = "permalink"
-}
-
-export enum PostType {
-	SYSTEM_ADD_REMOVE = "system_add_remove",
-	SYSTEM_ADD_TO_CHANNEL = "system_add_to_channel",
-	SYSTEM_ADD_TO_TEAM = "system_add_to_team",
-	SYSTEM_CHANNEL_DELETED = "system_channel_deleted",
-	SYSTEM_CHANNEL_RESTORED = "system_channel_restored",
-	SYSTEM_DISPLAY_NAME_CHANGE = "system_displayname_change",
-	SYSTEM_CONVERT_CHANNEL = "system_convert_channel",
-	SYSTEM_EPHEMERAL = "system_ephemeral",
-	SYSTEM_HEADER_CHANGE = "system_header_change",
-	SYSTEM_JOIN_CHANNEL = "system_join_channel",
-	SYSTEM_JOIN_LEAVE = "system_join_leave",
-	SYSTEM_LEAVE_CHANNEL = "system_leave_channel",
-	SYSTEM_PURPOSE_CHANGE = "system_purpose_change",
-	SYSTEM_REMOVE_FROM_CHANNEL = "system_remove_from_channel",
-	SYSTEM_COMBINED_USER_ACTIVITY = "system_combined_user_activity",
-	SYSTEM_FAKE_PARENT_DELETED = "system_fake_parent_deleted",
-	SYSTEM_GENERIC = "system_generic",
-	REMINDER = "reminder",
-	SYSTEM_WRANGLER = "system_wrangler",
-	NULL = ""
+export interface PostProps<PROP_METADATA = Record<string, unknown>> {
+	app_bindings?: AppBinding[];
+	attachments?: PostAttachment[];
+	from_bot?: "true" | "false";
+	metadata?: PROP_METADATA;
+	disable_group_highlight?: boolean;
+	locationReplyMessage?: "CENTER" | string;
+	replyMessage?: string;
 }
 
 /**
@@ -169,21 +185,6 @@ export interface PostMetadata {
 	reactions?: Reaction[];
 	priority?: PostPriorityMetadata;
 	acknowledgements?: PostAcknowledgement[];
-}
-
-/**
- * ===============================================
- * @description Posts props
- * ===============================================
- */
-export interface PostProps<PROP_METADATA = Record<string, unknown>> {
-	app_bindings?: AppBinding[];
-	attachments?: PostAttachment[];
-	from_bot?: "true" | "false";
-	metadata?: PROP_METADATA;
-	disable_group_highlight?: boolean;
-	locationReplyMessage?: "CENTER" | string;
-	replyMessage?: string;
 }
 
 /**
@@ -268,7 +269,7 @@ export interface PostAttachment {
 	/**
 	 * @description Post action array (buttons/selects) used in interactive messages
 	 */
-	actions?: Array<PostActionBase>;
+	actions?: Array<PostAction>;
 
 	/**
 	 * @description An optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
@@ -343,10 +344,16 @@ export enum PostActionType {
 	BUTTON = "button"
 }
 
-export enum PostActionDataSource {
-	CHANNELS = "channels",
-	USERS = "users",
-	NULL = ""
+interface ButtonStyle {
+	/**
+	 * @description Button color
+	 *
+	 * Button actions support a style parameter to change the color of the button.
+	 * The possible values for style are: good, warning, danger, default, primary, and success.
+	 *
+	 * It's also possible to pass a theme variable or a hex color, but we discourage this approach because it won't be resilient against theme changes.
+	 */
+	style?: PostActionStyle;
 }
 
 /**
@@ -355,11 +362,11 @@ export enum PostActionDataSource {
  *
  * @see {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
  */
-export interface PostActionBase<T extends PostActionType = PostActionType> {
+interface PostActionBase<CONTEXT = Record<string, unknown>> {
 	/**
 	 * @description Action type - button or select
 	 */
-	type: T;
+	type: PostActionType;
 
 	/**
 	 * @description A per post unique identifier.
@@ -386,56 +393,44 @@ export interface PostActionBase<T extends PostActionType = PostActionType> {
 		/**
 		 * @description The requests sent to the specified URL contain the user ID, post ID, channel ID, team ID, and any context that was provided in the action definition. If the post was of type Message Menus, then context also contains the selected_option field with the user-selected option value. The post ID can be used to, for example, delete or edit the post after selecting a message button.
 		 */
-		context?: Record<string, unknown>;
+		context?: CONTEXT;
 	};
 }
 
 /**
- * Post buttons
+ * Button action
  *
- * @description Add buttons as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
+ * @description Add buttons as actions in your integration
+ * @see {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
  */
-export interface PostActionButton
-	extends PostActionBase<PostActionType.BUTTON> {
-	data_source?: never;
-	options?: never[];
-	/**
-	 * @description Button text
-	 */
-	name: string;
-
-	/**
-	 * @description Button color
-	 *
-	 * Button actions support a style parameter to change the color of the button.
-	 * The possible values for style are: good, warning, danger, default, primary, and success.
-	 *
-	 * It's also possible to pass a theme variable or a hex color, but we discourage this approach because it won't be resilient against theme changes.
-	 */
-	style?: PostActionStyle;
+export interface PostActionButton<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT>,
+		ButtonStyle {
+	type: PostActionType.BUTTON;
 }
 
 /**
- * Post select
+ * Select action
  *
- * @description Similar to buttons, add menus as actions in your integration {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
+ * @description Similar to buttons, add menus as actions in your integration
+ * @see {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Message attachments}
  */
-export interface PostActionSelect
-	extends PostActionBase<PostActionType.SELECT> {
-	/**
-	 * @description Data source for options
-	 *
-	 * You can provide a list of channels for message menus for users to select from.
-	 * Users can only select from public channels in their teams.
-	 *
-	 * Similar to channels, you can also provide a list of users for message menus.
-	 * The user can choose the user who is part of the Mattermost system.
-	 *
-	 * If not provided then options array is used
-	 */
-	data_source?: PostActionDataSource;
-	options?: Option[] | undefined;
+export interface PostActionSelect<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT>,
+		DataSource,
+		Options {
+	type: PostActionType.SELECT;
 }
+
+export type PostAction<CONTEXT = Record<string, unknown>> =
+	| PostActionButton<CONTEXT>
+	| PostActionSelect<CONTEXT>;
+
+export interface PostActionData<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT>,
+		ButtonStyle,
+		DataSource,
+		Options {}
 
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	post_id: string;

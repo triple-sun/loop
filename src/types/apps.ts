@@ -1,4 +1,4 @@
-import type { Option } from "./general";
+import type { MinMaxLentgh, Option, Options } from "./common";
 
 /**
  * ===============================================
@@ -49,24 +49,6 @@ export enum AppExpandLevel {
 	ID = "id"
 }
 
-export interface AppContextProps {
-	[name: string]: string;
-}
-
-export interface AppContext {
-	app_id: string;
-	location?: string;
-	acting_user_id?: string;
-	user_id?: string;
-	channel_id?: string;
-	team_id?: string;
-	post_id?: string;
-	root_id?: string;
-	props?: AppContextProps;
-	user_agent?: string;
-	track_as_submit?: boolean;
-}
-
 export interface AppExpand {
 	app?: AppExpandLevel;
 	acting_user?: AppExpandLevel;
@@ -82,12 +64,25 @@ export interface AppExpand {
 	locale?: AppExpandLevel;
 }
 
+export interface AppContext<PROPS_TYPE = Record<string, unknown>> {
+	app_id: string;
+	location?: string;
+	acting_user_id?: string;
+	user_id?: string;
+	channel_id?: string;
+	team_id?: string;
+	post_id?: string;
+	root_id?: string;
+	props?: PROPS_TYPE;
+	user_agent?: string;
+	track_as_submit?: boolean;
+}
+
 /**
  * =======================================
  * @description Apps Call Types
  * =======================================
  */
-
 export interface AppCallMetadataForClient {
 	bot_user_id: string;
 	bot_username: string;
@@ -251,7 +246,7 @@ export enum AppFormFieldType {
 }
 
 /** The text field subtypes, except textarea, map to the types of the HTML input form element */
-export enum AppFormFieldSubType {
+export enum AppFormFieldTextSubType {
 	INPUT = "input" /**  A single-line text input field. */,
 	TEXT_AREA = "textarea" /** A multi-line text input field; uses the HTML textarea element. */,
 	EMAIL = "email" /**  A field for editing an email address. */,
@@ -261,16 +256,47 @@ export enum AppFormFieldSubType {
 	URL = "url" /**  A field for entering a URL. */
 }
 
+interface Multiselect {
+	/**
+	 * @description Whether a select field allows multiple values to be selected.
+	 */
+	multiselect?: boolean;
+}
+interface Refresh {
+	/**
+	 * @description Allows the form to be refreshed when the value of the field has changed.
+	 */
+	refresh?: boolean;
+}
+interface Lookup {
+	/**
+	 * @description A call that returns a list of options for dynamic select fields.
+	 */
+	lookup: AppCall;
+}
+interface TextSubType {
+	/**
+	 * @description The subtype of text field that will be shown.
+	 */
+	subtype?: AppFormFieldTextSubType;
+}
+
+export type FormFieldTypeValue<T extends AppFormFieldType> =
+	T extends AppFormFieldType.BOOLEAN
+		? boolean
+		: T extends AppFormStaticSelectField | AppFormDynamicSelectField
+			? Option
+			: string;
 /**
  * @description The basic structure of a form field
  *
  * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
  */
-interface FormFieldBase<T extends AppFormFieldType, V> {
+interface AppFormFieldBase<T extends AppFormFieldType = AppFormFieldType.TEXT> {
 	/**
 	 *  @description The type of the field.
 	 */
-	readonly type: T;
+	type: T;
 
 	/**
 	 * @description Key to use in the values field of the call.
@@ -303,7 +329,7 @@ interface FormFieldBase<T extends AppFormFieldType, V> {
 	/**
 	 * @description The field's default value.
 	 */
-	value?: V;
+	value?: FormFieldTypeValue<T>;
 
 	/**
 	 * @description Whether the field has a mandatory value.
@@ -323,20 +349,6 @@ interface FormFieldBase<T extends AppFormFieldType, V> {
 	position?: number;
 }
 
-interface Multiselectable {
-	/**
-	 * @description Whether a select field allows multiple values to be selected.
-	 */
-	multiselect?: boolean;
-}
-
-interface Refreshable {
-	/**
-	 * @description Allows the form to be refreshed when the value of the field has changed.
-	 */
-	refresh?: boolean;
-}
-
 /**
  * =======================================
  * @description App Form Field Actual Types
@@ -346,21 +358,15 @@ interface Refreshable {
  * @description A boolean selector represented as a checkbox.
  */
 export interface AppFormBooleanField
-	extends FormFieldBase<AppFormFieldType.BOOLEAN, boolean> {}
-
-/**
- * @description A dropdown to select channels.
- */
-export interface AppFormChannelsField
-	extends FormFieldBase<AppFormFieldType.CHANNEL, string>,
-		Multiselectable {}
-
-/**
- * @description A dropdown to select users.
- */
-export interface AppFormUsersField
-	extends FormFieldBase<AppFormFieldType.USER, string>,
-		Multiselectable {}
+	extends AppFormFieldBase<AppFormFieldType.BOOLEAN> {
+	options: never;
+	lookup: never;
+	refresh: never;
+	multiselect: never;
+	subtype: never;
+	min_lenghth: never;
+	max_length: never;
+}
 
 /**
  * @description An arbitrary markdown text; only visible in modal dialogs.
@@ -368,54 +374,49 @@ export interface AppFormUsersField
  * Read-only.
  */
 export interface AppFormMarkdownField
-	extends FormFieldBase<AppFormFieldType.MARKDOWN, string> {}
+	extends AppFormFieldBase<AppFormFieldType.MARKDOWN> {}
+
+/**
+ * @description A dropdown to select channels.
+ */
+export interface AppFormChannelsField
+	extends AppFormFieldBase<AppFormFieldType.CHANNEL>,
+		Multiselect,
+		Refresh {}
+
+/**
+ * @description A dropdown to select users.
+ */
+export interface AppFormUsersField
+	extends AppFormFieldBase<AppFormFieldType.USER>,
+		Multiselect,
+		Refresh {}
 
 /**
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends FormFieldBase<AppFormFieldType.STATIC_SELECT, Option>,
-		Multiselectable,
-		Refreshable {
-	/**
-	 * @description A list of options for static select fields.
-	 */
-	options: Option[];
-}
+	extends AppFormFieldBase<AppFormFieldType.STATIC_SELECT>,
+		Multiselect,
+		Options,
+		Refresh {}
 
 /**
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends FormFieldBase<AppFormFieldType.DYNAMIC_SELECT, Option>,
-		Multiselectable,
-		Refreshable {
-	/**
-	 * @description A call that returns a list of options for dynamic select fields.
-	 */
-	lookup: AppCall;
-}
+	extends AppFormFieldBase<AppFormFieldType.DYNAMIC_SELECT>,
+		Multiselect,
+		Lookup,
+		Refresh {}
 
 /**
  * @description A plain text field.
  */
 export interface AppFormTextField
-	extends FormFieldBase<AppFormFieldType.TEXT, string> {
-	/**
-	 * @description The subtype of text field that will be shown.
-	 */
-	readonly subtype: AppFormFieldSubType;
-
-	/**
-	 * @description The minimum length of text field input.
-	 */
-	min_length?: number;
-
-	/**
-	 * @description The maximum length of text field input.
-	 */
-	max_length?: number;
-}
+	extends AppFormFieldBase<AppFormFieldType.TEXT>,
+		TextSubType,
+		MinMaxLentgh {}
 
 export type AppFormField =
 	| AppFormBooleanField
@@ -425,3 +426,11 @@ export type AppFormField =
 	| AppFormStaticSelectField
 	| AppFormUsersField
 	| AppFormTextField;
+
+export interface AppFormFieldData
+	extends AppFormFieldBase,
+		Multiselect,
+		MinMaxLentgh,
+		Lookup,
+		Refresh,
+		Options {}
