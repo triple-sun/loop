@@ -19,14 +19,13 @@ export interface PostBaseArguments<METADATA = Record<string, unknown>> {
 export interface PostCreateWithUserIDArguments<
 	METADATA = Record<string, unknown>
 > extends TokenOverridable,
-		PostBaseArguments<METADATA> {
+		Readonly<PostBaseArguments<METADATA>> {
 	to_user_id: string;
 }
-
 export interface PostCreateWithChannelIDArguments<
 	METADATA = Record<string, unknown>
 > extends TokenOverridable,
-		PostBaseArguments<METADATA> {
+		Readonly<PostBaseArguments<METADATA>> {
 	channel_id: string;
 }
 /**

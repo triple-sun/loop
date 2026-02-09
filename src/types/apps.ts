@@ -144,7 +144,7 @@ export interface BindingsInfo {
 
 export interface AppBinding<SUBMIT_STATE = Record<string, unknown>> {
 	app_id: string;
-	location?: AppLocation;
+	location?: AppLocation | string;
 	supported_product_ids?: ProductScope;
 	icon?: string;
 
@@ -424,6 +424,6 @@ export interface AppFormFieldData
 	extends AppFormFieldBase,
 		Multiselect,
 		MinMaxLentgh,
-		Lookup,
+		Partial<Lookup>,
 		Refresh,
 		Options {}

@@ -426,6 +426,12 @@ export type PostAction<CONTEXT = Record<string, unknown>> =
 	| PostActionButton<CONTEXT>
 	| PostActionSelect<CONTEXT>;
 
+export interface PostActionData<CONTEXT = Record<string, unknown>>
+	extends PostActionBase<CONTEXT>,
+		Required<ButtonStyle>,
+		Required<DataSource>,
+		Required<Options> {}
+
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	post_id: string;
 	channel_id: string;
