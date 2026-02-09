@@ -366,7 +366,7 @@ interface PostActionBase<CONTEXT = Record<string, unknown>> {
 	/**
 	 * @description Action type - button or select
 	 */
-	type: PostActionType;
+	readonly type: PostActionType;
 
 	/**
 	 * @description A per post unique identifier.
@@ -406,7 +406,7 @@ interface PostActionBase<CONTEXT = Record<string, unknown>> {
 export interface PostActionButton<CONTEXT = Record<string, unknown>>
 	extends PostActionBase<CONTEXT>,
 		ButtonStyle {
-	type: PostActionType.BUTTON;
+	readonly type: PostActionType.BUTTON;
 }
 
 /**
@@ -419,18 +419,12 @@ export interface PostActionSelect<CONTEXT = Record<string, unknown>>
 	extends PostActionBase<CONTEXT>,
 		DataSource,
 		Options {
-	type: PostActionType.SELECT;
+	readonly type: PostActionType.SELECT;
 }
 
 export type PostAction<CONTEXT = Record<string, unknown>> =
 	| PostActionButton<CONTEXT>
 	| PostActionSelect<CONTEXT>;
-
-export interface PostActionData<CONTEXT = Record<string, unknown>>
-	extends PostActionBase<CONTEXT>,
-		ButtonStyle,
-		DataSource,
-		Options {}
 
 export interface PostActionPayload<CONTEXT = Record<string, unknown>> {
 	post_id: string;

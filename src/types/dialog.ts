@@ -124,7 +124,7 @@ interface DialogElementBase {
 	 * @description Element type
 	 * Set this value to `text` for a text element.
 	 */
-	type: DialogElementType;
+	readonly type: DialogElementType;
 
 	/**
 	 * @description Name of the field element used by the integration.
@@ -164,6 +164,11 @@ interface DialogElementBase {
 	default?: string;
 }
 
+/** Чекбоксы */
+export interface DialogCheckboxElement extends DialogElementBase {
+	readonly type: DialogElementType.CHECKBOX;
+}
+
 /**
  * Text elements
  * @description Text elements are single-line plain text fields. Below is an example of a text element that asks for an email address.
@@ -173,7 +178,7 @@ export interface DialogTextElement
 		TextSubType,
 		MinMaxLentgh,
 		Placeholder {
-	type: DialogElementType.TEXT;
+	readonly type: DialogElementType.TEXT;
 }
 
 /** Текстовое поле - многострочное */
@@ -182,7 +187,7 @@ export interface DialogTextAreaElement
 		TextSubType,
 		MinMaxLentgh,
 		Placeholder {
-	type: DialogElementType.TEXT_AREA;
+	readonly type: DialogElementType.TEXT_AREA;
 }
 
 /** Выпадающий список */
@@ -191,17 +196,12 @@ export interface DialogSelectElement
 		DataSource,
 		Options,
 		Placeholder {
-	type: DialogElementType.SELECT;
-}
-
-/** Чекбоксы */
-export interface DialogCheckboxElement extends DialogElementBase {
-	type: DialogElementType.CHECKBOX;
+	readonly type: DialogElementType.SELECT;
 }
 
 /** Радиокнопки */
 export interface DialogRadioElement extends DialogElementBase, Options {
-	type: DialogElementType.RADIO;
+	readonly type: DialogElementType.RADIO;
 }
 
 export type DialogElement =
@@ -210,14 +210,6 @@ export type DialogElement =
 	| DialogRadioElement
 	| DialogSelectElement
 	| DialogTextAreaElement;
-
-export interface DialogElementData
-	extends DialogElementBase,
-		Placeholder,
-		Options,
-		DataSource,
-		TextSubType,
-		MinMaxLentgh {}
 
 /**
  * ===============================================
@@ -228,7 +220,7 @@ export interface DialogElementData
  */
 
 export interface DialogSubmission {
-	type: "dialog_submission";
+	readonly type: "dialog_submission";
 	url?: string;
 	callback_id: string;
 	state: string;

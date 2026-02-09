@@ -88,17 +88,14 @@ export interface AppCallMetadataForClient {
 	bot_username: string;
 }
 
-export interface AppCall<
-	STATE extends Record<string, unknown> = Record<string, unknown>
-> {
+export interface AppCall<STATE = Record<string, unknown>> {
 	path: string;
 	expand?: AppExpand;
 	state?: STATE;
 }
 
-export interface AppCallRequest<
-	VALUES extends Record<string, unknown> = Record<string, unknown>
-> extends AppCall {
+export interface AppCallRequest<VALUES = Record<string, unknown>>
+	extends AppCall {
 	context: AppContext;
 	values?: VALUES;
 	raw_command?: string;
@@ -145,9 +142,7 @@ export interface BindingsInfo {
 	forms: AppCommandFormMap;
 }
 
-export interface AppBinding<
-	SUBMIT_STATE extends Record<string, unknown> = Record<string, unknown>
-> {
+export interface AppBinding<SUBMIT_STATE = Record<string, unknown>> {
 	app_id: string;
 	location?: AppLocation;
 	supported_product_ids?: ProductScope;
@@ -202,8 +197,8 @@ export interface AppFormResponseData {
 }
 
 export interface AppForm<
-	SOURCE_STATE extends Record<string, unknown> = Record<string, unknown>,
-	SUBMIT_STATE extends Record<string, unknown> = Record<string, unknown>
+	SOURCE_STATE = Record<string, unknown>,
+	SUBMIT_STATE = Record<string, unknown>
 > {
 	title?: string;
 	header?: string;
@@ -281,22 +276,16 @@ interface TextSubType {
 	subtype?: AppFormFieldTextSubType;
 }
 
-export type FormFieldTypeValue<T extends AppFormFieldType> =
-	T extends AppFormFieldType.BOOLEAN
-		? boolean
-		: T extends AppFormStaticSelectField | AppFormDynamicSelectField
-			? Option
-			: string;
 /**
  * @description The basic structure of a form field
  *
  * @see {@link godoc: https://pkg.go.dev/github.com/mattermost/mattermost-plugin-apps/apps#Field | Field}
  */
-interface AppFormFieldBase<T extends AppFormFieldType = AppFormFieldType.TEXT> {
+interface AppFormFieldBase {
 	/**
 	 *  @description The type of the field.
 	 */
-	type: T;
+	readonly type: AppFormFieldType;
 
 	/**
 	 * @description Key to use in the values field of the call.
@@ -329,7 +318,7 @@ interface AppFormFieldBase<T extends AppFormFieldType = AppFormFieldType.TEXT> {
 	/**
 	 * @description The field's default value.
 	 */
-	value?: FormFieldTypeValue<T>;
+	value?: unknown;
 
 	/**
 	 * @description Whether the field has a mandatory value.
@@ -357,15 +346,8 @@ interface AppFormFieldBase<T extends AppFormFieldType = AppFormFieldType.TEXT> {
 /**
  * @description A boolean selector represented as a checkbox.
  */
-export interface AppFormBooleanField
-	extends AppFormFieldBase<AppFormFieldType.BOOLEAN> {
-	options: never;
-	lookup: never;
-	refresh: never;
-	multiselect: never;
-	subtype: never;
-	min_lenghth: never;
-	max_length: never;
+export interface AppFormBooleanField extends AppFormFieldBase {
+	readonly type: AppFormFieldType.BOOLEAN;
 }
 
 /**
@@ -373,50 +355,61 @@ export interface AppFormBooleanField
  *
  * Read-only.
  */
-export interface AppFormMarkdownField
-	extends AppFormFieldBase<AppFormFieldType.MARKDOWN> {}
+export interface AppFormMarkdownField extends AppFormFieldBase {
+	readonly type: AppFormFieldType.MARKDOWN;
+}
 
 /**
  * @description A dropdown to select channels.
  */
 export interface AppFormChannelsField
-	extends AppFormFieldBase<AppFormFieldType.CHANNEL>,
+	extends AppFormFieldBase,
 		Multiselect,
-		Refresh {}
+		Refresh {
+	readonly type: AppFormFieldType.CHANNEL;
+}
 
 /**
  * @description A dropdown to select users.
  */
 export interface AppFormUsersField
-	extends AppFormFieldBase<AppFormFieldType.USER>,
+	extends AppFormFieldBase,
 		Multiselect,
-		Refresh {}
+		Refresh {
+	readonly type: AppFormFieldType.USER;
+}
 
 /**
  * @description A dropdown select with static elements.
  */
 export interface AppFormStaticSelectField
-	extends AppFormFieldBase<AppFormFieldType.STATIC_SELECT>,
+	extends AppFormFieldBase,
 		Multiselect,
 		Options,
-		Refresh {}
+		Refresh {
+	readonly type: AppFormFieldType.STATIC_SELECT;
+}
 
 /**
  * @description A dropdown select that loads the elements dynamically.
  */
 export interface AppFormDynamicSelectField
-	extends AppFormFieldBase<AppFormFieldType.DYNAMIC_SELECT>,
+	extends AppFormFieldBase,
 		Multiselect,
 		Lookup,
-		Refresh {}
+		Refresh {
+	readonly type: AppFormFieldType.DYNAMIC_SELECT;
+}
 
 /**
  * @description A plain text field.
  */
 export interface AppFormTextField
-	extends AppFormFieldBase<AppFormFieldType.TEXT>,
+	extends AppFormFieldBase,
 		TextSubType,
-		MinMaxLentgh {}
+		MinMaxLentgh {
+	readonly type: AppFormFieldType.TEXT;
+}
 
 export type AppFormField =
 	| AppFormBooleanField
