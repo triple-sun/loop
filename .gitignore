@@ -199,3 +199,5 @@ oldsrc
 
 test/integration/real-api/reports/*
 **/*local.*
+
+.env.test

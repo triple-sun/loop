@@ -2936,6 +2936,12 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			})
 		},
 
+		teams: bindApiCall<UserID, Team[]>(this, {
+			method: "GET",
+			path: `/users/:user_id/teams`,
+			type: ContentType.URLEncoded
+		}),
+
 		updateRoles: bindApiCall<UsersUpdateRolesArguments, StatusOKResponse>(
 			this,
 			{
