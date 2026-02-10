@@ -4,6 +4,8 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue.svg)](https://www.typescriptlang.org/)
 
+[🇷🇺 Читать на русском](./README.ru.md)
+
 A modern, strongly-typed TypeScript client for [Loop](https://loop.ru) (a fork of Mattermost). Designed to be compatible with both Node.js and browser environments, this client provides comprehensive coverage of the Loop/Mattermost API with full type safety.
 
 ## Features
@@ -96,7 +98,13 @@ import { WebClient, fiveRetriesInFiveMinutes } from 'loop-client';
 const client = new WebClient('https://your-loop-server.loop.ru', {
   // Authentication
   token: 'your-api-token',
+  userID: 'me', // Optional: Current user ID (calculated automatically if not provided)
   
+  // Auto-detection & Behavior
+  useCurrentUserForDirectChannels: true, // Auto-use current user ID for DM creation
+  useCurrentUserForPostCreation: true,   // Auto-resolve channel_id for new posts if missing
+  saveFetchedUserID: false,              // Cache fetched user ID for future requests
+
   // Logging
   logLevel: 'debug',
   logger: customLogger, // Optional: provide your own logger
@@ -110,6 +118,9 @@ const client = new WebClient('https://your-loop-server.loop.ru', {
   headers: {
     'X-Custom-Header': 'value'
   },
+  agent: new https.Agent({ keepAlive: true }), // Custom HTTP agent (e.g. for proxies)
+  requestInterceptor: (config) => config,      // Custom request interceptor
+  adapter: customAdapter,                      // Custom Axios adapter
   
   // TLS/SSL options
   tls: {

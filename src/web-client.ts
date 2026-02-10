@@ -26,7 +26,7 @@ import {
 	WebClientOptionsError
 } from "./errors";
 import { getUserAgent } from "./instrument";
-import { getLogger } from "./logger";
+import { getOrCreateLogger } from "./logger";
 import { Methods } from "./methods";
 import type {
 	ChannelsCreateDirectArguments,
@@ -97,7 +97,7 @@ export class WebClient extends Methods {
 	/**
 	 * Maximum HTTP status code considered successful
 	 */
-	private static readonly HTTP_SUCCESS_MAX = 300;
+	private static readonly HTTP_SUCCESS_MAX = 299;
 
 	/**
 	 * This object's logger instance
@@ -188,21 +188,11 @@ export class WebClient extends Methods {
 		this.saveFetchedUserID = saveFetchedUserID;
 
 		/** Set up logging */
-		if (logger !== undefined) {
-			this.logger = logger;
-
-			if (logLevel !== undefined) {
-				this.logger.debug(
-					"The logLevel given to WebClient was ignored as you also gave logger"
-				);
-			}
-		} else {
-			this.logger = getLogger(
-				WebClient.loggerName,
-				logLevel ?? LogLevel.INFO,
-				logger
-			);
-		}
+		this.logger = getOrCreateLogger(
+			WebClient.loggerName,
+			logLevel ?? LogLevel.INFO,
+			logger
+		);
 
 		if (this.token && !headers.Authorization) {
 			headers.Authorization = `Bearer ${this.token}`;
@@ -306,9 +296,9 @@ export class WebClient extends Methods {
 		};
 
 		/** and handle TokenOverridable */
-		if (typeof options["token"] === "string" && options["token"]) {
+		if (typeof options["token"] === "string") {
 			headers["Authorization"] = `Bearer ${options["token"]}`;
-			options["token"] = undefined;
+			delete options["token"];
 
 			this.logger.debug(`token has been overridden`);
 		}
@@ -328,7 +318,6 @@ export class WebClient extends Methods {
 		const result = this.buildResult<T>(url, response);
 
 		this.logger.debug(`APICall result: ${JSON.stringify(result, null, 2)}`);
-
 		this.logger.debug(`APICall [${config.method} ${config.path}] end`);
 
 		return result;
@@ -343,7 +332,6 @@ export class WebClient extends Methods {
 		config: AxiosRequestConfig
 	): Promise<RetryOkResult<AxiosResponse<T>> | RetryFailedResult> {
 		const task = () =>
-			// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <jesting>
 			this.breadline.add(async () => {
 				const cfg: AxiosRequestConfig = {
 					...config,
@@ -368,38 +356,27 @@ export class WebClient extends Methods {
 				this.logger.debug("http response received");
 				this.logger.debug(`http response status: ${response.status}`);
 
-				if (this.serverVersion !== response.headers[HEADER_X_VERSION_ID]) {
-					this.serverVersion = response.headers[HEADER_X_VERSION_ID];
-				}
+				this.setResponseVersionHeaders(response);
 
-				if (this.clusterId !== response.headers[HEADER_X_CLUSTER_ID]) {
-					this.clusterId = response.headers[HEADER_X_CLUSTER_ID];
+				if (response.status <= WebClient.HTTP_SUCCESS_MAX) {
+					return response;
 				}
 
 				/** handle error status code */
-				if (response.status > WebClient.HTTP_SUCCESS_MAX) {
-					this.logger.debug(
-						`http error: ${JSON.stringify(response.data, null, 2)}`
-					);
+				this.logger.debug(
+					`http error: ${JSON.stringify(response.data, null, 2)}`
+				);
 
-					const { data } = response;
-					if (isServerError(data)) {
-						if (response.status === 429) {
-							// Parse Retry-After header for rate limit backoff
-							const retryAfter = response.headers["retry-after"];
-							const retryAfterSeconds = retryAfter
-								? Number.parseInt(retryAfter, 10)
-								: undefined;
-							throw new WebAPIRateLimitedError(data, retryAfterSeconds);
-						}
-
-						throw new WebAPIServerError(data);
-					}
-
-					throw new WebAPIRequestError(data);
+				if (!isServerError(response.data)) {
+					throw new WebAPIRequestError(response.data);
 				}
 
-				return response;
+				switch (response.status) {
+					case 429:
+						throw new WebAPIRateLimitedError(response.data, response);
+					default:
+						throw new WebAPIServerError(response.data);
+				}
 			});
 
 		return await retry<AxiosResponse<T>>("safe", task, this.retryConfig);
@@ -653,5 +630,21 @@ export class WebClient extends Methods {
 				{} as Record<string, unknown>
 			)
 		};
+	}
+
+	private setResponseVersionHeaders(response: AxiosResponse): void {
+		if (
+			response.headers[HEADER_X_VERSION_ID] &&
+			this.serverVersion !== response.headers[HEADER_X_VERSION_ID]
+		) {
+			this.serverVersion = response.headers[HEADER_X_VERSION_ID];
+		}
+
+		if (
+			response.headers[HEADER_X_CLUSTER_ID] &&
+			this.clusterId !== response.headers[HEADER_X_CLUSTER_ID]
+		) {
+			this.clusterId = response.headers[HEADER_X_CLUSTER_ID];
+		}
 	}
 }

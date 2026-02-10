@@ -3,11 +3,11 @@ import { ConsoleLogger, type Logger, type LogLevel } from "@triple-sun/logger";
 let instanceCount = 0;
 
 /**
- * INTERNAL interface for getting or creating a named Logger.
+ * @internal interface for getting or creating a named Logger.
  * */
-export function getLogger(
+export function getOrCreateLogger(
 	name: string,
-	level: LogLevel,
+	level?: LogLevel,
 	existingLogger?: Logger
 ): Logger {
 	// Get a unique ID for the logger.
@@ -16,7 +16,15 @@ export function getLogger(
 
 	// Set up the logger.
 	const logger: Logger = (() => {
-		if (existingLogger !== undefined) return existingLogger;
+		if (existingLogger !== undefined) {
+			if (level !== undefined) {
+				existingLogger.debug(
+					"The logLevel given to WebClient was ignored as you also gave logger"
+				);
+			}
+
+			return existingLogger;
+		}
 		return new ConsoleLogger();
 	})();
 

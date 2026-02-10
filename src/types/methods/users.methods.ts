@@ -298,3 +298,156 @@ export interface UsersCustomStatusUnsetArguments
 export interface UsersUpdateRolesArguments extends UserID {
 	roles: string[];
 }
+
+/**
+ * ============================================================================
+ * CRUD Operations - NEW
+ * ============================================================================
+ */
+
+/**
+ * @description Create a new user account
+ * @permissions Requires `manage_system` or `create_user` permission
+ */
+export interface UsersCreateArguments extends TokenOverridable {
+	/** @description User email */
+	email: string;
+	/** @description Username */
+	username: string;
+	/** @description User password */
+	password: string;
+	/** @description First name */
+	first_name?: string;
+	/** @description Last name */
+	last_name?: string;
+	/** @description Nickname */
+	nickname?: string;
+	/** @description Authentication service (e.g., 'ldap', 'saml') */
+	auth_service?: string;
+	/** @description Authentication data for the service */
+	auth_data?: string;
+	/** @description User locale */
+	locale?: string;
+	/** @description Custom user properties */
+	props?: Record<string, string>;
+	/** @description Notification properties */
+	notify_props?: object;
+}
+
+/**
+ * @description Update a user's information (full update)
+ * @permissions User can update their own profile, or requires `edit_other_users`
+ */
+export interface UsersUpdateArguments extends UsersProfileSetArguments {
+	/** @description Timezone information */
+	timezone?: object;
+}
+
+/**
+ * @description Partially update a user's information
+ * @permissions User can patch their own profile, or requires `edit_other_users`
+ */
+export interface UsersPatchArguments extends TokenOverridable, UserID {
+	/** @description User email */
+	email?: string;
+	/** @description Username */
+	username?: string;
+	/** @description First name */
+	first_name?: string;
+	/** @description Last name */
+	last_name?: string;
+	/** @description Nickname */
+	nickname?: string;
+	/** @description User locale */
+	locale?: string;
+	/** @description Timezone information */
+	timezone?: object;
+	/** @description Position/title */
+	position?: string;
+	/** @description Custom user properties */
+	props?: Record<string, string>;
+	/** @description Notification properties */
+	notify_props?: object;
+}
+
+/**
+ * @description Deactivate a user account
+ * @permissions Requires `manage_system` permission
+ */
+export interface UsersDeleteArguments extends TokenOverridable, UserID {}
+
+/**
+ * @description Update user's active status
+ * @permissions Requires `manage_system` permission
+ */
+export interface UsersSetActiveArguments extends TokenOverridable, UserID {
+	/** @description Whether the user should be active */
+	active: boolean;
+}
+
+/**
+ * ============================================================================
+ * Authentication - NEW
+ * ============================================================================
+ */
+
+/**
+ * @description Login to Loop server
+ */
+export interface UsersLoginArguments extends TokenOverridable {
+	/** @description User login ID (email or username) */
+	login_id?: string;
+	/** @description User password */
+	password?: string;
+	/** @description User token for token-based authentication */
+	token?: string;
+	/** @description Device ID for push notifications */
+	device_id?: string;
+	/** @description Force LDAP authentication only */
+	ldap_only?: boolean;
+}
+
+/**
+ * @description Auto-login using CWS token
+ */
+export interface UsersLoginCWSArguments extends TokenOverridable {
+	/** @description CWS authentication token */
+	token: string;
+}
+
+/**
+ * @description Logout from the server
+ */
+export interface UsersLogoutArguments extends TokenOverridable {}
+
+/**
+ * ============================================================================
+ * Search & Retrieval - NEW
+ * ============================================================================
+ */
+
+/**
+ * @description Get users by their IDs
+ */
+export interface UsersGetByIdsArguments extends TokenOverridable {
+	/** @description List of user IDs */
+	user_ids: string[];
+	/** @description Only return users modified since this timestamp */
+	since?: number;
+}
+
+/**
+ * @description Get users by their usernames
+ */
+export interface UsersGetByUsernamesArguments extends TokenOverridable {
+	/** @description List of usernames */
+	usernames: string[];
+}
+
+/**
+ * @description Get users by group channel IDs
+ */
+export interface UsersGetByGroupChannelsArguments extends TokenOverridable {
+	/** @description List of group channel IDs */
+	channel_ids: string[];
+}

@@ -335,18 +335,29 @@ import type {
 } from "./types/methods/uploads.methods";
 import type {
 	UsersAutocompleteArguments,
+	UsersCreateArguments,
 	UsersCustomStatusSetArguments,
 	UsersCustomStatusUnsetArguments,
+	UsersDeleteArguments,
 	UsersDeleteImageArguments,
 	UsersGetByEmailArguments,
+	UsersGetByGroupChannelsArguments,
+	UsersGetByIdsArguments,
 	UsersGetByUsernameArguments,
+	UsersGetByUsernamesArguments,
 	UsersListArguments,
+	UsersLoginArguments,
+	UsersLoginCWSArguments,
+	UsersLogoutArguments,
+	UsersPatchArguments,
 	UsersProfileGetArguments,
 	UsersProfileSetArguments,
 	UsersSearchArguments,
+	UsersSetActiveArguments,
 	UsersSetImageArguments,
 	UsersStatusGetAruments,
 	UsersStatusSetAruments,
+	UsersUpdateArguments,
 	UsersUpdateRolesArguments
 } from "./types/methods/users.methods";
 import type {
@@ -2664,6 +2675,11 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 	 * ============================================================================
 	 */
 	public readonly users = {
+		/**
+		 * @description Autocomplete users by name, username, or email.
+		 * Optimized for real-time UI search.
+		 * @permissions Requires valid user session
+		 */
 		autocomplete: bindApiCall<
 			UsersAutocompleteArguments,
 			{ users: UserProfile[]; out_of_channel?: UserProfile[] }
@@ -2672,6 +2688,140 @@ export abstract class Methods extends EventEmitter<WebClientEvent> {
 			path: "users/autocomplete",
 			type: ContentType.URLEncoded
 		}),
+
+		/**
+		 * ============================================================================
+		 * @description Authentication methods
+		 * ============================================================================
+		 */
+		auth: {
+			/**
+			 * @description Login to Loop server
+			 * @returns Session token in `Token` header
+			 */
+			login: bindApiCall<UsersLoginArguments, UserProfile>(this, {
+				method: "POST",
+				path: "users/login",
+				type: ContentType.JSON
+			}),
+
+			/**
+			 * @description Auto-login using CWS token
+			 * Specific for Cloud Web Services integration
+			 */
+			loginCWS: bindApiCall<UsersLoginCWSArguments, UserProfile>(this, {
+				method: "POST",
+				path: "users/login/cws",
+				type: ContentType.JSON
+			}),
+
+			/**
+			 * @description Logout from the server
+			 * Invalidates the current session token
+			 */
+			logout: bindApiCall<UsersLogoutArguments, StatusOKResponse>(this, {
+				method: "POST",
+				path: "users/logout",
+				type: ContentType.URLEncoded
+			})
+		},
+
+		/**
+		 * ============================================================================
+		 * @description CRUD Operations
+		 * ============================================================================
+		 */
+		/**
+		 * @description Create a new user account
+		 * @permissions Requires `manage_system` or `create_user` permission
+		 */
+		create: bindApiCall<UsersCreateArguments, UserProfile>(this, {
+			method: "POST",
+			path: "users",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Update a user's information (full update)
+		 * @permissions User can update their own profile, or requires `edit_other_users`
+		 */
+		update: bindApiCall<UsersUpdateArguments, UserProfile>(this, {
+			method: "PUT",
+			path: "users/:user_id",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Partially update a user's information
+		 * @permissions User can patch their own profile, or requires `edit_other_users`
+		 */
+		patch: bindApiCall<UsersPatchArguments, UserProfile>(this, {
+			method: "PUT",
+			path: "users/:user_id/patch",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * @description Deactivate a user account
+		 * @permissions Requires `manage_system` permission
+		 */
+		delete: bindApiCall<UsersDeleteArguments, StatusOKResponse>(this, {
+			method: "DELETE",
+			path: "users/:user_id",
+			type: ContentType.URLEncoded
+		}),
+
+		/**
+		 * @description Update user's active status
+		 * @permissions Requires `manage_system` permission
+		 */
+		setActive: bindApiCall<UsersSetActiveArguments, StatusOKResponse>(this, {
+			method: "PUT",
+			path: "users/:user_id/active",
+			type: ContentType.JSON
+		}),
+
+		/**
+		 * ============================================================================
+		 * @description Retrieval methods
+		 * ============================================================================
+		 */
+		getMany: {
+			/**
+			 * @description Get users by their IDs
+			 */
+			byIds: bindApiCall<UsersGetByIdsArguments, UserProfile[]>(this, {
+				method: "POST",
+				path: "users/ids",
+				type: ContentType.JSON
+			}),
+
+			/**
+			 * @description Get users by their usernames
+			 */
+			byUsernames: bindApiCall<UsersGetByUsernamesArguments, UserProfile[]>(
+				this,
+				{
+					method: "POST",
+					path: "users/usernames",
+					type: ContentType.JSON
+				}
+			),
+
+			/**
+			 * @description Get users by group channel IDs
+			 * Retrieve members of specific group chats
+			 */
+			byGroupChannels: bindApiCall<
+				UsersGetByGroupChannelsArguments,
+				Record<string, UserProfile[]>
+			>(this, {
+				method: "POST",
+				path: "users/group_channels",
+				type: ContentType.JSON
+			})
+		},
+
 		channels: {
 			list: {
 				all: this.channels.list.forUser,

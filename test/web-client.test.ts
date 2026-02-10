@@ -1,15 +1,11 @@
+/** biome-ignore-all lint/complexity/noExcessiveLinesPerFunction: <jest tests are long!> */
 import { jest } from "@jest/globals";
 import * as againTs from "again-ts";
-import axios, {
-	type AxiosInstance,
-	type AxiosRequestConfig,
-	type AxiosStatic,
-	type RawAxiosRequestHeaders
-} from "axios";
-
+import axios, { type AxiosInstance, type RawAxiosRequestHeaders } from "axios";
 import { WebAPIServerError } from "../src/errors";
-import { ContentType, type PostsCreateArguments } from "../src/types";
+import { ContentType } from "../src/types";
 import { WebClient } from "../src/web-client";
+import { createMockAxiosInstance } from "./helpers/test-utils";
 
 // Mocking axios
 jest.mock("axios");
@@ -29,7 +25,7 @@ jest.spyOn(againTs, "retry").mockImplementation(async (_, task) => {
 				start: performance.now(),
 				end: performance.now()
 			}
-		}; // Mocking RetryOkResult
+		};
 	} catch (err) {
 		return {
 			ok: false,
@@ -40,61 +36,33 @@ jest.spyOn(againTs, "retry").mockImplementation(async (_, task) => {
 				start: performance.now(),
 				end: performance.now()
 			}
-		}; // Mocking RetryFailedResult
+		};
 	}
 });
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <vitest>
 describe("WebClient", () => {
 	let client: WebClient;
-	let mockAxiosInstance: unknown;
-	let mockAxios: jest.Mock<AxiosStatic>;
+	let mockAxiosInstance: AxiosInstance;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-
-		mockAxiosInstance = {
-			defaults: {
-				headers: {
-					common: {},
-					post: {}
-				}
-			},
-			interceptors: {
-				request: {
-					use: jest.fn()
-				}
-			},
-			getUri: jest.fn().mockReturnValue("https://api.example.com/api/v4/"),
-			request: jest.fn()
-		};
-		// The client expects axios(url, config) or similar.
-		// It's a callable object.
-		const axiosFn = jest.fn(axios).mockResolvedValue({
-			status: 200,
-			headers: {},
-			data: { ok: true }
-		});
-		Object.assign(axiosFn, mockAxiosInstance);
-
-		mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
-		mockAxios = axiosFn;
-
+		mockAxiosInstance = createMockAxiosInstance();
+		mockedAxios.create.mockReturnValue(mockAxiosInstance);
 		client = new WebClient("https://api.example.com");
 	});
 
 	describe("Constructor", () => {
-		it("should initialize with default URL and settings", () => {
+		it("initializes with default URL", () => {
 			expect(client.url).toBe("https://api.example.com/api/v4/");
 			expect(mockedAxios.create).toHaveBeenCalled();
 		});
 
-		it("should append api/v4/ if missing", () => {
+		it("appends api/v4/ if missing", () => {
 			const c = new WebClient("https://api.example.com");
 			expect(c.url).toBe("https://api.example.com/api/v4/");
 		});
 
-		it("should set Authorization header if token is provided", () => {
+		it("sets Authorization header if token provided", () => {
 			mockedAxios.create.mockClear();
 			new WebClient("https://api.example.com", { token: "mytoken" });
 			expect(mockedAxios.create).toHaveBeenCalledWith(
@@ -108,7 +76,7 @@ describe("WebClient", () => {
 	});
 
 	describe("apiCall", () => {
-		it("should throw TypeError if options is a primitive", async () => {
+		it("throws TypeError if options is a primitive", async () => {
 			await expect(
 				client.apiCall(
 					{ path: "test", method: "GET", type: ContentType.JSON },
@@ -117,17 +85,13 @@ describe("WebClient", () => {
 			).rejects.toThrow(TypeError);
 		});
 
-		it("should handle token override in options", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
-			if (!axiosInstance) throw new Error("Axios instance not found");
-
+		it("handles token override in options", async () => {
 			await client.apiCall(
 				{ path: "test", method: "GET", type: ContentType.JSON },
 				{ token: "override-token" }
 			);
 
-			// Verify the Authorization header was set with the overridden token
-			expect(axiosInstance).toHaveBeenCalledWith(
+			expect(mockAxiosInstance).toHaveBeenCalledWith(
 				expect.stringContaining("test"),
 				expect.objectContaining({
 					headers: expect.objectContaining({
@@ -137,89 +101,45 @@ describe("WebClient", () => {
 			);
 		});
 
-		it("should replace parameters in URL", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
-			if (!axiosInstance) throw new Error("Axios instance not found");
-
+		it("replaces parameters in URL", async () => {
 			await client.apiCall(
 				{ path: "channels/:channel_id", method: "GET", type: ContentType.JSON },
 				{ channel_id: "C123" }
 			);
-			expect(axiosInstance).toHaveBeenCalledWith(
+			expect(mockAxiosInstance).toHaveBeenCalledWith(
 				expect.stringContaining("channels/C123"),
 				expect.any(Object)
 			);
 		});
 
-		it("should replace :user_id with me if matched", async () => {
-			const axiosInstance = mockedAxios.create.mock.results[0]?.value;
-			if (!axiosInstance) throw new Error("Axios instance not found");
-
+		it("replaces :user_id with me if matched", async () => {
 			await client.apiCall(
 				{ path: "users/:user_id", method: "GET", type: ContentType.JSON },
 				{}
 			);
-			expect(axiosInstance).toHaveBeenCalledWith(
+			expect(mockAxiosInstance).toHaveBeenCalledWith(
 				expect.stringContaining("users/me"),
 				expect.any(Object)
 			);
 		});
 	});
 
-	// biome-ignore lint/complexity/noExcessiveLinesPerFunction: <vitest>
 	describe("Interceptors", () => {
-		let client: WebClient;
-		// biome-ignore lint/suspicious/noExplicitAny: <test>
-		let mockAxiosInstance: any;
-
-		beforeEach(() => {
-			jest.clearAllMocks();
-			mockAxiosInstance = {
-				defaults: { headers: { common: {}, post: {} } },
-				interceptors: { request: { use: jest.fn() } },
-				getUri: jest.fn().mockReturnValue("https://api.example.com/api/v4/"),
-				request: jest.fn()
-			};
-			const axiosFn = jest
-				.fn(async () => ({
-					status: 200,
-					headers: {},
-					data: { ok: true }
-				}))
-				.mockResolvedValue({
-					status: 200,
-					headers: {},
-					data: { ok: true }
-				});
-			Object.assign(axiosFn, mockAxiosInstance);
-			mockedAxios.create.mockReturnValue(axiosFn as unknown as AxiosInstance);
-			// biome-ignore lint/suspicious/noExplicitAny: <jesting>
-			mockAxios = axiosFn as any;
-
-			client = new WebClient("https://api.example.com");
-		});
-
 		describe("setCurrentUserForDirectChannel", () => {
-			it("should throw if data length is 0", async () => {
-				client = new WebClient("https://api.example.com");
-
+			it("throws if data length is 0", async () => {
 				const config = {
 					url: "https://api.example.com/api/v4/channels/direct",
 					headers: {} as RawAxiosRequestHeaders,
 					data: []
 				};
 
-				try {
+				await expect(
 					// biome-ignore lint/suspicious/noExplicitAny: <test>
-					await (client as any).setCurrentUserForDirectChannel(config);
-					throw new Error("Should have thrown");
-					// biome-ignore lint/suspicious/noExplicitAny: <test>
-				} catch (e: any) {
-					expect(e.message).toContain("at least one user_id");
-				}
+					(client as any).setCurrentUserForDirectChannel(config)
+				).rejects.toThrow("at least one user_id");
 			});
 
-			it("should throw if data.length is 1 and useCurrentUserForDirectChannels is false", async () => {
+			it("throws if data.length is 1 and useCurrentUserForDirectChannels is false", async () => {
 				client = new WebClient("https://api.example.com", {
 					useCurrentUserForDirectChannels: false
 				});
@@ -228,21 +148,13 @@ describe("WebClient", () => {
 					headers: {} as RawAxiosRequestHeaders,
 					data: ["other_user"]
 				};
-				try {
+				await expect(
 					// biome-ignore lint/suspicious/noExplicitAny: <test>
-					await (client as any).setCurrentUserForDirectChannel(config);
-					throw new Error("Should have thrown");
-					// biome-ignore lint/suspicious/noExplicitAny: <test>
-				} catch (e: any) {
-					expect(e.message).toContain(
-						"If useCurrentUserForDirectChannels is false"
-					);
-				}
+					(client as any).setCurrentUserForDirectChannel(config)
+				).rejects.toThrow("If useCurrentUserForDirectChannels is false");
 			});
 
-			it("should fetch my ID if data.length is 1 and useCurrentUserForDirectChannels is true", async () => {
-				client = new WebClient("https://api.example.com");
-				// Mock users.profile.get.me
+			it("fetches my ID if data.length is 1 and useCurrentUserForDirectChannels is true", async () => {
 				const meMock = jest
 					.fn(async () => ({ ok: true, data: { id: "my_id" } }))
 					.mockResolvedValue({ ok: true, data: { id: "my_id" } });
@@ -264,11 +176,10 @@ describe("WebClient", () => {
 				expect(newConfig.data).toEqual(["other_user", "my_id"]);
 			});
 
-			it("should use userID property if set", async () => {
+			it("uses userID property if set", async () => {
 				client = new WebClient("https://api.example.com", {
 					userID: "cached_id"
 				});
-				// Ensure users.profile.get.me is NOT called
 				const meMock = jest.fn();
 				// biome-ignore lint/suspicious/noExplicitAny: <test>
 				(client as any).users = { profile: { get: { me: meMock } } };
@@ -290,7 +201,7 @@ describe("WebClient", () => {
 		});
 
 		describe("setCurrentUserForPostCreation", () => {
-			it("should throw if useCurrentUserForPostCreation is false and channel_id missing", async () => {
+			it("throws if useCurrentUserForPostCreation is false and channel_id missing", async () => {
 				client = new WebClient("https://api.example.com", {
 					useCurrentUserForPostCreation: false
 				});
@@ -300,57 +211,43 @@ describe("WebClient", () => {
 					method: "post",
 					data: { user_id: "u1" }
 				};
-				try {
+				await expect(
 					// biome-ignore lint/suspicious/noExplicitAny: <test>
-					await (client as any).setCurrentUserForPostCreation(config);
-					throw new Error("Should have thrown");
-					// biome-ignore lint/suspicious/noExplicitAny: <test>
-				} catch (e: any) {
-					expect(e.message).toContain(
-						"If useCurrentUserForPostCreation is false"
-					);
-				}
+					(client as any).setCurrentUserForPostCreation(config)
+				).rejects.toThrow("If useCurrentUserForPostCreation is false");
 			});
 
-			it("should throw if neither user_id nor channel_id provided", async () => {
-				client = new WebClient("https://api.example.com");
+			it("throws if neither user_id nor channel_id provided", async () => {
 				const config = {
 					url: "https://api.example.com/api/v4/posts",
 					headers: {} as RawAxiosRequestHeaders,
 					method: "post",
 					data: {}
 				};
-				try {
+				await expect(
 					// biome-ignore lint/suspicious/noExplicitAny: <test>
-					await (client as any).setCurrentUserForPostCreation(config);
-					throw new Error("Should have thrown");
-					// biome-ignore lint/suspicious/noExplicitAny: <test>
-				} catch (e: any) {
-					expect(e.message).toContain(
-						"To create a post you need to provide either a channel_id or user_id"
-					);
-				}
+					(client as any).setCurrentUserForPostCreation(config)
+				).rejects.toThrow("To create a post you need to provide");
 			});
 
-			it("should create direct channel if user_id provided", async () => {
+			it("creates direct channel if user_id provided", async () => {
 				client = new WebClient("https://api.example.com", { userID: "me" });
 				const createDirectMock = jest
 					.fn(async () => ({ ok: true, data: { id: "direct_channel_id" } }))
 					.mockResolvedValue({ ok: true, data: { id: "direct_channel_id" } });
 
-				// Mock the getter for channels
 				Object.defineProperty(client, "channels", {
 					get: jest.fn(() => ({ create: { direct: createDirectMock } }))
 				});
 
-				const config: AxiosRequestConfig<PostsCreateArguments> = {
+				const config = {
 					url: "https://api.example.com/api/v4/posts",
 					headers: {} as RawAxiosRequestHeaders,
 					method: "post",
 					data: { to_user_id: "other", message: "" }
 				};
 
-				// biome-ignore lint/suspicious/noExplicitAny: <jesting>
+				// biome-ignore lint/suspicious/noExplicitAny: <test>
 				const newConfig = await (client as any).setCurrentUserForPostCreation(
 					config
 				);
@@ -361,40 +258,41 @@ describe("WebClient", () => {
 				expect(newConfig.data.channel_id).toBe("direct_channel_id");
 			});
 		});
+	});
 
-		describe("buildResult tests", () => {
-			it("should return { data: ... } on success", async () => {
-				const result = await client.apiCall({
-					path: "test",
-					method: "GET",
+	describe("Response Handling", () => {
+		it("returns { data: ... } on success", async () => {
+			const result = await client.apiCall({
+				path: "test",
+				method: "GET",
+				type: ContentType.JSON
+			});
+			expect(result.data).toEqual({ ok: true });
+		});
+
+		it("rejects with { ctx: ... } on failure > 300", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: <test>
+			(mockAxiosInstance as any).mockResolvedValue({
+				status: 400,
+				statusText: "Bad Request",
+				headers: {},
+				data: {
+					id: "api.context.invalid_param.app_error",
+					message: "Invalid parameter",
+					status_code: 400
+				},
+				config: {}
+			});
+
+			await expect(
+				client.apiCall({
+					path: "channels",
+					method: "POST",
 					type: ContentType.JSON
-				});
-				expect(result.data).toEqual({ ok: true });
-			});
+				})
+			).rejects.toThrow(WebAPIServerError);
 
-			it("should reject with { ctx: ... } on failure > 300", async () => {
-				mockAxios.mockResolvedValue({
-					status: 400,
-					statusText: "Bad Request",
-					headers: {},
-					data: {
-						id: "api.context.invalid_param.app_error",
-						message: "Invalid parameter",
-						status_code: 400
-					},
-					config: {}
-				});
-
-				await expect(
-					client.apiCall({
-						path: "channels",
-						method: "POST",
-						type: ContentType.JSON
-					})
-				).rejects.toThrow(WebAPIServerError);
-
-				expect(mockAxios).toHaveBeenCalled();
-			});
+			expect(mockAxiosInstance).toHaveBeenCalled();
 		});
 	});
 });

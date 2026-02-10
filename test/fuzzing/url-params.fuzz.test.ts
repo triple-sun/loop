@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noExcessiveLinesPerFunction: <jest> */
 import { expect, jest } from "@jest/globals";
 import * as againTs from "again-ts";
 import axios, { type AxiosInstance } from "axios";
@@ -104,6 +105,7 @@ describe("URL Parameter Fuzzing", () => {
 			"<script>alert('XSS')</script>",
 			"<img src=x onerror=alert(1)>",
 			"javascript:alert(1)",
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: <fuzzing test>
 			"${7*7}",
 			"{{7*7}}",
 			"<%= 7*7 %>",

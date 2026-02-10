@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noExcessiveLinesPerFunction: <jest tests are long!> */
 import { expect } from "@jest/globals";
 import { redact } from "../../src/utils";
 

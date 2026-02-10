@@ -1,24 +1,28 @@
+/** biome-ignore-all lint/complexity/noExcessiveLinesPerFunction: <jest tests are long!> */
 import { expect } from "@jest/globals";
 import {
 	ErrorCode,
-	ServerError,
-	type ServerErrorID,
+	type ServerError,
 	WebAPIRateLimitedError,
 	WebAPIRequestError,
 	WebAPIServerError,
 	WebClientOptionsError
 } from "../src/errors";
+import {
+	createRateLimitResponse,
+	createServerError
+} from "./helpers/test-utils";
 
 describe("Error Edge Cases", () => {
 	describe("ServerError", () => {
-		it("should create error with all parameters", () => {
-			const error = new ServerError(
-				"error.id" as ServerErrorID,
-				"Error message",
-				500,
-				"request-123",
-				"Detailed error info"
-			);
+		it("creates error with all parameters", () => {
+			const error = createServerError({
+				id: "error.id" as never,
+				message: "Error message",
+				status_code: 500,
+				request_id: "request-123",
+				detailed_error: "Detailed error info"
+			});
 
 			expect(error.id).toBe("error.id");
 			expect(error.message).toBe("Error message");
@@ -27,79 +31,72 @@ describe("Error Edge Cases", () => {
 			expect(error.detailed_error).toBe("Detailed error info");
 		});
 
-		it("should handle missing detailed_error (default empty string)", () => {
-			const error = new ServerError(
-				"error.id" as ServerErrorID,
-				"Error message",
-				500,
-				"request-123"
-			);
+		it("handles missing detailed_error (defaults to empty string)", () => {
+			const error = createServerError({
+				id: "error.id" as never,
+				message: "Error message",
+				status_code: 500,
+				request_id: "request-123"
+			});
 
 			expect(error.detailed_error).toBe("");
 		});
 
-		it("should handle numeric status_code", () => {
-			const error = new ServerError(
-				"error.id" as ServerErrorID,
-				"Error message",
-				"429" as unknown as number,
-				"request-123"
-			);
+		it("handles numeric status_code conversion", () => {
+			const error = createServerError({
+				id: "error.id" as never,
+				message: "Error message",
+				status_code: "429" as unknown as number,
+				request_id: "request-123"
+			});
 
-			// Should convert to number
 			expect(error.status_code).toBe(429);
 			expect(typeof error.status_code).toBe("number");
 		});
 
-		it("should handle very long error messages", () => {
+		it("handles very long error messages", () => {
 			const longMessage = "error ".repeat(10000);
-			const error = new ServerError(
-				"error.id" as ServerErrorID,
-				longMessage,
-				500,
-				"request-123"
-			);
+			const error = createServerError({
+				message: longMessage
+			});
 
 			expect(error.message).toBe(longMessage);
 		});
 
-		it("should handle unicode in error messages", () => {
-			const error = new ServerError(
-				"error.id" as ServerErrorID,
-				"エラーメッセージ 🚨",
-				500,
-				"request-123"
-			);
+		it("handles unicode in error messages", () => {
+			const error = createServerError({
+				message: "エラーメッセージ 🚨"
+			});
 
 			expect(error.message).toBe("エラーメッセージ 🚨");
 		});
 	});
 
 	describe("WebClientOptionsError", () => {
-		it("should create error with message", () => {
+		it("creates error with message", () => {
 			const error = new WebClientOptionsError("Invalid options");
 			expect(error.message).toBe("Invalid options");
 			expect(error.code).toBe("options_error");
 		});
 
-		it("should handle empty message", () => {
+		it("handles empty message", () => {
 			const error = new WebClientOptionsError("");
 			expect(error.message).toBe("");
 		});
 
-		it("should handle undefined message", () => {
+		it("handles undefined message", () => {
 			const error = new WebClientOptionsError(undefined as unknown as string);
 			expect(error).toBeDefined();
 		});
 
-		it("should have correct error name", () => {
+		it("has correct error name", () => {
 			const error = new WebClientOptionsError("test");
 			expect(error.name).toBe("WebClientOptionsError");
 		});
 	});
 
 	describe("WebAPIRequestError", () => {
-		it("should create error with original data", () => {
+		it("creates error with original data", () => {
 			const originalError = { error: "request failed" };
 			const error = new WebAPIRequestError(originalError);
 
@@ -107,17 +104,17 @@ describe("Error Edge Cases", () => {
 			expect(error.code).toBe("request_error");
 		});
 
-		it("should handle null original", () => {
+		it("handles null original", () => {
 			const error = new WebAPIRequestError(null);
 			expect(error.original).toBeNull();
 		});
 
-		it("should handle undefined original", () => {
+		it("handles undefined original", () => {
 			const error = new WebAPIRequestError(undefined);
 			expect(error.original).toBeUndefined();
 		});
 
-		it("should handle primitive original values", () => {
+		it("handles primitive original values", () => {
 			const error = new WebAPIRequestError(
 				"string error" as unknown as Record<string, unknown>
 			);
@@ -126,14 +123,14 @@ describe("Error Edge Cases", () => {
 	});
 
 	describe("WebAPIServerError", () => {
-		it("should create error from ServerError", () => {
-			const serverError = new ServerError(
-				"api.error" as ServerErrorID,
-				"Server error",
-				500,
-				"req-123",
-				"Details"
-			);
+		it("creates error from ServerError", () => {
+			const serverError = createServerError({
+				id: "api.error" as never,
+				message: "Server error",
+				status_code: 500,
+				request_id: "req-123",
+				detailed_error: "Details"
+			});
 
 			const error = new WebAPIServerError(serverError);
 
@@ -142,7 +139,7 @@ describe("Error Edge Cases", () => {
 			expect(error.code).toBe(ErrorCode.ServerError);
 		});
 
-		it("should handle server error with missing fields", () => {
+		it("handles server error with missing fields", () => {
 			const serverError = {
 				id: "api.error",
 				message: "Error"
@@ -156,88 +153,71 @@ describe("Error Edge Cases", () => {
 	});
 
 	describe("WebAPIRateLimitedError", () => {
-		it("should create error with retryAfter", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
-			);
-
-			const error = new WebAPIRateLimitedError(serverError, 60);
-
-			expect(error.retryAfter).toBe(60);
-			expect(error.message).toBe("Rate limited: Too many requests");
-			expect(error.code).toBe("rate_limited_error");
+		const baseServerError = createServerError({
+			id: "api.rate_limit" as never,
+			message: "Too many requests",
+			status_code: 429,
+			request_id: "req-123"
 		});
 
-		it("should handle missing retryAfter", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
+		// Parameterized test for different rate limit header values
+		test.each([
+			{
+				name: "with all headers",
+				headers: { limit: 60, remaining: 0, reset: 0 },
+				expected: { limit: 60, remaining: 0, reset: 0 }
+			},
+			{
+				name: "with missing headers",
+				headers: {},
+				expected: { limit: undefined, remaining: undefined, reset: undefined }
+			},
+			{
+				name: "with zero values",
+				headers: { limit: 0, remaining: 0, reset: 0 },
+				expected: { limit: 0, remaining: 0, reset: 0 }
+			},
+			{
+				name: "with negative values",
+				headers: { limit: -1, remaining: -1, reset: -1 },
+				expected: { limit: -1, remaining: -1, reset: -1 }
+			},
+			{
+				name: "with max safe integer",
+				headers: {
+					limit: Number.MAX_SAFE_INTEGER,
+					remaining: Number.MAX_SAFE_INTEGER,
+					reset: Number.MAX_SAFE_INTEGER
+				},
+				expected: {
+					limit: Number.MAX_SAFE_INTEGER,
+					remaining: Number.MAX_SAFE_INTEGER,
+					reset: Number.MAX_SAFE_INTEGER
+				}
+			}
+		])("$name", ({ headers, expected }) => {
+			const response = createRateLimitResponse(
+				headers.limit,
+				headers.remaining,
+				headers.reset
 			);
+			const error = new WebAPIRateLimitedError(baseServerError, response);
 
-			const error = new WebAPIRateLimitedError(serverError);
-
-			expect(error.retryAfter).toBeUndefined();
+			expect(error.limit).toBe(expected.limit);
+			expect(error.remaining).toBe(expected.remaining);
+			expect(error.reset).toBe(expected.reset);
 		});
 
-		it("should handle retryAfter as 0", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
-			);
-
-			const error = new WebAPIRateLimitedError(serverError, 0);
-
-			expect(error.retryAfter).toBe(0);
-		});
-
-		it("should handle negative retryAfter", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
-			);
-
-			const error = new WebAPIRateLimitedError(serverError, -1);
-
-			expect(error.retryAfter).toBe(-1);
-		});
-
-		it("should handle very large retryAfter", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
-			);
-
+		it("has correct inheritance chain and properties", () => {
 			const error = new WebAPIRateLimitedError(
-				serverError,
-				Number.MAX_SAFE_INTEGER
+				baseServerError,
+				createRateLimitResponse(60, 0, 0)
 			);
 
-			expect(error.retryAfter).toBe(Number.MAX_SAFE_INTEGER);
-		});
-
-		it("should have correct error inheritance", () => {
-			const serverError = new ServerError(
-				"api.rate_limit" as ServerErrorID,
-				"Too many requests",
-				429,
-				"req-123"
-			);
-
-			const error = new WebAPIRateLimitedError(serverError, 60);
-
-			expect(error instanceof WebAPIServerError).toBe(true);
-			expect(error instanceof Error).toBe(true);
+			expect(error).toBeInstanceOf(WebAPIServerError);
+			expect(error).toBeInstanceOf(Error);
+			expect(error.code).toBe(ErrorCode.RateLimitedError);
+			expect(error.message).toBe("Rate limited: Too many requests");
 		});
 	});
 });

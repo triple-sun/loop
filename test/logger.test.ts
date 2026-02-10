@@ -1,37 +1,37 @@
 import { expect, jest } from "@jest/globals";
 import { type Logger, LogLevel } from "@triple-sun/logger";
-import { getLogger } from "../src/logger";
+import { getOrCreateLogger } from "../src/logger";
 
 describe("Logger Edge Cases", () => {
 	describe("getLogger", () => {
 		it("should create logger with valid name", () => {
-			const logger = getLogger("test", "INFO" as LogLevel);
+			const logger = getOrCreateLogger("test", "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
 		it("should handle empty string name", () => {
-			const logger = getLogger("", "INFO" as LogLevel);
+			const logger = getOrCreateLogger("", "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
 		it("should handle unicode name", () => {
-			const logger = getLogger("テスト", "INFO" as LogLevel);
+			const logger = getOrCreateLogger("テスト", "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
 		it("should handle emoji in logger name", () => {
-			const logger = getLogger("🚀💻", "INFO" as LogLevel);
+			const logger = getOrCreateLogger("🚀💻", "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
 		it("should handle very long name", () => {
 			const longName = "a".repeat(1000);
-			const logger = getLogger(longName, "INFO" as LogLevel);
+			const logger = getOrCreateLogger(longName, "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
 		it("should handle special characters in name", () => {
-			const logger = getLogger("test!@#$%^&*()", "INFO" as LogLevel);
+			const logger = getOrCreateLogger("test!@#$%^&*()", "INFO" as LogLevel);
 			expect(logger).toBeDefined();
 		});
 
@@ -46,7 +46,7 @@ describe("Logger Edge Cases", () => {
 				setName: jest.fn()
 			} as Logger;
 
-			const logger = getLogger("test", LogLevel.INFO, mockLogger);
+			const logger = getOrCreateLogger("test", LogLevel.INFO, mockLogger);
 
 			// Should use the provided logger
 			expect(mockLogger.setName).toHaveBeenCalled();
@@ -54,8 +54,8 @@ describe("Logger Edge Cases", () => {
 		});
 
 		it("should increment instance count for unique loggers", () => {
-			const logger1 = getLogger("test", LogLevel.INFO);
-			const logger2 = getLogger("test", LogLevel.INFO);
+			const logger1 = getOrCreateLogger("test", LogLevel.INFO);
+			const logger2 = getOrCreateLogger("test", LogLevel.INFO);
 
 			// Both should be defined but potentially have different instance IDs
 			expect(logger1).toBeDefined();
@@ -73,13 +73,16 @@ describe("Logger Edge Cases", () => {
 				setName: jest.fn()
 			} as Logger;
 
-			getLogger("test", LogLevel.DEBUG, mockLogger);
+			getOrCreateLogger("test", LogLevel.DEBUG, mockLogger);
 
 			expect(mockLogger.setLevel).toHaveBeenCalledWith(LogLevel.DEBUG);
 		});
 
 		it("should handle undefined log level gracefully", () => {
-			const logger = getLogger("test", undefined as unknown as LogLevel);
+			const logger = getOrCreateLogger(
+				"test",
+				undefined as unknown as LogLevel
+			);
 			expect(logger).toBeDefined();
 		});
 	});

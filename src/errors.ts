@@ -1,3 +1,5 @@
+import type { AxiosResponse } from "axios";
+
 /**
  * A dictionary of codes for errors produced by this package
  */
@@ -74,12 +76,25 @@ export class WebAPIRateLimitedError extends WebAPIServerError {
 	/**
 	 * Number of seconds to wait before retrying (from Retry-After header)
 	 */
-	retryAfter?: number;
+	limit?: number;
+	remaining?: number;
+	reset?: number;
 
-	constructor(error: ServerError, retryAfter?: number) {
+	constructor(error: ServerError, res: AxiosResponse) {
 		super(error);
 		this.message = `Rate limited: ${error.message}`;
-		this.retryAfter = retryAfter;
+		this.limit =
+			res.headers["X-RateLimit-Limit"] !== undefined
+				? Number.parseInt(res.headers["X-RateLimit-Limit"], 10)
+				: undefined;
+		this.remaining =
+			res.headers["X-RateLimit-Remaining"] !== undefined
+				? Number.parseInt(res.headers["X-RateLimit-Remaining"], 10)
+				: undefined;
+		this.reset =
+			res.headers["X-RateLimit-Reset"] !== undefined
+				? Number.parseInt(res.headers["X-RateLimit-Reset"], 10)
+				: undefined;
 	}
 }
 

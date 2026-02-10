@@ -12,6 +12,11 @@ import type {
 	UserThreadSynthetic
 } from "./types";
 
+interface FileLike {
+	name?: string;
+	path?: string;
+}
+
 export const wait = (ms: number): Promise<void> => {
 	return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -56,14 +61,16 @@ export const getFormDataConfig = (
 				// https://github.com/form-data/form-data/blob/028c21e0f93c5fefa46a7bbf1ba753e4f627ab7a/lib/form_data.js#L227-L230
 				// formidable and the browser add a name property
 				// fs- and request- streams have path property
-				// biome-ignore lint/suspicious/noExplicitAny: form values can be anything
-				const streamOrBuffer: any = value;
+				const streamOrBuffer = value as FileLike;
+
 				if (typeof streamOrBuffer.name === "string") {
 					return basename(streamOrBuffer.name);
 				}
+
 				if (typeof streamOrBuffer.path === "string") {
 					return basename(streamOrBuffer.path);
 				}
+
 				return `${DEFAULT_FILE_NAME}_${Date.now().toString()}`;
 			})();
 			form.append(key as string, value, opts);
@@ -73,8 +80,6 @@ export const getFormDataConfig = (
 	}
 
 	if (headers) {
-		// Copying FormData-generated headers into headers param
-		// not reassigning to headers param since it is passed by reference and behaves as an inout param
 		for (const [header, value] of Object.entries(form.getHeaders())) {
 			headers[header] = value;
 		}
