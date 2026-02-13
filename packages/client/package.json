@@ -1,11 +1,12 @@
 {
 	"name": "loop-client",
 	"version": "0.0.18",
-	"main": "build/index.js",
-	"module": "src/index.ts",
+	"main": "build/src/index.js",
+	"types": "build/src/index.d.ts",
 	"description": "\"Loop/Mattermost TypeScript client\"",
 	"engines": {
-		"node": ">=20"
+		"node": ">=20",
+		"pnpm": ">=10"
 	},
 	"scripts": {
 		"test": "jest",
