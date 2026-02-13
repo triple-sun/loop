@@ -19,7 +19,7 @@
 			"!**/dist",
 			"!**/.next",
 			"!**/oldsrc",
-			"!**/test/integration/real-api/schemas/*"
+			"!**/test/real-api/schemas/*"
 		]
 	},
 	"formatter": {

@@ -14,7 +14,7 @@ const config: Config = {
 	transformIgnorePatterns: [
 		"node_modules/(?!(is-stream|again-ts|p-limit|yocto-queue)/)"
 	],
-	testPathIgnorePatterns: ["./test/integration/real-api/*"], // only test those if needed
+	testPathIgnorePatterns: ["./test/real-api/*"], // only test those if needed
 	coveragePathIgnorePatterns: ["index.ts"],
 	coverageThreshold: {
 		global: {

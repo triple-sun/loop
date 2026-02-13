@@ -7,20 +7,18 @@ OUTDIR="test/integration/real-api/schemas"
 
 echo "🚀 Starting Real API Schema Generation..."
 
-for FILE in \
+for FILE in src/types/general.ts \
+	src/types/common.ts \
 	src/types/posts.ts \
+	src/types/responses/posts.responses.ts \
 	src/types/teams.ts \
 	src/types/apps.ts \
 	src/types/responses/common.responses.ts \
-	src/types/responses/posts.responses.ts \
-	src/types/bots.ts \
 	src/types/channels.ts \
 	src/types/metadata.ts \
 	src/types/emojis.ts \
 	src/types/files.ts \
 	src/types/plugins.ts \
-	src/types/preferences.ts \
-	src/types/reactions.ts \
 	src/types/roles.ts \
 	src/types/users.ts; do
 
@@ -58,18 +56,45 @@ for FILE in \
 	echo "✔ Type contents copied successfully!"
 
 	echo "Fixing generics..."
+
+	# apps fix
+	if [[ "$FILENAME" = "apps" ]]; then
+		echo "Fixing apps generics"
+		# Remove generic definitions
+		perl -0777 -pi -e 's/<PROPS_TYPE = Record<string, unknown>>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<STATE = Record<string, unknown>>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<VALUES = Record<string, unknown>>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<RESPONSE = unknown>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<SUBMIT_STATE = Record<string, unknown>>//g' "$TYPEFILE"
+
+		# Remove multi-line generic definition in AppForm
+		perl -0777 -pi -e 's/<\n\tSOURCE_STATE = Record<string, unknown>,\n\tSUBMIT_STATE = Record<string, unknown>\n>//g' "$TYPEFILE"
+
+		# Replace generic usages
+		perl -0777 -pi -e 's/: PROPS_TYPE/: any/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/: STATE/: any/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/: VALUES/: any/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/: RESPONSE/: any/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/AppCall<SUBMIT_STATE>/AppCall<any>/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/AppCall<SOURCE_STATE>/AppCall<any>/g' "$TYPEFILE"
+	fi
+
 	# posts fix
 	if [[ "$FILENAME" = "posts" || "$FILENAME" = "posts.responses" ]]; then
 		echo "Fixing posts generics"
-		sed -i '' 's/<PROP_METADATA = undefined>//g' "$TYPEFILE"
-		sed -i '' 's/<PROP_METADATA>//g' "$TYPEFILE"
-		sed -i '' 's/<PROP_METADATA = Record<string, unknown>>//g' "$TYPEFILE"
-		sed -i '' 's/PROP_METADATA/unknown/g' "$TYPEFILE"
+		
+		# Handle multi-line PostActionResponsePayload definition
+		perl -0777 -pi -e 's/PostActionResponsePayload\s*<\s*PROP_METADATA\s*=\s*Record<string,\s*unknown>\s*>/PostActionResponsePayload/g' "$TYPEFILE"
 
-		sed -i '' 's/<CONTEXT = Record<string, unknown>>//g' "$TYPEFILE"
-		sed -i '' 's/<CONTEXT>//g' "$TYPEFILE"
-		sed -i '' 's/CONTEXT/unknown/g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<PROP_METADATA = undefined>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<PROP_METADATA>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<PROP_METADATA = Record<string, unknown>>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/PROP_METADATA/unknown/g' "$TYPEFILE"
 
+		perl -0777 -pi -e 's/<CONTEXT = Record<string, unknown>>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/<CONTEXT>//g' "$TYPEFILE"
+		perl -0777 -pi -e 's/CONTEXT/unknown/g' "$TYPEFILE"
+		
 		sed -i '' 's/{ AppBinding }/{}/g' "$TYPEFILE"
 		sed -i '' 's/AppBinding/any/g' "$TYPEFILE"
 		sed -i '' 's/{ UserProfile }/{}/g' "$TYPEFILE"
@@ -77,6 +102,7 @@ for FILE in \
 		sed -i '' 's/any["id"]/any/g' "$TYPEFILE"
 		sed -i '' 's/channel_type: ChannelType/channel_type: string/g' "$TYPEFILE"
 		sed -i '' 's/team_type: TeamType/team_type: string/g' "$TYPEFILE"
+		sed -i '' 's|\.\.|.|g' "$TYPEFILE"
 	fi
 
 	# channels fix
@@ -103,13 +129,29 @@ for FILE in \
 
 	npx ts-to-zod "$TYPEFILE" "$OUTFILE"
 
-	if [[ "$FILENAME" = "posts" || "$FILENAME" = "posts.responses" ]]; then
-		sed -i '' 's/postSchema.partial()/postSchema/g' "$OUTFILE"
-		sed -i '' 's/import type { TeamType } from "./teams";//g' "$OUTFILE"
-		sed -i '' 's/import type { ChannelType } from "./channels"//g' "$OUTFILE"
-	fi
-done
+	sleep 1
 
-rm -rf $(find $OUTDIR -maxdepth 1 -type f -path '*.typefile.ts')
+	if [[ "$FILENAME" = "posts" || "$FILENAME" = "posts.responses" ]]; then
+		echo "Fixing $FILENAME OUTFILE: $OUTFILE"
+
+		sed -i '' 's/postSchema.partial()/postSchema/g' "$OUTFILE"
+		sed -i '' 's|import type { TeamType } from "./teams";||g' "$OUTFILE"
+		sed -i '' 's|import type { ChannelType } from "./channels"||g' "$OUTFILE"
+		sed -i '' 's|dataSourceSchema.shape|dataSourceSchema|g' "$OUTFILE"
+		sed -i '' 's|optionsSchema.shape|optionsSchema|g' "$OUTFILE"
+
+		sed -i '' 's|postAttachmentSchema.extend|z.object|g' "$OUTFILE"
+		sed -i '' 's|postPropsSchema.extend|z.object|g' "$OUTFILE"
+		sed -i '' 's|postSchema.extend|z.object|g' "$OUTFILE"
+
+		sed -i '' 's|const postSchema = z.any();||g' "$OUTFILE"
+
+		sed -i '' 's|postActionBaseSchema.extend|postActionBaseSchema|g' "$OUTFILE"
+
+		echo "Fixed $FILENAME OUTFILE!"
+	fi
+
+	sleep 1
+done
 
 echo "✅ Done!"

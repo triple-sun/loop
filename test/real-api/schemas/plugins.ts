@@ -55,13 +55,13 @@ export interface PluginSettingsSchema {
 export interface PluginSetting {
 	key: string;
 	display_name: string;
-	type: "text" | "number" | "custom" | string;
+	type: string;
 	help_text: string | MessageDescriptor;
 	regenerate_help_text?: string;
 	placeholder: string;
 	default: unknown;
 	options?: PluginSettingOption[];
-	hosting?: "on-prem" | "cloud" | "";
+	hosting?: "on-prem" | "cloud";
 }
 
 export interface PluginSettingOption {

@@ -15,7 +15,7 @@
 		"lint": "biome lint ./src",
 		"prepare": "husky",
 		"prepublishOnly": "biome format --write && lint-staged --allow-empty && husky && jest && rimraf ./build && tsc -p tsconfig.json",
-		"test:real:base": "jest --testPathIgnorePatterns=null",
+		"test:real": "jest --testPathIgnorePatterns=null --",
 		"test:real:only": "jest --testPathIgnorePatterns=null --testMatch=\"**/test/integration/real-api/*.test.ts\""
 	},
 	"repository": {

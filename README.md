@@ -19,7 +19,7 @@ A modern, strongly-typed TypeScript client for [Loop](https://loop.ru) (a fork o
 - Request queuing with concurrency control (via [breadline-ts](https://github.com/triple-sun/breadline-ts))
 
 🌐 **Universal Compatibility**
-- Works in both Node.js (≥20) and browser environments
+- Works in Node.js (≥20), bun (≥1.0) and browser environments
 
 📊 **Extensive API Coverage**
 - **Channels**: Create, manage, search, and moderate channels
@@ -50,6 +50,12 @@ Or using pnpm:
 
 ```bash
 pnpm add loop-client
+```
+
+Or using bun:
+
+```bash
+bun add loop-client
 ```
 
 Or using yarn:
@@ -353,7 +359,7 @@ const client3 = new WebClient(url, {
 ### Prerequisites
 
 - Node.js ≥20
-- pnpm (recommended) or npm
+- bun, pnpm (recommended) or npm
 
 ### Setup
 
@@ -425,7 +431,7 @@ The project has comprehensive test coverage:
 # Run unit tests
 pnpm test
 
-# Run integration tests against real API
+# Run integration tests against actual API
 # Create .env.test.local with:
 # LOOP_URL=https://your-loop-server.com
 # LOOP_TOKEN=your-test-token
@@ -434,9 +440,8 @@ pnpm test:real:only
 
 Test structure:
 - **Unit tests**: Mock-based tests for core functionality
-- **Integration tests**: Tests against real Loop API
+- **Integration tests**: e2e tests and tests against actual Loop API
 - **Fuzz tests**: Edge case and randomized input testing
-- **Coverage requirement**: 90% lines and statements
 
 ### Code Quality
 
