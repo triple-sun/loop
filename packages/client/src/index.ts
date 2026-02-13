@@ -6,4 +6,6 @@ export {
 	WebAPIServerError
 } from "./errors";
 export * from "./instrument";
+export * from "./types/methods";
+export * from "./types/web-client";
 export { WebClient } from "./web-client";

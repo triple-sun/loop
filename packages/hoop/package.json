@@ -1,35 +1,43 @@
 {
-	"name": "loop-ws-client",
+	"name": "@triple-sun/hoop",
 	"version": "0.0.18",
-	"main": "build/src/index.js",
-	"types": "build/src/index.d.ts",
-	"description": "\"Loop/Mattermost TypeScript websocket client\"",
-	"engines": {
-		"node": ">=20"
-	},
-	"scripts": {
-		"test": "jest",
-		"build": "rimraf ./build && tsc",
-		"check": "biome check --write",
-		"lint": "biome lint ./src",
-		"prepublishOnly": "bun run check && bun run lint-staged --allow-empty && bun run jest && bun run rimraf ./build && bun run tsc -p tsconfig.json"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/triple-sun/loop.git"
-	},
-	"author": "triple-sun",
-	"license": "ISC",
-	"bugs": {
-		"url": "https://github.com/triple-sun/loop/issues"
-	},
-	"homepage": "https://github.com/triple-sun/loop#readme",
+	"description": "Пакет SDK для Loop/Mattermost",
+	"author": "Semen Kononets <sploit.strannik@gmail.com>",
+	"license": "MIT",
+	"main": "build/index.js",
 	"files": [
 		"build/**/*",
 		"*.md"
 	],
+	"scripts": {
+		"test": "jest --passWithNoTests",
+		"test:coverage": "jest --coverage",
+		"test:watch": "jest --watch",
+		"test:ci": "jest --ci --coverage --maxWorkers=2",
+		"build": "rimraf ./build && tsc -p tsconfig.json",
+		"format": "biome format ./ --write",
+		"check": "biome check ./ --write",
+		"lint": "biome lint ./src",
+		"prepublishOnly": "pnpm run check && lint-staged --allow-empty && pnpm run build && pnpm run test"
+	},
+	"homepage": "https://github.com/triple-sun/loop/packages/hoop#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/triple-sun/loop.git"
+	},
+	"keywords": [
+		"loop",
+		"mattermost"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"bugs": {
+		"url": "https://github.com/triple-sun/loop/issues"
+	},
 	"dependencies": {
-		"@triple-sun/logger": "^0.0.1"
+		"loop-client": "workspace:*",
+		"remove-markdown": "^0.6.3"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:dev",
@@ -37,16 +45,16 @@
 		"@tsconfig/recommended": "^1",
 		"@types/jest": "catalog:test",
 		"@types/node": "catalog:dev",
-		"@types/qs": "^6.14.0",
 		"dotenv": "catalog:test",
-		"husky": "catalog:dev",
 		"jest": "catalog:test",
 		"lint-staged": "catalog:dev",
 		"loop-types": "workspace:*",
 		"rimraf": "catalog:dev",
 		"ts-jest": "catalog:test",
 		"ts-node": "catalog:test",
+		"ts-to-zod": "^5.1.0",
 		"tsd": "catalog:test",
+		"type-fest": "^5.4.4",
 		"typescript": "catalog:dev"
 	},
 	"lint-staged": {
@@ -56,7 +64,6 @@
 		],
 		"*": [
 			"biome check --no-errors-on-unmatched --files-ignore-unknown=true"
-		],
-		"test/integration/real-api/schemas/*": []
+		]
 	}
 }

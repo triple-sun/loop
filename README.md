@@ -5,23 +5,33 @@
 
 [🇷🇺 По-русски](./README.ru.md)
 
-Welcome. This monorepo hosts the *unofficial* TypeScript ecosystem for [Loop](https://loop.ru) (and [Mattermost](https://mattermost.com)).
+Welcome. This monorepo hosts the *unofficial* TypeScript ecosystem for [Loop](https://loop.ru) (and by extension [Mattermost](https://mattermost.com)).
 Whether you're crafting a bot, an integration, or a full-blown client, we've got the tools.
 
 ## Packages
 
 | Package | Description | Version |
 |---|---|---|
-| [`loop-client`](./packages/client) | The heavy lifter. HTTP client, robust, verified, strongly typed. | [![npm](https://img.shields.io/npm/v/loop-client)](https://www.npmjs.com/package/loop-client) |
+| [`loop-client`](./packages/client) | The heavy lifter. HTTP client, robust, tested, strongly typed. | [![npm](https://img.shields.io/npm/v/loop-client)](https://www.npmjs.com/package/loop-client) |
 | [`loop-ws-client`](./packages/websocket-client) | WebSocket client for events. | [![npm](https://img.shields.io/npm/v/loop-ws-client)](https://www.npmjs.com/package/loop-ws-client) |
-| [`loop-types`](./packages/types) | Shared definitions. | - |
+| [`@triple-sun/hoop`](./packages/hoop) | High-level SDK. Builders and factories for posts, buttons, etc.. | [![npm](https://img.shields.io/npm/v/@triple-sun/hoop)](https://www.npmjs.com/package/@triple-sun/hoop) |
+| [`loop-types`](./packages/types) | Shared definitions. | [![npm](https://img.shields.io/npm/v/loop-types)](https://www.npmjs.com/package/loop-types) |
 
 ## Getting Started
 
 Pick what you need.
 
 ```bash
-pnpm add loop-client loop-ws-client
+npm i loop-client
+```
+```bash
+npm i loop-ws-client
+```
+```bash
+npm i @triple-sun/hoop
+```
+```bash
+npm i loop-types -D
 ```
 
 Check out individual package READMEs for usage examples.
