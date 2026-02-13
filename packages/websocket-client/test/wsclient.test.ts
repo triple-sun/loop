@@ -4,9 +4,9 @@
 
 import { expect, jest } from "@jest/globals";
 import { ConsoleLogger, LogLevel } from "@triple-sun/logger";
+import { WebSocketClient } from "../src";
 import { CLIENT_PING_TIMEOUT_ERR_CODE } from "../src/const";
 import { LoopEvent } from "../src/types/events";
-import { WebSocketClient } from "../src";
 
 jest.mock("ws");
 jest.useFakeTimers();
