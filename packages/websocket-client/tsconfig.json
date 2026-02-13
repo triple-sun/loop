@@ -1,0 +1,14 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"exclude": ["src/**/*.spec.*"],
+	"include": [
+		"src/**/*.ts",
+		"test/logger.test.ts",
+		"test/utils.test.ts",
+		"test/wsclient.test.ts"
+	],
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./build"
+	}
+}

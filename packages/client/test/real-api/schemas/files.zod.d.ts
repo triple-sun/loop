@@ -1,0 +1,49 @@
+import { z } from "zod";
+export declare const uploadSessionSchema: z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodString;
+    create_at: z.ZodNumber;
+    path: z.ZodString;
+    file_size: z.ZodNumber;
+    file_offset: z.ZodNumber;
+}, z.core.$strip>;
+export declare const fileInfoSchema: z.ZodObject<{
+    id: z.ZodString;
+    user_id: z.ZodString;
+    create_at: z.ZodNumber;
+    update_at: z.ZodNumber;
+    delete_at: z.ZodNumber;
+    name: z.ZodString;
+    extension: z.ZodString;
+    size: z.ZodNumber;
+    mime_type: z.ZodString;
+    width: z.ZodNumber;
+    height: z.ZodNumber;
+    has_preview_image: z.ZodBoolean;
+    clientId: z.ZodString;
+    post_id: z.ZodOptional<z.ZodString>;
+    mini_preview: z.ZodOptional<z.ZodString>;
+    archived: z.ZodBoolean;
+    link: z.ZodOptional<z.ZodString>;
+}, z.core.$strip>;
+export declare const fileSearchResultItemSchema: z.ZodObject<{
+    id: z.ZodString;
+    user_id: z.ZodString;
+    create_at: z.ZodNumber;
+    update_at: z.ZodNumber;
+    delete_at: z.ZodNumber;
+    name: z.ZodString;
+    extension: z.ZodString;
+    size: z.ZodNumber;
+    mime_type: z.ZodString;
+    width: z.ZodNumber;
+    height: z.ZodNumber;
+    has_preview_image: z.ZodBoolean;
+    clientId: z.ZodString;
+    post_id: z.ZodOptional<z.ZodString>;
+    mini_preview: z.ZodOptional<z.ZodString>;
+    archived: z.ZodBoolean;
+    link: z.ZodOptional<z.ZodString>;
+    channel_id: z.ZodString;
+}, z.core.$strip>;
+//# sourceMappingURL=files.zod.d.ts.map

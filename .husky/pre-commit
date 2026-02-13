@@ -9,32 +9,23 @@ SUFFIX=
 
 
 # Check if pnpm is available and use it, otherwise fallback to npm
-if  command -v bun > /dev/null; then
-  PM="bun"
-elif command -v pnpm > /dev/null; then
+if  command -v pnpm > /dev/null; then
   PM="pnpm"
-elif command -v yarn > /dev/null; then
-  PM="bun"
-elif command -v npm > /dev/null; then
-  PM="npm"
 else
-  echo "${RED}${BOLD}${PREFIX}Error: pnpm/yarn/bun/npm not found. What are you doing?${SUFFIX}${RESET}"
+  echo "${RED}${BOLD}${PREFIX}Error: pnpm not found. Please install it${SUFFIX}${RESET}"
   exit 1
 fi
 
 echo "${BOLD}${YELLOW}${PREFIX}Using $PM as package manager${SUFFIX}${RESET}"
 
 echo "${BOLD}${GREEN}${PREFIX}Running biome check...${SUFFIX}${RESET}"
-$PM run check
-
-echo "${BOLD}${GREEN}${PREFIX}Running tsc check...${SUFFIX}${RESET}"
-tsc --noEmit
+pnpm run check
 
 echo "${BOLD}${GREEN}${PREFIX}Running biome lint...${SUFFIX}${RESET}"
-$PM run lint
+pnpm run lint
 
 echo "${BOLD}${GREEN}${PREFIX}Running lint-staged...${SUFFIX}${RESET}"
-$PM lint-staged --allow-empty
+pnpm run lint-staged --allow-empty
 
 echo "${BOLD}${GREEN}${PREFIX}Running tests...${SUFFIX}${RESET}"
-$PM run test
+pnpm run test

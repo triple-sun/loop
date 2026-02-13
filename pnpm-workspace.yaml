@@ -1,0 +1,27 @@
+packages:
+  - 'packages/client'
+  - 'packages/types'
+  - 'packages/websocket-client'
+  - '!**/test/**'
+
+catalogs:
+  test:
+    "@jest/globals": ^30.2.0
+    "@types/jest": ^30.0.0
+    "@types/nock": ^10.0.3
+    dotenv: ^17.2.3
+    jest: ^30.2.0
+    nock: ^15.0.0
+    ts-jest: ^29.4.6
+    ts-node: ^10.9.2
+    tsd: ^0.33.0
+  dev:
+    "@biomejs/biome": 2.3.14
+    "@tsconfig/recommended": ^1
+    "@types/node": ^25.0.10
+    husky: ^9.1.7
+    lint-staged: ^16.2.7
+    rimraf: ^6.1.2
+    typescript: "5.9.3"
+  
+linkWorkspacePackages: true

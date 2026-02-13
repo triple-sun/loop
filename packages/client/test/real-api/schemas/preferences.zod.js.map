@@ -1,0 +1,1 @@
+{"version":3,"file":"preferences.zod.js","sourceRoot":"","sources":["preferences.zod.ts"],"names":[],"mappings":";;;AAAA,yBAAyB;AACzB,6BAAwB;AAEX,QAAA,gBAAgB,GAAG,OAAC,CAAC,MAAM,CAAC;IACxC,OAAO,EAAE,OAAC,CAAC,MAAM,EAAE;IACnB,QAAQ,EAAE,OAAC,CAAC,MAAM,EAAE;IACpB,IAAI,EAAE,OAAC,CAAC,MAAM,EAAE;IAChB,KAAK,EAAE,OAAC,CAAC,MAAM,EAAE;CACjB,CAAC,CAAC"}

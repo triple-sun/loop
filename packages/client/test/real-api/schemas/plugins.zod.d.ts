@@ -1,0 +1,428 @@
+import { z } from "zod";
+export declare const pluginManifestServerSchema: z.ZodObject<{
+    executables: z.ZodOptional<z.ZodObject<{
+        "linux-amd64": z.ZodOptional<z.ZodString>;
+        "darwin-amd64": z.ZodOptional<z.ZodString>;
+        "windows-amd64": z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>>;
+    executable: z.ZodString;
+}, z.core.$strip>;
+export declare const pluginManifestWebappSchema: z.ZodObject<{
+    bundle_path: z.ZodString;
+}, z.core.$strip>;
+export declare const pluginSettingOptionSchema: z.ZodObject<{
+    display_name: z.ZodString;
+    value: z.ZodString;
+}, z.core.$strip>;
+export declare const pluginStatusSchema: z.ZodObject<{
+    plugin_id: z.ZodString;
+    cluster_id: z.ZodString;
+    plugin_path: z.ZodString;
+    state: z.ZodNumber;
+    name: z.ZodString;
+    description: z.ZodString;
+    version: z.ZodString;
+}, z.core.$strip>;
+export declare const pluginStatusReduxSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    description: z.ZodString;
+    version: z.ZodString;
+    active: z.ZodBoolean;
+    state: z.ZodNumber;
+    error: z.ZodOptional<z.ZodString>;
+    instances: z.ZodArray<z.ZodObject<{
+        cluster_id: z.ZodString;
+        version: z.ZodString;
+        state: z.ZodNumber;
+    }, z.core.$strip>>;
+}, z.core.$strip>;
+export declare const clientPluginManifestSchema: z.ZodObject<{
+    id: z.ZodString;
+    min_server_version: z.ZodOptional<z.ZodString>;
+    version: z.ZodString;
+    webapp: z.ZodObject<{
+        bundle_path: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export declare const pluginSettingSchema: z.ZodObject<{
+    key: z.ZodString;
+    display_name: z.ZodString;
+    type: z.ZodString;
+    help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+        id: z.ZodString;
+        defaultMessage: z.ZodString;
+    }, z.core.$strip>]>;
+    regenerate_help_text: z.ZodOptional<z.ZodString>;
+    placeholder: z.ZodString;
+    default: z.ZodUnknown;
+    options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        display_name: z.ZodString;
+        value: z.ZodString;
+    }, z.core.$strip>>>;
+    hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+}, z.core.$strip>;
+export declare const pluginSettingsSchemaSchema: z.ZodObject<{
+    header: z.ZodString;
+    footer: z.ZodString;
+    settings: z.ZodArray<z.ZodObject<{
+        key: z.ZodString;
+        display_name: z.ZodString;
+        type: z.ZodString;
+        help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+            id: z.ZodString;
+            defaultMessage: z.ZodString;
+        }, z.core.$strip>]>;
+        regenerate_help_text: z.ZodOptional<z.ZodString>;
+        placeholder: z.ZodString;
+        default: z.ZodUnknown;
+        options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            display_name: z.ZodString;
+            value: z.ZodString;
+        }, z.core.$strip>>>;
+        hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+    }, z.core.$strip>>;
+}, z.core.$strip>;
+export declare const pluginManifestSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    description: z.ZodOptional<z.ZodString>;
+    homepage_url: z.ZodOptional<z.ZodString>;
+    support_url: z.ZodOptional<z.ZodString>;
+    release_notes_url: z.ZodOptional<z.ZodString>;
+    icon_path: z.ZodOptional<z.ZodString>;
+    version: z.ZodString;
+    min_server_version: z.ZodOptional<z.ZodString>;
+    translate: z.ZodOptional<z.ZodBoolean>;
+    server: z.ZodOptional<z.ZodObject<{
+        executables: z.ZodOptional<z.ZodObject<{
+            "linux-amd64": z.ZodOptional<z.ZodString>;
+            "darwin-amd64": z.ZodOptional<z.ZodString>;
+            "windows-amd64": z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>>;
+        executable: z.ZodString;
+    }, z.core.$strip>>;
+    backend: z.ZodOptional<z.ZodObject<{
+        executables: z.ZodOptional<z.ZodObject<{
+            "linux-amd64": z.ZodOptional<z.ZodString>;
+            "darwin-amd64": z.ZodOptional<z.ZodString>;
+            "windows-amd64": z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>>;
+        executable: z.ZodString;
+    }, z.core.$strip>>;
+    webapp: z.ZodOptional<z.ZodObject<{
+        bundle_path: z.ZodString;
+    }, z.core.$strip>>;
+    settings_schema: z.ZodOptional<z.ZodObject<{
+        header: z.ZodString;
+        footer: z.ZodString;
+        settings: z.ZodArray<z.ZodObject<{
+            key: z.ZodString;
+            display_name: z.ZodString;
+            type: z.ZodString;
+            help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                id: z.ZodString;
+                defaultMessage: z.ZodString;
+            }, z.core.$strip>]>;
+            regenerate_help_text: z.ZodOptional<z.ZodString>;
+            placeholder: z.ZodString;
+            default: z.ZodUnknown;
+            options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                display_name: z.ZodString;
+                value: z.ZodString;
+            }, z.core.$strip>>>;
+            hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+        }, z.core.$strip>>;
+    }, z.core.$strip>>;
+    props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+        enterprise: z.ZodBoolean;
+        experimental: z.ZodBoolean;
+    }, z.core.$strip>>>;
+}, z.core.$strip>;
+export declare const pluginsResponseSchema: z.ZodObject<{
+    active: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        homepage_url: z.ZodOptional<z.ZodString>;
+        support_url: z.ZodOptional<z.ZodString>;
+        release_notes_url: z.ZodOptional<z.ZodString>;
+        icon_path: z.ZodOptional<z.ZodString>;
+        version: z.ZodString;
+        min_server_version: z.ZodOptional<z.ZodString>;
+        translate: z.ZodOptional<z.ZodBoolean>;
+        server: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        backend: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        webapp: z.ZodOptional<z.ZodObject<{
+            bundle_path: z.ZodString;
+        }, z.core.$strip>>;
+        settings_schema: z.ZodOptional<z.ZodObject<{
+            header: z.ZodString;
+            footer: z.ZodString;
+            settings: z.ZodArray<z.ZodObject<{
+                key: z.ZodString;
+                display_name: z.ZodString;
+                type: z.ZodString;
+                help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                    id: z.ZodString;
+                    defaultMessage: z.ZodString;
+                }, z.core.$strip>]>;
+                regenerate_help_text: z.ZodOptional<z.ZodString>;
+                placeholder: z.ZodString;
+                default: z.ZodUnknown;
+                options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    display_name: z.ZodString;
+                    value: z.ZodString;
+                }, z.core.$strip>>>;
+                hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+            }, z.core.$strip>>;
+        }, z.core.$strip>>;
+        props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+            enterprise: z.ZodBoolean;
+            experimental: z.ZodBoolean;
+        }, z.core.$strip>>>;
+    }, z.core.$strip>>;
+    inactive: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        homepage_url: z.ZodOptional<z.ZodString>;
+        support_url: z.ZodOptional<z.ZodString>;
+        release_notes_url: z.ZodOptional<z.ZodString>;
+        icon_path: z.ZodOptional<z.ZodString>;
+        version: z.ZodString;
+        min_server_version: z.ZodOptional<z.ZodString>;
+        translate: z.ZodOptional<z.ZodBoolean>;
+        server: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        backend: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        webapp: z.ZodOptional<z.ZodObject<{
+            bundle_path: z.ZodString;
+        }, z.core.$strip>>;
+        settings_schema: z.ZodOptional<z.ZodObject<{
+            header: z.ZodString;
+            footer: z.ZodString;
+            settings: z.ZodArray<z.ZodObject<{
+                key: z.ZodString;
+                display_name: z.ZodString;
+                type: z.ZodString;
+                help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                    id: z.ZodString;
+                    defaultMessage: z.ZodString;
+                }, z.core.$strip>]>;
+                regenerate_help_text: z.ZodOptional<z.ZodString>;
+                placeholder: z.ZodString;
+                default: z.ZodUnknown;
+                options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    display_name: z.ZodString;
+                    value: z.ZodString;
+                }, z.core.$strip>>>;
+                hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+            }, z.core.$strip>>;
+        }, z.core.$strip>>;
+        props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+            enterprise: z.ZodBoolean;
+            experimental: z.ZodBoolean;
+        }, z.core.$strip>>>;
+    }, z.core.$strip>>;
+}, z.core.$strip>;
+export declare const pluginsGetResponseSchema: z.ZodObject<{
+    active: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        homepage_url: z.ZodOptional<z.ZodString>;
+        support_url: z.ZodOptional<z.ZodString>;
+        release_notes_url: z.ZodOptional<z.ZodString>;
+        icon_path: z.ZodOptional<z.ZodString>;
+        version: z.ZodString;
+        min_server_version: z.ZodOptional<z.ZodString>;
+        translate: z.ZodOptional<z.ZodBoolean>;
+        server: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        backend: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        webapp: z.ZodOptional<z.ZodObject<{
+            bundle_path: z.ZodString;
+        }, z.core.$strip>>;
+        settings_schema: z.ZodOptional<z.ZodObject<{
+            header: z.ZodString;
+            footer: z.ZodString;
+            settings: z.ZodArray<z.ZodObject<{
+                key: z.ZodString;
+                display_name: z.ZodString;
+                type: z.ZodString;
+                help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                    id: z.ZodString;
+                    defaultMessage: z.ZodString;
+                }, z.core.$strip>]>;
+                regenerate_help_text: z.ZodOptional<z.ZodString>;
+                placeholder: z.ZodString;
+                default: z.ZodUnknown;
+                options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    display_name: z.ZodString;
+                    value: z.ZodString;
+                }, z.core.$strip>>>;
+                hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+            }, z.core.$strip>>;
+        }, z.core.$strip>>;
+        props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+            enterprise: z.ZodBoolean;
+            experimental: z.ZodBoolean;
+        }, z.core.$strip>>>;
+    }, z.core.$strip>>;
+    inactive: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        homepage_url: z.ZodOptional<z.ZodString>;
+        support_url: z.ZodOptional<z.ZodString>;
+        release_notes_url: z.ZodOptional<z.ZodString>;
+        icon_path: z.ZodOptional<z.ZodString>;
+        version: z.ZodString;
+        min_server_version: z.ZodOptional<z.ZodString>;
+        translate: z.ZodOptional<z.ZodBoolean>;
+        server: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        backend: z.ZodOptional<z.ZodObject<{
+            executables: z.ZodOptional<z.ZodObject<{
+                "linux-amd64": z.ZodOptional<z.ZodString>;
+                "darwin-amd64": z.ZodOptional<z.ZodString>;
+                "windows-amd64": z.ZodOptional<z.ZodString>;
+            }, z.core.$strip>>;
+            executable: z.ZodString;
+        }, z.core.$strip>>;
+        webapp: z.ZodOptional<z.ZodObject<{
+            bundle_path: z.ZodString;
+        }, z.core.$strip>>;
+        settings_schema: z.ZodOptional<z.ZodObject<{
+            header: z.ZodString;
+            footer: z.ZodString;
+            settings: z.ZodArray<z.ZodObject<{
+                key: z.ZodString;
+                display_name: z.ZodString;
+                type: z.ZodString;
+                help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                    id: z.ZodString;
+                    defaultMessage: z.ZodString;
+                }, z.core.$strip>]>;
+                regenerate_help_text: z.ZodOptional<z.ZodString>;
+                placeholder: z.ZodString;
+                default: z.ZodUnknown;
+                options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    display_name: z.ZodString;
+                    value: z.ZodString;
+                }, z.core.$strip>>>;
+                hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+            }, z.core.$strip>>;
+        }, z.core.$strip>>;
+        props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+            enterprise: z.ZodBoolean;
+            experimental: z.ZodBoolean;
+        }, z.core.$strip>>>;
+    }, z.core.$strip>>;
+}, z.core.$strip>;
+export declare const pluginReduxSchema: z.ZodIntersection<z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    description: z.ZodOptional<z.ZodString>;
+    homepage_url: z.ZodOptional<z.ZodString>;
+    support_url: z.ZodOptional<z.ZodString>;
+    release_notes_url: z.ZodOptional<z.ZodString>;
+    icon_path: z.ZodOptional<z.ZodString>;
+    version: z.ZodString;
+    min_server_version: z.ZodOptional<z.ZodString>;
+    translate: z.ZodOptional<z.ZodBoolean>;
+    server: z.ZodOptional<z.ZodObject<{
+        executables: z.ZodOptional<z.ZodObject<{
+            "linux-amd64": z.ZodOptional<z.ZodString>;
+            "darwin-amd64": z.ZodOptional<z.ZodString>;
+            "windows-amd64": z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>>;
+        executable: z.ZodString;
+    }, z.core.$strip>>;
+    backend: z.ZodOptional<z.ZodObject<{
+        executables: z.ZodOptional<z.ZodObject<{
+            "linux-amd64": z.ZodOptional<z.ZodString>;
+            "darwin-amd64": z.ZodOptional<z.ZodString>;
+            "windows-amd64": z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>>;
+        executable: z.ZodString;
+    }, z.core.$strip>>;
+    webapp: z.ZodOptional<z.ZodObject<{
+        bundle_path: z.ZodString;
+    }, z.core.$strip>>;
+    settings_schema: z.ZodOptional<z.ZodObject<{
+        header: z.ZodString;
+        footer: z.ZodString;
+        settings: z.ZodArray<z.ZodObject<{
+            key: z.ZodString;
+            display_name: z.ZodString;
+            type: z.ZodString;
+            help_text: z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
+                id: z.ZodString;
+                defaultMessage: z.ZodString;
+            }, z.core.$strip>]>;
+            regenerate_help_text: z.ZodOptional<z.ZodString>;
+            placeholder: z.ZodString;
+            default: z.ZodUnknown;
+            options: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                display_name: z.ZodString;
+                value: z.ZodString;
+            }, z.core.$strip>>>;
+            hosting: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"on-prem">, z.ZodLiteral<"cloud">]>>;
+        }, z.core.$strip>>;
+    }, z.core.$strip>>;
+    props: z.ZodOptional<z.ZodIntersection<z.ZodRecord<z.ZodString, z.ZodUnknown>, z.ZodObject<{
+        enterprise: z.ZodBoolean;
+        experimental: z.ZodBoolean;
+    }, z.core.$strip>>>;
+}, z.core.$strip>, z.ZodObject<{
+    active: z.ZodBoolean;
+}, z.core.$strip>>;
+//# sourceMappingURL=plugins.zod.d.ts.map

@@ -1,0 +1,47 @@
+import type { RetryOptions } from "again-ts";
+
+export const HEADER_AUTH = "Authorization";
+export const HEADER_BEARER = "BEARER";
+export const HEADER_CONTENT_TYPE = "Content-Type";
+export const HEADER_REQUESTED_WITH = "X-Requested-With";
+export const HEADER_USER_AGENT = "User-Agent";
+
+export const HEADER_X_CLUSTER_ID = "X-Cluster-Id";
+export const HEADER_X_CSRF_TOKEN = "X-CSRF-Token";
+export const HEADER_X_VERSION_ID = "X-Version-Id";
+
+export const HEADER_X_RATELIMIT_LIMIT = "X-RateLimit-Limit";
+export const HEADER_X_RATELIMIT_REMAINING = "X-RateLimit-Remaining";
+export const HEADER_X_RATELIMIT_RESET = "X-RateLimit-Reset";
+
+export const LOGS_PER_PAGE_DEFAULT = 10000;
+export const AUTOCOMPLETE_LIMIT_DEFAULT = 25;
+export const PER_PAGE_DEFAULT = 60;
+export const DEFAULT_LIMIT_BEFORE = 30;
+export const DEFAULT_LIMIT_AFTER = 30;
+export const DEFAULT_FILE_NAME = "Untitled";
+export const DEFAULT_USER_ME = "me";
+
+/**
+ * The default retry policy. Retry up to 10 times, over the span of about 30 minutes. It's not exact because
+ * randomization has been added to prevent a stampeding herd problem (if all instances in your application are retrying
+ * a request at the exact same intervals, they are more likely to cause failures for each other).
+ */
+export const tenRetriesInAboutThirtyMinutes: RetryOptions = {
+	retries: 10,
+	factor: 1.96821,
+	random: true
+};
+
+/**
+ * Short & sweet, five retries in five minutes and then bail.
+ */
+export const fiveRetriesInFiveMinutes: RetryOptions = {
+	retries: 5,
+	factor: 3.86
+};
+
+export const retryPolicies = {
+	tenRetriesInAboutThirtyMinutes,
+	fiveRetriesInFiveMinutes
+};

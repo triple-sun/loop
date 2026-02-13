@@ -1,0 +1,61 @@
+{
+	"name": "loop-ws-client",
+	"version": "0.0.18",
+	"main": "build/index.js",
+	"description": "\"Loop/Mattermost TypeScript websocket client\"",
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"test": "jest",
+		"build": "rimraf ./build && tsc",
+		"check": "biome check --write",
+		"lint": "biome lint ./src",
+		"prepublishOnly": "bun run check && bun run lint-staged --allow-empty && bun run jest && bun run rimraf ./build && bun run tsc -p tsconfig.json"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/triple-sun/loop.git"
+	},
+	"author": "triple-sun",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/triple-sun/loop/issues"
+	},
+	"homepage": "https://github.com/triple-sun/loop#readme",
+	"files": [
+		"build/**/*",
+		"*.md"
+	],
+	"dependencies": {
+		"@triple-sun/logger": "^0.0.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:dev",
+		"@jest/globals": "catalog:test",
+		"@tsconfig/recommended": "^1",
+		"@types/jest": "catalog:test",
+		"@types/node": "catalog:dev",
+		"@types/qs": "^6.14.0",
+		"dotenv": "catalog:test",
+		"husky": "catalog:dev",
+		"jest": "catalog:test",
+		"lint-staged": "catalog:dev",
+		"loop-types": "workspace:*",
+		"rimraf": "catalog:dev",
+		"ts-jest": "catalog:test",
+		"ts-node": "catalog:test",
+		"tsd": "catalog:test",
+		"typescript": "catalog:dev"
+	},
+	"lint-staged": {
+		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+			"biome check --files-ignore-unknown=true",
+			"biome check --write --no-errors-on-unmatched"
+		],
+		"*": [
+			"biome check --no-errors-on-unmatched --files-ignore-unknown=true"
+		],
+		"test/integration/real-api/schemas/*": []
+	}
+}

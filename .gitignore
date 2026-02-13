@@ -201,3 +201,4 @@ test/real-api/reports/*
 **/*local.*
 
 .env.test
+node_modules
