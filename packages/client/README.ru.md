@@ -78,7 +78,7 @@ const client = new LoopClient('https://your-loop-server.loop.ru', {
 });
 
 // Получение текущего пользователя
-const me = await client.users.profile.get({ user_id: 'me' });
+const me = await client.users.profile.get.me();
 console.log(`Привет, ${me.data.username}!`);
 
 // Создание сообщения
@@ -148,7 +148,7 @@ const client = new LoopClient('https://your-loop-server.loop.ru', {
 
 ```typescript
 // Получить пользователя по ID
-await client.users.profile.get({ user_id: 'user-id' });
+await client.users.profile.get.byId({ user_id: 'user-id' });
 
 // Поиск пользователей
 await client.users.search({ term: 'john' });
@@ -166,7 +166,7 @@ await client.users.status.set({
 });
 
 // Установить пользовательский статус
-await client.users.customStatus.set({
+await client.users.status.setCustom({
   emoji: '🚀',
   text: 'Работаю над чем-то крутым'
 });
@@ -244,13 +244,13 @@ const uploadResult = await client.files.upload({
   channel_id: 'channel-id',
   files: fileBuffer, // или Stream
   filename: 'document.pdf'
-});
+}); // Примечание: реальная реализация может потребовать FormData или специфической обработки потоков в зависимости от окружения
 
 // Получить метаданные файла
-await client.files.getMetadata({ file_id: 'file-id' });
+await client.files.get.metadata({ file_id: 'file-id' });
 
 // Скачать файл
-const fileData = await client.files.get({ file_id: 'file-id' });
+const fileData = await client.files.get.file({ file_id: 'file-id' });
 
 // Поиск файлов
 await client.files.search({ terms: 'отчёт', team_id: 'team-id' });

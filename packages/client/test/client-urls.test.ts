@@ -2,7 +2,7 @@ import { expect, jest, test } from "@jest/globals";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
 import { LoopClient } from "../src/client";
-import { ContentType } from "../src/client.types";
+import { ContentType } from "../src/types";
 import { createMockAxiosInstance } from "./helpers/test-utils";
 
 jest.mock("axios");

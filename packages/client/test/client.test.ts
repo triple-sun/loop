@@ -4,12 +4,12 @@ import { describe, expect, it, jest } from "@jest/globals";
 import * as againTs from "again-ts";
 import axios, { type AxiosInstance, type RawAxiosRequestHeaders } from "axios";
 import { LoopClient } from "../src/client";
-import { ContentType } from "../src/client.types";
 import {
 	WebAPIRateLimitedError,
 	WebAPIRequestError,
 	WebAPIServerError
 } from "../src/errors";
+import { ContentType } from "../src/types";
 import { createMockAxiosInstance } from "./helpers/test-utils";
 
 // Mocking axios

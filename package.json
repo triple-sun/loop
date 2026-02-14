@@ -1,6 +1,21 @@
 {
 	"name": "@triple-sun/loop",
 	"description": "Loop TypeScript clients and types",
+	"author": "Simon Kononets <[EMAIL_ADDRESS]>",
+	"license": "ISC",
+	"keywords": [
+		"loop",
+		"loop-ru",
+		"mattermost"
+	],
+	"homepage": "https://github.com/triple-sun/loop#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/triple-sun/loop.git"
+	},
+	"bugs": {
+		"url": "https://github.com/triple-sun/loop/issues"
+	},
 	"packageManager": "pnpm@10.28.0",
 	"engines": {
 		"pnpm": "10",
@@ -19,9 +34,6 @@
 		"build:client": "pnpm -r --filter loop-client build",
 		"build:wsclient": "pnpm -r --filter loop-ws-client build"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
 	"devDependencies": {
 		"@biomejs/biome": "catalog:dev",
 		"husky": "^9.1.7"

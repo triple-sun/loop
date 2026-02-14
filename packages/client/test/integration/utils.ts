@@ -1,7 +1,7 @@
 import { LogLevel } from "@triple-sun/logger";
 import nock from "nock";
 import { LoopClient } from "../../src/client";
-import type { LoopClientOptions } from "../../src/client.types";
+import type { LoopClientOptions } from "../../src/types";
 
 export const TEST_URL = "https://loop.example.com";
 export const TEST_TOKEN = "test-token";

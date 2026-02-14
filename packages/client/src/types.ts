@@ -20,12 +20,6 @@ export enum ContentType {
 	URLEncoded = "application/x-www-form-urlencoded"
 }
 
-export type FileUploadData = {
-	file: unknown;
-	channel_id: string;
-	filename: string;
-};
-
 export type WebApiCallConfig = {
 	/**
 	 * @description http request method

@@ -18,14 +18,6 @@ import type {
 	TokenOverridable
 } from "loop-types";
 import {
-	ContentType,
-	type LoopClientOptions,
-	type TLSOptions,
-	type WebAPICallContext,
-	type WebAPICallResult,
-	type WebApiCallConfig
-} from "./client.types";
-import {
 	HEADER_X_CLUSTER_ID,
 	HEADER_X_VERSION_ID,
 	tenRetriesInAboutThirtyMinutes
@@ -40,6 +32,14 @@ import {
 import { getUserAgent } from "./instrument";
 import { getOrCreateLogger } from "./logger";
 import { Methods } from "./methods";
+import {
+	ContentType,
+	type LoopClientOptions,
+	type TLSOptions,
+	type WebAPICallContext,
+	type WebAPICallResult,
+	type WebApiCallConfig
+} from "./types";
 import {
 	checkForBinaryData,
 	getFormDataConfig,
@@ -141,9 +141,9 @@ export class LoopClient extends Methods {
 	private clusterId: string;
 	private serverVersion: string;
 
-	constructor(
-		url: Readonly<string>,
-		{
+	constructor(url: Readonly<string>, options: LoopClientOptions = {}) {
+		super();
+		const {
 			token = undefined,
 			userID = undefined,
 			logger = undefined,
@@ -160,9 +160,8 @@ export class LoopClient extends Methods {
 			headers = {},
 			requestInterceptor = undefined,
 			adapter = undefined
-		}: LoopClientOptions = {}
-	) {
-		super();
+		} = options;
+
 		if (!isValidUrl(url)) {
 			throw new LoopClientOptionsError(
 				"Invalid URL. See LoopClient constructor docs for details."

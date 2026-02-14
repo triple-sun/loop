@@ -6,8 +6,8 @@ import * as againTs from "again-ts";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
 import { LoopClient } from "../src/client";
-import { ContentType } from "../src/client.types";
 import { WebAPIRequestError, WebAPIServerError } from "../src/errors";
+import { ContentType } from "../src/types";
 import { createMockAxiosInstance } from "./helpers/test-utils";
 
 jest.mock("axios");

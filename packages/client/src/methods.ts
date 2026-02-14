@@ -341,7 +341,7 @@ import {
 	type LoopClientEvent,
 	type WebAPICallResult,
 	type WebApiCallConfig
-} from "./client.types";
+} from "./types";
 
 type MethodWithRequiredArgument<
 	METHOD_ARGS,

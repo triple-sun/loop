@@ -4,7 +4,7 @@ import { expect, jest } from "@jest/globals";
 import * as againTs from "again-ts";
 import axios, { type AxiosInstance } from "axios";
 import { LoopClient } from "../../src/client";
-import { ContentType } from "../../src/client.types";
+import { ContentType } from "../../src/types";
 
 // Mock axios
 jest.mock("axios");

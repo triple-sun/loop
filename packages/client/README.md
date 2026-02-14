@@ -84,7 +84,7 @@ const client = new LoopClient('https://your-loop-server.loop.ru', {
 });
 
 // Fetch current user
-const me = await client.users.profile.get({ user_id: 'me' });
+const me = await client.users.profile.get.me();
 console.log(`Hello, ${me.data.username}!`);
 
 // Create a post
@@ -154,7 +154,7 @@ The client provides a comprehensive API organized by resource type. All methods 
 
 ```typescript
 // Get user by ID
-await client.users.profile.get({ user_id: 'user-id' });
+await client.users.profile.get.byId({ user_id: 'user-id' });
 
 // Search users
 await client.users.search({ term: 'john' });
@@ -172,7 +172,7 @@ await client.users.status.set({
 });
 
 // Set custom status
-await client.users.customStatus.set({
+await client.users.status.setCustom({
   emoji: '🚀',
   text: 'Working on something awesome'
 });
@@ -250,13 +250,13 @@ const uploadResult = await client.files.upload({
   channel_id: 'channel-id',
   files: fileBuffer, // or Stream
   filename: 'document.pdf'
-});
+}); // Note: actual implementation might require FormData or specific stream handling depending on environment
 
 // Get file metadata
-await client.files.getMetadata({ file_id: 'file-id' });
+await client.files.get.metadata({ file_id: 'file-id' });
 
 // Download a file
-const fileData = await client.files.get({ file_id: 'file-id' });
+const fileData = await client.files.get.file({ file_id: 'file-id' });
 
 // Search files
 await client.files.search({ terms: 'report', team_id: 'team-id' });
