@@ -1,11 +1,11 @@
 import type { Logger } from "@triple-sun/logger";
 import {
-	CLIENT_PING_TIMEOUT_ERR_CODE,
-	DEFAULT_CLIENT_PING_INTERVAL,
-	DEFAULT_WEBSOCKET_JITTER_RANGE,
-	DEFAULT_WEBSOCKET_MAX_FAILS,
-	DEFAULT_WEBSOCKET_MAX_RETRY_TIME,
-	DEFAULT_WEBSOCKET_MIN_RETRY_TIME
+	DEFAULT_MAX_RECONNECT_FAILS,
+	DEFAULT_MIN_RECONNECT_TIME,
+	DEFAULT_PING_INTERVAL,
+	DEFAULT_RECONNECT_JITTER_RANGE,
+	PING_TIMEOUT_ERROR_CODE,
+	SEQUENCE_MISMATCH_ERROR_CODE
 } from "./const";
 import { getLogger } from "./logger";
 import { LoopEvent } from "./types/events";
@@ -24,24 +24,11 @@ import type {
 import { getUserAgent, isHelloMessage, isValidUrl } from "./utils";
 
 export class WebSocketClient {
-	/**
-	 * @description Websocket connection url
-	 * @example wss://your-loop.loop.ru/api/v4/websocket
-	 */
 	private url: string | null;
-	/**
-	 * @description Websocket auth token (usually is the same as regular auth token)
-	 */
 	private token: string;
-	/**
-	 * @description logger instance
-	 */
 	private logger: Logger;
-	/**
-	 * @description WebSocket connection (if connected)
-	 */
 	private socket: WebSocket | null;
-
+	private connectionId: string | null;
 	/**
 	 * @description rSequence is the number to track a response sent
 	 * via the websocket. A response will always have the same sequence number
@@ -55,27 +42,28 @@ export class WebSocketClient {
 	 */
 	private sSequence: number;
 
-	private connectFailCount: number;
-	private responseCallbacks: Map<number, (msg: unknown) => void>;
-	private connectionId: string | null;
 	private postedAck: boolean;
-	private resetCount: boolean;
-	private jitterRange: number;
-	private maxFails: number;
-	private minRetryTime: number;
-	private maxRetryTime: number;
+
 	private wsCreator: (url: string) => WebSocket;
-	private clientPingInterval: number;
-
 	private listenerStore: ListenerStore;
+	private responseCallbacks: Map<number, (msg: unknown) => void>;
 
+	// Ping params
+	private pingIntervalLength: number;
 	private pingInterval: ReturnType<typeof setInterval> | null;
-	private waitingForPong: boolean;
+	private awaitingPong: boolean;
+
 	private lastErrCode: string | null;
 
+	private maxFails: number;
+	private failCount: number;
+	private jitterRange: number;
+	private minReconnectTime: number;
+	private maxReconnectTime: number;
+	private resetSequenceOnClose: boolean;
 	// reconnectTimeout is used for automatic reconnect after socket close
 	private reconnectTimeout: ReturnType<typeof setTimeout> | null;
-	// Network event handlers
+	// Browser network event handlers
 	private onlineHandler: (() => void) | null = null;
 	private offlineHandler: (() => void) | null = null;
 
@@ -83,9 +71,9 @@ export class WebSocketClient {
 		this.socket = null;
 		this.rSequence = 1;
 		this.sSequence = 0;
-		this.connectFailCount = 0;
+		this.failCount = 0;
 		this.pingInterval = null;
-		this.waitingForPong = false;
+		this.awaitingPong = false;
 		this.lastErrCode = null;
 		this.reconnectTimeout = null;
 
@@ -93,24 +81,23 @@ export class WebSocketClient {
 			throw new TypeError(`${o.url} is not a valid URL`);
 		}
 
-		if (o.url && !o.url.endsWith(`v4/websocket`)) {
-			o.url += `v4/websocket`;
+		this.url = o.url;
+		if (this.url && !this.url.endsWith(`v4/websocket`)) {
+			this.url += `v4/websocket`;
 		}
 
-		this.url = o.url;
 		this.token = o.token;
 
 		this.responseCallbacks = new Map<number, (msg: unknown) => void>();
 		this.connectionId = "";
 		this.postedAck = o.postedAck ?? false;
-		this.resetCount = o.resetCount ?? true;
-		this.jitterRange = o.jitterRange ?? DEFAULT_WEBSOCKET_JITTER_RANGE;
-		this.maxFails = o.maxFails ?? DEFAULT_WEBSOCKET_MAX_FAILS;
-		this.minRetryTime = o.minRetryTime ?? DEFAULT_WEBSOCKET_MIN_RETRY_TIME;
-		this.maxRetryTime = o.maxRetryTime ?? DEFAULT_WEBSOCKET_MAX_RETRY_TIME;
-		this.wsCreator = o.wsCreator ?? ((url: string) => new WebSocket(url));
-		this.clientPingInterval =
-			o.clientPingInterval ?? DEFAULT_CLIENT_PING_INTERVAL;
+		this.resetSequenceOnClose = o.resetSequenceOnClose ?? true;
+		this.jitterRange = o.reconnectJitterRange ?? DEFAULT_RECONNECT_JITTER_RANGE;
+		this.maxFails = o.maxReconnectFails ?? DEFAULT_MAX_RECONNECT_FAILS;
+		this.minReconnectTime = o.minReconnectTime ?? DEFAULT_MIN_RECONNECT_TIME;
+		this.maxReconnectTime = o.maxReconnectTime ?? DEFAULT_MIN_RECONNECT_TIME;
+		this.wsCreator = o.wsConstructor ?? ((url: string) => new WebSocket(url));
+		this.pingIntervalLength = o.pingInterval ?? DEFAULT_PING_INTERVAL;
 
 		/** Set up logging */
 		this.logger = getLogger(o.logLevel, o.logger);
@@ -147,30 +134,35 @@ export class WebSocketClient {
 			return this;
 		}
 
+		// Don't connect if we have reconnection scheduled
 		if (this.reconnectTimeout) {
 			return this;
 		}
 
-		if (this.connectFailCount === 0) {
+		if (this.failCount === 0) {
 			this.logger.info(`Websocket connecting to ${this.url}`);
 		}
 
-		// Setup network event listener
+		// Setup browser network event listeners
 		// biome-ignore lint/suspicious/noExplicitAny: <required for browser compatibility>
 		const windowGlobal = (globalThis as any).window;
 		if (windowGlobal) {
 			this.setUpBrowserListeners(windowGlobal);
 		}
 
+		// Creating params string
 		// Add connection id, and last_sequence_number to the query param.
-		// We cannot use a cookie because it will bleed across tabs.
-		// We cannot also send it as part of the auth_challenge, because the session cookie is already sent with the request.
-		this.socket = this.wsCreator(
-			`${this.url}?connection_id=${this.connectionId}&sequence_number=${this.sSequence}` +
-				`${this.postedAck ? "&posted_ack=true" : ""}` +
-				`${this.lastErrCode ? `&disconnect_err_code=${encodeURIComponent(this.lastErrCode)}` : ""}`
-		);
+		const params = Object.entries({
+			connection_id: this.connectionId,
+			sequence_number: this.sSequence,
+			posted_ack: this.postedAck,
+			disconnect_err_code: this.lastErrCode
+		})
+			.filter(([_, value]) => value !== null && value !== undefined)
+			.map(([key, value]) => `${key}=${value}`)
+			.join("&");
 
+		this.socket = this.wsCreator(`${this.url}?${params}`);
 		this.socket.onopen = this.onOpen.bind(this);
 		this.socket.onclose = this.onClose.bind(this);
 		this.socket.onmessage = this.onMessage.bind(this);
@@ -180,14 +172,11 @@ export class WebSocketClient {
 	}
 
 	public close(): this {
-		this.connectFailCount = 0;
+		this.failCount = 0;
 		this.rSequence = 1;
 		this.lastErrCode = null;
 
-		if (this.reconnectTimeout) {
-			clearTimeout(this.reconnectTimeout);
-			this.reconnectTimeout = null;
-		}
+		this.clearReconnectTimeout();
 		this.responseCallbacks.clear();
 		this.stopPingInterval();
 
@@ -354,7 +343,7 @@ export class WebSocketClient {
 	}
 
 	private onError(event: ErrorEvent): void {
-		if (this.connectFailCount <= 1) {
+		if (this.failCount <= 1) {
 			this.logger.error(`Websocket error: ${event.message}`);
 		}
 		this.executeListeners("error", event);
@@ -365,7 +354,7 @@ export class WebSocketClient {
 			token: this.token
 		});
 
-		if (this.connectFailCount > 0) {
+		if (this.failCount > 0) {
 			this.logger.info("Websocket re-established connection");
 			this.executeListeners("reconnect");
 		} else if (this.listenerStore.firstConnect.size > 0) {
@@ -375,18 +364,18 @@ export class WebSocketClient {
 		this.stopPingInterval();
 
 		// Send a ping immediately to test the socket
-		this.waitingForPong = true;
+		this.awaitingPong = true;
 		this.ping(() => {
-			this.waitingForPong = false;
+			this.awaitingPong = false;
 		});
 
 		// And every 30 seconds after, checking to ensure
 		// we're getting responses from the server
 		this.pingInterval = setInterval(() => {
-			if (!this.waitingForPong) {
-				this.waitingForPong = true;
+			if (!this.awaitingPong) {
+				this.awaitingPong = true;
 				this.ping(() => {
-					this.waitingForPong = false;
+					this.awaitingPong = false;
 				});
 				return;
 			}
@@ -408,43 +397,43 @@ export class WebSocketClient {
 			// call the onclose callback ourselves immediately. We also
 			// unset the callback on the old connection to ensure it
 			// is only called once.
-			this.connectFailCount = 0;
+			this.failCount = 0;
 			this.rSequence = 1;
 			this.socket.onclose = () => null;
 			this.socket.close();
 			this.onClose(
 				new CloseEvent("close", {
 					reason: "timeout",
-					code: CLIENT_PING_TIMEOUT_ERR_CODE,
+					code: PING_TIMEOUT_ERROR_CODE,
 					wasClean: false
 				})
 			);
-		}, this.clientPingInterval);
+		}, this.pingIntervalLength);
 
-		this.connectFailCount = 0;
+		this.failCount = 0;
 	}
 
 	private onClose(event: CloseEvent): void {
 		this.socket = null;
 		this.rSequence = 1;
 
-		if (this.resetCount) {
+		if (this.resetSequenceOnClose) {
 			this.sSequence = 0;
 			this.connectionId = null;
 		}
 
-		if (!this.lastErrCode && event && event.code) {
+		if (!this.lastErrCode && event?.code) {
 			this.lastErrCode = `${event.code}`;
 		}
 
-		if (this.connectFailCount === 0) {
+		if (this.failCount === 0) {
 			this.logger.warn("Websocket closed");
 		}
 
-		this.connectFailCount++;
+		this.failCount++;
 
 		/** call close listeners */
-		this.executeListeners("close", this.connectFailCount);
+		this.executeListeners("close", this.failCount);
 
 		// Make sure we stop pinging if the connection is closed
 		this.stopPingInterval();
@@ -454,12 +443,10 @@ export class WebSocketClient {
 		}
 
 		/** retry */
-		const retryTime = this.getRetryTime();
-
 		this.reconnectTimeout = setTimeout(() => {
 			this.reconnectTimeout = null;
 			this.init();
-		}, retryTime);
+		}, this.getRetryTime());
 
 		this.responseCallbacks.clear();
 	}
@@ -521,7 +508,7 @@ export class WebSocketClient {
 			this.reconnectTimeout = setTimeout(() => {
 				this.reconnectTimeout = null;
 				this.init();
-			}, this.minRetryTime);
+			}, this.getRetryTime());
 		};
 
 		this.offlineHandler = () => {
@@ -542,9 +529,9 @@ export class WebSocketClient {
 			// even though the network might be fine and the server just needs a bit more time to respond.
 			// This race condition is rare and the impact is just an unnecessary reconnect,
 			// so we accept this limitation to keep the implementation simple.
-			this.waitingForPong = true;
+			this.awaitingPong = true;
 			this.ping(() => {
-				this.waitingForPong = false;
+				this.awaitingPong = false;
 			});
 		};
 
@@ -630,10 +617,23 @@ export class WebSocketClient {
 		this.logger.warn(
 			`Missed websocket event, actual seq: ${msg.seq} expected seq: ${this.sSequence}`
 		);
-		// We are not calling this.close() because we need to auto-restart.
-		this.connectFailCount = 0;
+		const closeEvent = new CloseEvent("close", {
+			code: SEQUENCE_MISMATCH_ERROR_CODE,
+			wasClean: false
+		});
+
+		// Calling conn.close() will trigger the onclose callback,
+		// but sometimes with a significant delay. So instead, we
+		// call the onclose callback ourselves immediately. We also
+		// unset the callback on the old connection to ensure it
+		// is only called once.
+		this.failCount = 0;
 		this.rSequence = 1;
-		this.socket?.close(); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
+		if (this.socket) {
+			this.socket.onclose = () => null;
+			this.socket.close();
+			this.onClose(closeEvent);
+		}
 	}
 
 	private handleSocketReply(msg: LoopMessage, seq_reply: number): void {
@@ -651,14 +651,12 @@ export class WebSocketClient {
 	}
 
 	private getRetryTime(): number {
-		let retryTime = this.minRetryTime;
+		let retryTime = this.minReconnectTime;
 
-		if (this.connectFailCount > this.maxFails) {
+		if (this.failCount > this.maxFails) {
 			// If we've failed a bunch of connections then start backing off
-			retryTime =
-				this.minRetryTime * this.connectFailCount * this.connectFailCount;
-
-			if (retryTime > this.maxRetryTime) retryTime = this.maxRetryTime;
+			retryTime = this.minReconnectTime * 2 ** this.failCount;
+			retryTime = Math.min(retryTime, this.maxReconnectTime);
 		}
 
 		// Applying jitter to avoid thundering herd problems.
