@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.18] - 2026-02-14
+## [0.0.1] - 2026-02-14
 
 ### Added
 - Monorepo migration.
