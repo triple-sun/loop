@@ -1,4 +1,4 @@
-import type { Scheme } from "loop-types";
+import type { Scheme } from "../general";
 
 export interface SchemesCreateArguments {
 	scheme: Scheme;

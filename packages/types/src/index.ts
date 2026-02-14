@@ -14,6 +14,7 @@ export * from "./groups";
 export * from "./jobs";
 export * from "./marketplace";
 export * from "./metadata";
+export * from "./methods";
 export * from "./oauth";
 export * from "./playbooks";
 export * from "./plugins";

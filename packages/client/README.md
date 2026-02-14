@@ -64,15 +64,21 @@ Or using yarn:
 yarn add loop-client
 ```
 
+Or using bun:
+
+```bash
+bun add loop-client
+```
+
 ## Quick Start
 
 ### Basic Usage
 
 ```typescript
-import { WebClient } from 'loop-client';
+import { LoopClient } from 'loop-client';
 
 // Initialize the client
-const client = new WebClient('https://your-loop-server.loop.ru', {
+const client = new LoopClient('https://your-loop-server.loop.ru', {
   token: 'your-api-token',
   logLevel: 'info'
 });
@@ -99,9 +105,9 @@ client.destroy();
 ### Advanced Configuration
 
 ```typescript
-import { WebClient, fiveRetriesInFiveMinutes } from 'loop-client';
+import { LoopClient, fiveRetriesInFiveMinutes } from 'loop-client';
 
-const client = new WebClient('https://your-loop-server.loop.ru', {
+const client = new LoopClient('https://your-loop-server.loop.ru', {
   // Authentication
   token: 'your-api-token',
   userID: 'me', // Optional: Current user ID (calculated automatically if not provided)
@@ -330,19 +336,19 @@ import {
 } from 'loop-client';
 
 // Default: 10 retries over ~30 minutes
-const client1 = new WebClient(url, {
+const client1 = new LoopClient(url, {
   token,
   retryConfig: tenRetriesInAboutThirtyMinutes
 });
 
 // Faster: 5 retries over 5 minutes
-const client2 = new WebClient(url, {
+const client2 = new LoopClient(url, {
   token,
   retryConfig: fiveRetriesInFiveMinutes
 });
 
 // Custom retry policy
-const client3 = new WebClient(url, {
+const client3 = new LoopClient(url, {
   token,
   retryConfig: {
     retries: 3,
@@ -380,7 +386,7 @@ pnpm build
 ```
 loop-client/
 ├── src/
-│   ├── web-client.ts       # Main WebClient class
+│   ├── web-client.ts       # Main LoopClient class
 │   ├── methods.ts          # API method definitions (2900+ LOC)
 │   ├── errors.ts           # Error definitions
 │   ├── utils.ts            # Utility functions

@@ -1,4 +1,4 @@
-import type { CloudCustomerAddress, CloudCustomerPatch } from "loop-types";
+import type { CloudCustomerAddress, CloudCustomerPatch } from "../cloud";
 
 export interface CloudUpdateCustomerArguments extends CloudCustomerPatch {
 	customer: CloudCustomerPatch;

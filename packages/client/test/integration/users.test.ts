@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import {
 	cleanupTestClient,
 	mockApi,
@@ -8,7 +8,7 @@ import {
 } from "./utils";
 
 describe("Users Integration Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	beforeEach(() => {
 		client = setupTestClient();

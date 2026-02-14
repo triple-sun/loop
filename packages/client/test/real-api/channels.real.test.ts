@@ -6,7 +6,7 @@
 
 import { ChannelType } from "loop-types";
 import { z } from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import {
 	channelMembershipSchema,
 	channelSchema,
@@ -19,7 +19,7 @@ import {
 } from "./utils/real-api.utils";
 
 describe("Channels API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 	let foundTeamId: string = "";
 	let foundChannelId: string = "";
 	let currentUserId: string = "";

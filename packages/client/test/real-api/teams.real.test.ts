@@ -5,7 +5,7 @@
 
 import { afterAll, beforeAll } from "@jest/globals";
 import { z } from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import {
 	teamMembershipSchema,
 	teamSchema,
@@ -14,7 +14,7 @@ import {
 import { createRealApiClient, TestReport } from "./utils/real-api.utils";
 
 describe("Teams API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 	let foundTeamId: string | undefined;
 	let foundTeamName: string | undefined;
 	let currentUserId: string | undefined;

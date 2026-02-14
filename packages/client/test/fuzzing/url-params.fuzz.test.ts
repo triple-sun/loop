@@ -3,8 +3,8 @@
 import { expect, jest } from "@jest/globals";
 import * as againTs from "again-ts";
 import axios, { type AxiosInstance } from "axios";
-import { ContentType } from "../../src/types/web-client";
-import { WebClient } from "../../src/web-client";
+import { LoopClient } from "../../src/client";
+import { ContentType } from "../../src/client.types";
 
 // Mock axios
 jest.mock("axios");
@@ -82,7 +82,7 @@ describe("URL Parameter Fuzzing", () => {
 		];
 
 		it("should handle path traversal attempts safely", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await Promise.all(
 				pathTraversalPayloads.map(payload => {
@@ -115,7 +115,7 @@ describe("URL Parameter Fuzzing", () => {
 		];
 
 		it("should handle SQL injection attempts safely", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			const sqlPayloads = injectionPayloads.filter(
 				p => p.includes("OR") || p.includes("DROP") || p.includes("DELETE")
@@ -134,7 +134,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle XSS attempts safely", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			const xssPayloads = injectionPayloads.filter(
 				p =>
@@ -160,7 +160,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle template injection attempts safely", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			const templatePayloads = injectionPayloads.filter(
 				p => p.includes("${") || p.includes("{{") || p.includes("<%=")
@@ -194,7 +194,7 @@ describe("URL Parameter Fuzzing", () => {
 		];
 
 		it("should handle null bytes", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(
@@ -205,7 +205,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle unicode characters", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await Promise.all(
 				Array.from(specialChars.filter(c => c.match(/[\u0100-\uffff]/))).map(
@@ -226,7 +226,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle very long parameter values", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			const longValues = [
 				"a".repeat(1000),
@@ -266,7 +266,7 @@ describe("URL Parameter Fuzzing", () => {
 		];
 
 		it("should handle URL encoded values", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await Promise.all(
 				encodedValues.map(encoded => {
@@ -285,7 +285,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle double-encoded values", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(
@@ -298,7 +298,7 @@ describe("URL Parameter Fuzzing", () => {
 
 	describe("Boundary Value Testing", () => {
 		it("should handle empty string parameter", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(
@@ -309,7 +309,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle whitespace-only parameter", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(
@@ -320,7 +320,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle parameter with leading/trailing whitespace", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(
@@ -331,7 +331,7 @@ describe("URL Parameter Fuzzing", () => {
 		});
 
 		it("should handle numeric zero", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 
 			await expect(
 				client.apiCall(

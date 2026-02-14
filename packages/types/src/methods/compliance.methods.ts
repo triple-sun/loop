@@ -1,4 +1,4 @@
-import type { ComplianceReport } from "loop-types";
+import type { ComplianceReport } from "../general";
 
 /**
  * Arguments for creating a compliance report.

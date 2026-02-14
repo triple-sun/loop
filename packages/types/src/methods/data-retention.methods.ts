@@ -1,4 +1,4 @@
-import type { DataRetentionCustomPolicy } from "loop-types";
+import type { DataRetentionCustomPolicy } from "../general";
 
 export interface PatchDataRetentionCustomPolicyTeams {
 	team_ids: string[];

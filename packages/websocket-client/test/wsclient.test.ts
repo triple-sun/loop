@@ -905,7 +905,7 @@ describe("WebSocketClient", () => {
 			});
 			expect(spy).toHaveBeenCalledWith(
 				expect.stringContaining(
-					"The logLevel given to WebClient was ignored as you also gave logger"
+					"The logLevel given to LoopClient was ignored as you also gave logger"
 				)
 			);
 		});

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect } from "@jest/globals";
 import { TeamType } from "loop-types";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { cleanupTestClient, mockApi, setupTestClient } from "./utils";
 
 describe("Teams Integration Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	beforeEach(() => {
 		client = setupTestClient();

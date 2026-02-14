@@ -3,70 +3,6 @@ import type { Stream } from "form-data";
 import type {
 	AnalyticsRow,
 	Bot,
-	Channel,
-	ChannelMembership,
-	ChannelStats,
-	ChannelUnreadResponse,
-	ChannelViewResponse,
-	ClientConfig,
-	CloudCustomer,
-	CloudInvoice,
-	CloudLimits,
-	CloudProduct,
-	CloudSubscription,
-	Command,
-	CommandExecuteResponse,
-	ComplianceReport,
-	CustomEmoji,
-	DataRetentionCustomPolicies,
-	FileInfo,
-	FileSearchResponse,
-	FileUploadResponse,
-	Group,
-	GroupMembership,
-	GroupStats,
-	GroupSyncable,
-	IncomingWebhook,
-	Job,
-	OAuthApp,
-	OutgoingWebhook,
-	PlaybookRunsCreateResponse,
-	PlaybookRunsGetResponse,
-	PlaybooksCreateResponse,
-	PlaybooksGetResponse,
-	PlaybooksListResponse,
-	PlaybooksRunsListResponse,
-	PlaybooksUpdateResponse,
-	PluginManifest,
-	PluginStatus,
-	PluginsGetResponse,
-	PostListResponse,
-	PostResponse,
-	PostSearchResponse,
-	Preference,
-	Reaction,
-	Role,
-	Scheme,
-	StatusOKResponse,
-	SystemCheckDatabaseIntegrityResponse,
-	SystemCheckHealthResponse,
-	Team,
-	TeamMembership,
-	TeamMemberWithError,
-	TeamStats,
-	TermsOfService,
-	UploadSession,
-	UserCustomStatus,
-	UserProfile,
-	UserStatus
-} from "loop-types";
-import type {
-	DialogOpenArguments,
-	DialogSubmitArguments,
-	TokenOverridable,
-	UserID
-} from "./types/methods";
-import type {
 	BotsAssignArguments,
 	BotsConvertBotToUserArguments,
 	BotsConvertUserArguments,
@@ -78,13 +14,12 @@ import type {
 	BotsGetIconArguments,
 	BotsListArguments,
 	BotsPatchArguments,
-	BotsSetIconArguments
-} from "./types/methods/bots.methods";
-import type {
+	BotsSetIconArguments,
 	BrandGetImageArguments,
-	BrandUploadImageArguments
-} from "./types/methods/brand.methods";
-import type {
+	BrandUploadImageArguments,
+	Channel,
+	ChannelMembership,
+	ChannelStats,
 	ChannelsAutocompleteArguments,
 	ChannelsCategoriesCreateArguments,
 	ChannelsCategoriesListArguments,
@@ -135,15 +70,20 @@ import type {
 	ChannelsUpdateArguments,
 	ChannelsUpdatePrivacyArguments,
 	ChannelsViewArguments,
-	SidebarCategory
-} from "./types/methods/channels.methods";
-import type {
+	ChannelUnreadResponse,
+	ChannelViewResponse,
+	ClientConfig,
 	CloudConfirmCustomerPaymentArguments,
+	CloudCustomer,
+	CloudInvoice,
+	CloudLimits,
+	CloudProduct,
+	CloudSubscription,
 	CloudUpdateAddressArguments,
 	CloudUpdateCustomerArguments,
-	CloudValidateBusinessEmailArguments
-} from "./types/methods/cloud.methods";
-import type {
+	CloudValidateBusinessEmailArguments,
+	Command,
+	CommandExecuteResponse,
 	CommandsCreateArguments,
 	CommandsDeleteArguments,
 	CommandsExecuteArguments,
@@ -153,17 +93,16 @@ import type {
 	CommandsListAutocompleteDataArguments,
 	CommandsMoveArguments,
 	CommandsRegenerateTokenArguments,
-	CommandsUpdateArguments
-} from "./types/methods/commands.methods";
-import type {
+	CommandsUpdateArguments,
 	ComplianceCreateReportArguments,
 	ComplianceDownloadReportArguments,
-	ComplianceGetReportsArguments
-} from "./types/methods/compliance.methods";
-import type {
+	ComplianceGetReportsArguments,
+	ComplianceReport,
+	CustomEmoji,
 	DataRetentionAddPolicyChannelsArguments,
 	DataRetentionAddPolicyTeamsArguments,
 	DataRetentionCreatePolicyArguments,
+	DataRetentionCustomPolicies,
 	DataRetentionDeletePolicyArguments,
 	DataRetentionGetPoliciesArguments,
 	DataRetentionGetPolicyArguments,
@@ -176,9 +115,9 @@ import type {
 	DataRetentionRemovePolicyTeamsArguments,
 	DataRetentionSearchPolicyChannelsArguments,
 	DataRetentionSearchPolicyTeamsArguments,
-	DataRetentionUpdatePolicyArguments
-} from "./types/methods/data-retention.methods";
-import type {
+	DataRetentionUpdatePolicyArguments,
+	DialogOpenArguments,
+	DialogSubmitArguments,
 	EmojisAutocompleteArguments,
 	EmojisCreateArguments,
 	EmojisDeleteArguments,
@@ -186,9 +125,9 @@ import type {
 	EmojisGetByNameArguments,
 	EmojisGetImageArguments,
 	EmojisGetListArguments,
-	EmojisSearchArguments
-} from "./types/methods/emojis.methods";
-import type {
+	EmojisSearchArguments,
+	FileInfo,
+	FileSearchResponse,
 	FilesGetArguments,
 	FilesGetMetadataArguments,
 	FilesGetPreviewArguments,
@@ -196,9 +135,12 @@ import type {
 	FilesGetPublicLinkArguments,
 	FilesGetThumbnailArguments,
 	FilesSearchArguments,
-	FilesUploadArguments
-} from "./types/methods/files.methods";
-import type {
+	FilesUploadArguments,
+	FileUploadResponse,
+	Group,
+	GroupMembership,
+	GroupStats,
+	GroupSyncable,
 	GroupsAddSyncableArguments,
 	GroupsChannelsGetArguments,
 	GroupsCreateArguments,
@@ -217,47 +159,63 @@ import type {
 	GroupsRemoveSyncableArguments,
 	GroupsRestoreArguments,
 	GroupsTeamsGetArguments,
-	GroupsUpdateArguments
-} from "./types/methods/groups.methods";
-import type {
+	GroupsUpdateArguments,
+	IncomingWebhook,
+	IncomingWebhooksCreateArguments,
+	IncomingWebhooksDeleteArguments,
+	IncomingWebhooksGetArguments,
+	IncomingWebhooksListArguments,
+	IncomingWebhooksUpdateArguments,
+	Job,
 	JobsCancelArguments,
 	JobsCreateArguments,
 	JobsGetArguments,
 	JobsListArguments,
-	JobsListByTypeArguments
-} from "./types/methods/jobs.methods";
-import type {
+	JobsListByTypeArguments,
+	OAuthApp,
 	OAuthAppsCreateArguments,
 	OAuthAppsDeleteArguments,
 	OAuthAppsGetArguments,
 	OAuthAppsGetInfoArguments,
 	OAuthAppsListArguments,
 	OAuthAppsRegenerateSecretArguments,
-	OAuthAppsUpdateArguments
-} from "./types/methods/oauth.methods";
-import type {
+	OAuthAppsUpdateArguments,
+	OutgoingWebhook,
+	OutgoingWebhooksCreateArguments,
+	OutgoingWebhooksDeleteArguments,
+	OutgoingWebhooksGetArguments,
+	OutgoingWebhooksListArguments,
+	OutgoingWebhooksRegenerateTokenArguments,
+	OutgoingWebhooksUpdateArguments,
 	PlaybookRunsCreateArguments,
+	PlaybookRunsCreateResponse,
 	PlaybookRunsGetArguments,
-	PlaybookRunsListArguments
-} from "./types/methods/playbook-runs.methods";
-import type {
+	PlaybookRunsGetResponse,
+	PlaybookRunsListArguments,
 	PlaybooksCreateArguments,
+	PlaybooksCreateResponse,
 	PlaybooksDeleteArguments,
 	PlaybooksGetArguments,
+	PlaybooksGetResponse,
 	PlaybooksListArguments,
-	PlaybooksUpdateArguments
-} from "./types/methods/playbooks.methods";
-import type {
+	PlaybooksListResponse,
+	PlaybooksRunsListResponse,
+	PlaybooksUpdateArguments,
+	PlaybooksUpdateResponse,
+	PluginManifest,
+	PluginStatus,
 	PluginsDisableArguments,
 	PluginsEnableArguments,
 	PluginsGetMarketplaceArguments,
+	PluginsGetResponse,
 	PluginsGetWebAppArguments,
 	PluginsInstallFromMarketplaceArguments,
 	PluginsInstallFromUrlArguments,
 	PluginsRemoveArguments,
-	PluginsUploadArguments
-} from "./types/methods/plugins.methods";
-import type {
+	PluginsUploadArguments,
+	PostListResponse,
+	PostResponse,
+	PostSearchResponse,
 	PostsCreateArguments,
 	PostsCreateEphemeralArguments,
 	PostsDeleteArguments,
@@ -276,46 +234,46 @@ import type {
 	PostsSearchArguments,
 	PostsSetReminderArguments,
 	PostsUnpinArguments,
-	PostsUpdateArguments
-} from "./types/methods/posts.methods";
-import type {
+	PostsUpdateArguments,
+	Preference,
 	PreferencesDeleteArguments,
 	PreferencesGetArguments,
-	PreferencesSaveArguments
-} from "./types/methods/preferences.methods";
-import type {
+	PreferencesSaveArguments,
+	Reaction,
 	ReactionsCreateArguments,
 	ReactionsDeleteArguments,
 	ReactionsGetBulkArguments,
-	ReactionsGetForPostArguments
-} from "./types/methods/reactions.methods";
-import type {
+	ReactionsGetForPostArguments,
+	Role,
 	RolesGetArguments,
 	RolesGetByNameArguments,
 	RolesGetByNamesArguments,
-	RolesPatchArguments
-} from "./types/methods/roles.methods";
-import type {
+	RolesPatchArguments,
+	Scheme,
 	SchemesCreateArguments,
 	SchemesDeleteArguments,
 	SchemesGetArguments,
 	SchemesGetChannelsArguments,
 	SchemesGetTeamsArguments,
 	SchemesListArguments,
-	SchemesPatchArguments
-} from "./types/methods/schemes.methods";
-import type {
+	SchemesPatchArguments,
+	SidebarCategory,
+	StatusOKResponse,
 	SystemCheckDatabaseIntegrityArguments,
+	SystemCheckDatabaseIntegrityResponse,
 	SystemCheckHealthArguments,
+	SystemCheckHealthResponse,
 	SystemGetAnalyticsArguments,
 	SystemGetLogsArguments,
 	SystemTestEmailArguments,
 	SystemTestS3ConnectionArguments,
 	SystemTestSiteURLArguments,
 	SystemUpdateConfigArguments,
-	SystemUploadLogFileArguments
-} from "./types/methods/system.methods";
-import type {
+	SystemUploadLogFileArguments,
+	Team,
+	TeamMembership,
+	TeamMemberWithError,
+	TeamStats,
 	TeamsCheckNameExistsArguments,
 	TeamsCreateArguments,
 	TeamsDeleteArguments,
@@ -338,19 +296,20 @@ import type {
 	TeamsRemoveIconArguments,
 	TeamsSearchArguments,
 	TeamsSetIconArguments,
-	TeamsUpdateArguments
-} from "./types/methods/teams.methods";
-import type {
+	TeamsUpdateArguments,
+	TermsOfService,
 	TermsOfServiceCreateArguments,
 	TermsOfServiceGetArguments,
-	TermsOfServiceUpdateArguments
-} from "./types/methods/terms-of-service.methods";
-import type {
+	TermsOfServiceUpdateArguments,
+	TokenOverridable,
+	UploadSession,
 	UploadsCreateArguments,
 	UploadsGetArguments,
-	UploadsUploadArguments
-} from "./types/methods/uploads.methods";
-import type {
+	UploadsUploadArguments,
+	UserCustomStatus,
+	UserID,
+	UserProfile,
+	UserStatus,
 	UsersAutocompleteArguments,
 	UsersCreateArguments,
 	UsersCustomStatusSetArguments,
@@ -376,26 +335,13 @@ import type {
 	UsersStatusSetAruments,
 	UsersUpdateArguments,
 	UsersUpdateRolesArguments
-} from "./types/methods/users.methods";
-import type {
-	IncomingWebhooksCreateArguments,
-	IncomingWebhooksDeleteArguments,
-	IncomingWebhooksGetArguments,
-	IncomingWebhooksListArguments,
-	IncomingWebhooksUpdateArguments,
-	OutgoingWebhooksCreateArguments,
-	OutgoingWebhooksDeleteArguments,
-	OutgoingWebhooksGetArguments,
-	OutgoingWebhooksListArguments,
-	OutgoingWebhooksRegenerateTokenArguments,
-	OutgoingWebhooksUpdateArguments
-} from "./types/methods/webhooks.methods";
+} from "loop-types";
 import {
 	ContentType,
+	type LoopClientEvent,
 	type WebAPICallResult,
-	type WebApiCallConfig,
-	type WebClientEvent
-} from "./types/web-client";
+	type WebApiCallConfig
+} from "./client.types";
 
 type MethodWithRequiredArgument<
 	METHOD_ARGS,
@@ -450,14 +396,14 @@ function bindApiCallWithOptionalArg<ARGS, RESULT>(
  * Loop API reference:
  * @see {@link https://developers.loop.ru/category/loop-api|Loop API}
  */
-export abstract class Methods extends EventEmitter<WebClientEvent> {
+export abstract class Methods extends EventEmitter<LoopClientEvent> {
 	protected constructor() {
 		super();
 
-		if (new.target.name !== "WebClient") {
-			// Check that the class being created extends from `WebClient` rather than this class
+		if (new.target.name !== "LoopClient") {
+			// Check that the class being created extends from `LoopClient` rather than this class
 			throw new Error(
-				"Attempt to inherit from WebClient methods without inheriting from WebClient"
+				"Attempt to inherit from LoopClient methods without inheriting from LoopClient"
 			);
 		}
 	}

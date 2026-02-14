@@ -1,6 +1,6 @@
 {
 	"name": "loop-ws-client",
-	"version": "0.0.18",
+	"version": "0.1.0",
 	"main": "build/src/index.js",
 	"types": "build/src/index.d.ts",
 	"description": "\"Loop/Mattermost TypeScript websocket client\"",
@@ -29,7 +29,8 @@
 		"*.md"
 	],
 	"dependencies": {
-		"@triple-sun/logger": "^0.0.1"
+		"@triple-sun/logger": "^0.0.1",
+		"loop-types": "workspace:*"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:dev",
@@ -42,7 +43,6 @@
 		"husky": "catalog:dev",
 		"jest": "catalog:test",
 		"lint-staged": "catalog:dev",
-		"loop-types": "workspace:*",
 		"rimraf": "catalog:dev",
 		"ts-jest": "catalog:test",
 		"ts-node": "catalog:test",

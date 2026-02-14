@@ -1,4 +1,4 @@
-import type { PostsCreateArguments, PostsUpdateArguments } from "loop-client";
+import type { PostsCreateArguments, PostsUpdateArguments } from "loop-types";
 import {
 	type AppBinding,
 	type Post,

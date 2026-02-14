@@ -2,11 +2,11 @@
 import { expect, test } from "@jest/globals";
 import {
 	ErrorCode,
+	LoopClientOptionsError,
 	type ServerError,
 	WebAPIRateLimitedError,
 	WebAPIRequestError,
-	WebAPIServerError,
-	WebClientOptionsError
+	WebAPIServerError
 } from "../src/errors";
 import {
 	createRateLimitResponse,
@@ -72,26 +72,26 @@ describe("Error Edge Cases", () => {
 		});
 	});
 
-	describe("WebClientOptionsError", () => {
+	describe("LoopClientOptionsError", () => {
 		it("creates error with message", () => {
-			const error = new WebClientOptionsError("Invalid options");
+			const error = new LoopClientOptionsError("Invalid options");
 			expect(error.message).toBe("Invalid options");
 			expect(error.code).toBe("options_error");
 		});
 
 		it("handles empty message", () => {
-			const error = new WebClientOptionsError("");
+			const error = new LoopClientOptionsError("");
 			expect(error.message).toBe("");
 		});
 
 		it("handles undefined message", () => {
-			const error = new WebClientOptionsError(undefined as unknown as string);
+			const error = new LoopClientOptionsError(undefined as unknown as string);
 			expect(error).toBeDefined();
 		});
 
 		it("has correct error name", () => {
-			const error = new WebClientOptionsError("test");
-			expect(error.name).toBe("WebClientOptionsError");
+			const error = new LoopClientOptionsError("test");
+			expect(error.name).toBe("LoopClientOptionsError");
 		});
 	});
 

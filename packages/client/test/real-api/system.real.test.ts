@@ -5,7 +5,7 @@
 
 import { afterAll, beforeAll } from "@jest/globals";
 import { z } from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { statusOkResponseSchema } from "./schemas/common.responses.zod";
 import {
 	createRealApiClient,
@@ -14,7 +14,7 @@ import {
 } from "./utils/real-api.utils";
 
 describe("System API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	const report = new TestReport("System");
 

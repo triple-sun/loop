@@ -5,13 +5,13 @@
 
 import { afterAll, beforeAll } from "@jest/globals";
 import { z } from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { statusOkResponseSchema } from "./schemas/common.responses.zod";
 import { reactionSchema } from "./schemas/reactions.zod";
 import { createRealApiClient, TestReport } from "./utils/real-api.utils";
 
 describe("Reactions API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 	let foundTeamId: string = "";
 	let foundChannelId: string = "";
 	let currentUserId: string = "";

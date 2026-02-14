@@ -13,6 +13,18 @@ import axios, {
 	type RawAxiosRequestHeaders
 } from "axios";
 import { Breadline } from "breadline-ts";
+import type {
+	ChannelsCreateDirectArguments,
+	TokenOverridable
+} from "loop-types";
+import {
+	ContentType,
+	type LoopClientOptions,
+	type TLSOptions,
+	type WebAPICallContext,
+	type WebAPICallResult,
+	type WebApiCallConfig
+} from "./client.types";
 import {
 	HEADER_X_CLUSTER_ID,
 	HEADER_X_VERSION_ID,
@@ -20,26 +32,14 @@ import {
 } from "./const";
 import {
 	isServerError,
+	LoopClientOptionsError,
 	WebAPIRateLimitedError,
 	WebAPIRequestError,
-	WebAPIServerError,
-	WebClientOptionsError
+	WebAPIServerError
 } from "./errors";
 import { getUserAgent } from "./instrument";
 import { getOrCreateLogger } from "./logger";
 import { Methods } from "./methods";
-import type {
-	ChannelsCreateDirectArguments,
-	TokenOverridable
-} from "./types/methods";
-import {
-	ContentType,
-	type TLSOptions,
-	type WebAPICallContext,
-	type WebAPICallResult,
-	type WebApiCallConfig,
-	type WebClientOptions
-} from "./types/web-client";
 import {
 	checkForBinaryData,
 	getFormDataConfig,
@@ -48,7 +48,7 @@ import {
 	warnIfFallbackIsMissing
 } from "./utils";
 
-export class WebClient extends Methods {
+export class LoopClient extends Methods {
 	/**
 	 * @description The base URL for reaching Loop/Mattermost Web API
 	 *
@@ -69,7 +69,7 @@ export class WebClient extends Methods {
 	private retryConfig: RetryOptions;
 
 	/**
-	 * Queue of requests in which a maximum of {@link WebClientOptions.maxRequestConcurrency} can concurrently be
+	 * Queue of requests in which a maximum of {@link LoopClientOptions.maxRequestConcurrency} can concurrently be
 	 * in-flight.
 	 */
 	private breadline: Breadline;
@@ -160,12 +160,12 @@ export class WebClient extends Methods {
 			headers = {},
 			requestInterceptor = undefined,
 			adapter = undefined
-		}: WebClientOptions = {}
+		}: LoopClientOptions = {}
 	) {
 		super();
 		if (!isValidUrl(url)) {
-			throw new WebClientOptionsError(
-				"Invalid URL. See WebClient constructor docs for details."
+			throw new LoopClientOptionsError(
+				"Invalid URL. See LoopClient constructor docs for details."
 			);
 		}
 
@@ -189,7 +189,7 @@ export class WebClient extends Methods {
 
 		/** Set up logging */
 		this.logger = getOrCreateLogger(
-			WebClient.loggerName,
+			LoopClient.loggerName,
 			logLevel ?? LogLevel.INFO,
 			logger
 		);
@@ -262,11 +262,11 @@ export class WebClient extends Methods {
 
 	/**
 	 * Cleanup method to remove all event listeners and prevent memory leaks.
-	 * Call this method when you're done with the WebClient instance.
+	 * Call this method when you're done with the LoopClient instance.
 	 */
 	public destroy(): void {
 		this.removeAllListeners();
-		this.logger.debug("WebClient destroyed, all listeners removed");
+		this.logger.debug("LoopClient destroyed, all listeners removed");
 	}
 
 	/**
@@ -358,7 +358,7 @@ export class WebClient extends Methods {
 
 				this.setResponseVersionHeaders(response);
 
-				if (response.status <= WebClient.HTTP_SUCCESS_MAX) {
+				if (response.status <= LoopClient.HTTP_SUCCESS_MAX) {
 					return response;
 				}
 
@@ -417,7 +417,7 @@ export class WebClient extends Methods {
 		let requestUrl = config.path;
 
 		// Only process if there are path parameters
-		const pathParams = requestUrl.match(WebClient.PATH_PARAM_REGEX);
+		const pathParams = requestUrl.match(LoopClient.PATH_PARAM_REGEX);
 		if (pathParams) {
 			for (const param of pathParams) {
 				const key = param.slice(1); // Remove ':'
@@ -452,11 +452,11 @@ export class WebClient extends Methods {
 			const userIDs = data;
 
 			if (!Array.isArray(userIDs)) {
-				throw new WebClientOptionsError(`Expected user_ids to be an array`);
+				throw new LoopClientOptionsError(`Expected user_ids to be an array`);
 			}
 
 			if (userIDs.length === 0) {
-				throw new WebClientOptionsError(
+				throw new LoopClientOptionsError(
 					`To create a direct channel you should use at least one user_id in a tuple`
 				);
 			}
@@ -464,7 +464,7 @@ export class WebClient extends Methods {
 			if (userIDs.length === 1) {
 				/** throw if not enough user_ids and can't fetch current from server */
 				if (!this.useCurrentUserForDirectChannels) {
-					throw new WebClientOptionsError(
+					throw new LoopClientOptionsError(
 						`If useCurrentUserForDirectChannels is false you MUST use two user_ids in a tuple to create a direct channel`
 					);
 				}
@@ -487,13 +487,13 @@ export class WebClient extends Methods {
 
 			/** throw if we dont have required params and we can't fetch them */
 			if (!this.useCurrentUserForPostCreation && !data.channel_id) {
-				throw new WebClientOptionsError(
+				throw new LoopClientOptionsError(
 					"If useCurrentUserForPostCreation is false you MUST provide channel_id to send a post"
 				);
 			}
 			/** throw if we don't even have options required to fetch missing data */
 			if (!data.to_user_id && !data.channel_id) {
-				throw new WebClientOptionsError(
+				throw new LoopClientOptionsError(
 					"To create a post you need to provide either a channel_id or user_id"
 				);
 			}
@@ -553,7 +553,7 @@ export class WebClient extends Methods {
 			const userIDs = data.user_ids;
 
 			if (!Array.isArray(userIDs)) {
-				throw new WebClientOptionsError(
+				throw new LoopClientOptionsError(
 					`Expected data.user_ids to be an array`
 				);
 			}
@@ -565,7 +565,7 @@ export class WebClient extends Methods {
 			const channelIDs = data.channel_ids;
 
 			if (!Array.isArray(channelIDs)) {
-				throw new WebClientOptionsError(
+				throw new LoopClientOptionsError(
 					`Expected data.channel_ids to be an array`
 				);
 			}
@@ -580,7 +580,7 @@ export class WebClient extends Methods {
 			const roles = data.roles;
 
 			if (!Array.isArray(roles)) {
-				throw new WebClientOptionsError(`Expected data.roles to be an array`);
+				throw new LoopClientOptionsError(`Expected data.roles to be an array`);
 			}
 
 			config.data = roles;

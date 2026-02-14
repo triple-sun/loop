@@ -1,6 +1,5 @@
 {
 	"name": "@triple-sun/loop",
-	"version": "0.0.18",
 	"description": "Loop TypeScript clients and types",
 	"packageManager": "pnpm@10.28.0",
 	"engines": {

@@ -1,4 +1,4 @@
-import type { Playbook, PlaybookChecklist, PlaybookTask } from "loop-types";
+import type { Playbook, PlaybookChecklist, PlaybookTask } from "../playbooks";
 import type {
 	Directionable,
 	Paginated,

@@ -1,6 +1,6 @@
 {
 	"name": "loop-client",
-	"version": "0.0.18",
+	"version": "0.1.0",
 	"main": "build/src/index.js",
 	"types": "build/src/index.d.ts",
 	"description": "\"Loop/Mattermost TypeScript client\"",
@@ -40,7 +40,8 @@
 		"breadline-ts": "^1.1.0",
 		"eventemitter3": "^5.0.4",
 		"form-data": "^4.0.5",
-		"is-stream": "^4.0.1"
+		"is-stream": "^4.0.1",
+		"loop-types": "workspace:*"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:dev",
@@ -52,7 +53,6 @@
 		"dotenv": "catalog:test",
 		"jest": "catalog:test",
 		"lint-staged": "catalog:dev",
-		"loop-types": "workspace:*",
 		"nock": "catalog:test",
 		"rimraf": "catalog:dev",
 		"ts-jest": "catalog:test",

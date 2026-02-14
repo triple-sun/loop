@@ -1,4 +1,5 @@
-import type { AdminConfig, LogFilter } from "loop-types";
+import type { LogFilter } from "../admin";
+import type { AdminConfig } from "../config";
 import type { OptionalTeamID, TokenOverridable } from "./common.methods";
 
 /**

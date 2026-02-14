@@ -2,7 +2,7 @@
 
 import { expect, jest } from "@jest/globals";
 import { ChannelType } from "loop-types";
-import { WebClient } from "../src/web-client";
+import { LoopClient } from "../src/client";
 
 // Mock dependencies
 jest.mock("axios", () => ({
@@ -15,13 +15,13 @@ jest.mock("axios", () => ({
 jest.mock("breadline-ts");
 
 describe("Methods", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
 		// Mock apiCall on prototype before instantiation
-		jest.spyOn(WebClient.prototype, "apiCall").mockResolvedValue({ data: {} });
-		client = new WebClient("https://example.com");
+		jest.spyOn(LoopClient.prototype, "apiCall").mockResolvedValue({ data: {} });
+		client = new LoopClient("https://example.com");
 	});
 
 	it("should have all method groups defined", () => {

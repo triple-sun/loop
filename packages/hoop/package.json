@@ -1,6 +1,6 @@
 {
 	"name": "@triple-sun/hoop",
-	"version": "0.0.18",
+	"version": "0.1.0",
 	"description": "Пакет SDK для Loop/Mattermost",
 	"author": "Semen Kononets <sploit.strannik@gmail.com>",
 	"license": "MIT",
@@ -36,8 +36,8 @@
 		"url": "https://github.com/triple-sun/loop/issues"
 	},
 	"dependencies": {
-		"loop-client": "workspace:*",
-		"remove-markdown": "^0.6.3"
+		"remove-markdown": "^0.6.3",
+		"loop-types": "workspace:*"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:dev",
@@ -48,7 +48,7 @@
 		"dotenv": "catalog:test",
 		"jest": "catalog:test",
 		"lint-staged": "catalog:dev",
-		"loop-types": "workspace:*",
+
 		"rimraf": "catalog:dev",
 		"ts-jest": "catalog:test",
 		"ts-node": "catalog:test",

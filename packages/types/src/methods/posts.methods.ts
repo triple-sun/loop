@@ -1,4 +1,4 @@
-import type { Post, PostProps } from "loop-types";
+import type { Post, PostProps } from "../posts";
 import type { ChannelID, Paginated, TokenOverridable } from "./common.methods";
 
 export interface PostBaseArguments<METADATA = Record<string, unknown>> {

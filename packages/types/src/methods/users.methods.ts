@@ -1,9 +1,5 @@
 import type { Stream } from "form-data";
-import type {
-	UserCustomStatus,
-	UserProfile,
-	UserStatusValue
-} from "loop-types";
+import type { UserCustomStatus, UserProfile, UserStatusValue } from "../users";
 import type {
 	OptionalChannelID,
 	OptionalTeamID,

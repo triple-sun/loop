@@ -1,4 +1,4 @@
-import type { Dialog } from "loop-types";
+import type { Dialog } from "../dialog";
 
 /**
  * Arguments for opening a dialog.

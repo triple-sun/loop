@@ -18,15 +18,15 @@ yarn add @triple-sun/hoop
 
 ## 🎯 What is it?
 
-Hoop gives you type-safe builders and factories for creating Loop (or Mattermost) API objects like posts, forms, dialogs, and buttons. Built on `loop-client`, it makes working with the API simple and fluent.
+Hoop gives you type-safe builders and factories for creating Loop (or Mattermost) API objects like posts, forms, dialogs, and buttons. Built for `loop-client`, it makes working with Loop API simple and fluent.
 
 ## ✨ Features
 
-- **🏗️ Builder Pattern** - Chain methods to build complex objects easily
-- **🏭 Factory Functions** - Shortcuts for common UI patterns
+- **🏗️ Builders** - Chain methods to build complex objects easily
+- **🏭 Factories** - Shortcuts for common patterns
 - **📘 Full TypeScript Support** - Get complete type safety and IntelliSense
-- **🎨 Interactive Messages** - Create buttons, forms, and dialogs with valid types
-- **🔗 Based on loop-client** - Inherits all core functionality transparently
+- **🎨 Create amazing integrations** - Create whatever you want: colorful buttons, huge forms, and responsive dialogs
+- **🔗 Built for loop-client**
 
 ## 🚀 Quick Start
 

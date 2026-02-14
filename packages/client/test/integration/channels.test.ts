@@ -1,10 +1,10 @@
 import { expect } from "@jest/globals";
 import { ChannelType } from "loop-types";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { cleanupTestClient, mockApi, setupTestClient } from "./utils";
 
 describe("Channels Integration Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	beforeEach(() => {
 		client = setupTestClient();

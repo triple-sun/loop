@@ -1,4 +1,4 @@
-import type { Channel, ChannelModerationPatch, ChannelType } from "loop-types";
+import type { Channel, ChannelModerationPatch, ChannelType } from "../channels";
 import type {
 	ChannelID,
 	Paginated,

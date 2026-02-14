@@ -3,19 +3,19 @@
 import { afterEach, beforeEach, describe, expect } from "@jest/globals";
 import { ChannelType } from "loop-types";
 import nock from "nock";
+import type { LoopClient } from "../../src/client";
 import {
 	WebAPIRateLimitedError,
 	WebAPIRequestError,
 	WebAPIServerError
 } from "../../src/errors";
-import type { WebClient } from "../../src/web-client";
 import { cleanupTestClient, mockApi, setupTestClient } from "./utils";
 
 const TEST_URL = "https://loop.example.com";
 const TEST_TOKEN = "test-token";
 
-describe("WebClient Integration Tests", () => {
-	let client: WebClient;
+describe("LoopClient Integration Tests", () => {
+	let client: LoopClient;
 
 	beforeEach(() => {
 		client = setupTestClient({ retryConfig: { retries: 0 } });

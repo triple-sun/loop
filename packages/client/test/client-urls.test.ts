@@ -1,14 +1,14 @@
 import { expect, jest, test } from "@jest/globals";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
-import { ContentType } from "../src/types/web-client";
-import { WebClient } from "../src/web-client";
+import { LoopClient } from "../src/client";
+import { ContentType } from "../src/client.types";
 import { createMockAxiosInstance } from "./helpers/test-utils";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-describe("WebClient URL Building", () => {
+describe("LoopClient URL Building", () => {
 	let mockAxiosInstance: AxiosInstance;
 
 	beforeEach(() => {
@@ -47,7 +47,7 @@ describe("WebClient URL Building", () => {
 		params,
 		expectedInUrl
 	}) => {
-		const client = new WebClient("https://api.example.com");
+		const client = new LoopClient("https://api.example.com");
 		await client.apiCall(
 			{ path, method: "GET", type: ContentType.JSON },
 			params
@@ -61,7 +61,7 @@ describe("WebClient URL Building", () => {
 	});
 
 	it("handles missing path parameter (keeps :param)", async () => {
-		const client = new WebClient("https://api.example.com");
+		const client = new LoopClient("https://api.example.com");
 		await client.apiCall(
 			{
 				path: "channels/:channel_id/:post_id",
@@ -78,7 +78,7 @@ describe("WebClient URL Building", () => {
 	});
 
 	it("replaces :user_id with 'me' when not provided", async () => {
-		const client = new WebClient("https://api.example.com");
+		const client = new LoopClient("https://api.example.com");
 		await client.apiCall(
 			{ path: "users/:user_id", method: "GET", type: ContentType.JSON },
 			{}

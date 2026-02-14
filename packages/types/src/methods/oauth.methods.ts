@@ -1,4 +1,4 @@
-import type { OAuthApp } from "loop-types";
+import type { OAuthApp } from "../oauth";
 
 // OAuth
 export interface OAuthAppsCreateArguments extends Omit<OAuthApp, "id"> {}

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-02-14
+
+### Added
+- **Client**: Added `LoopClient` class (renamed from `WebClient`) with improved structure.
+- **Testing**: Added more comprehensive unit, integration, and fuzz tests.
+
+### Changed
+- **Breaking**: Renamed `WebClient` to `LoopClient`.
+- **Refactor**: Major refactor of internals for better maintainability and type safety.
+
 ## [0.0.18] - 2026-02-10
 
 ### Added
@@ -14,9 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests**: Added more unit tests and edge case coverage.
 
 ### Changed
-- **Error Handling**: Improved error classification and handling in `WebClient`.
+- **Error Handling**: Improved error classification and handling in `LoopClient`.
 - **Logger**: Enhanced logger configuration and output.
-- **WebClient**: Improved code readability and structure.
+- **LoopClient**: Improved code readability and structure.
 - **Metadata**: Removed application metadata.
 
 ## [0.0.18] - 2026-02-10
@@ -28,9 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests**: Added instrument tests and improved coverage.
 
 ### Changed
-- **Error Handling**: Improved error classification and handling in `WebClient`.
+- **Error Handling**: Improved error classification and handling in `LoopClient`.
 - **Logger**: Enhanced logger configuration and output.
-- **WebClient**: Improved code readability and structure.
+- **LoopClient**: Improved code readability and structure.
 - **Metadata**: Removed application metadata.
 
 ## [0.0.17] - 2026-02-09
@@ -59,11 +69,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Tests**: Added fuzzing tests for URL parameters and redaction.
-- **Tests**: Added edge case tests for `WebClient` and errors.
+- **Tests**: Added edge case tests for `LoopClient` and errors.
 - **Tests**: Added logger tests.
 
 ### Fixed
-- **Bugs**: Fixed various bugs in `WebClient` and error handling.
+- **Bugs**: Fixed various bugs in `LoopClient` and error handling.
 - **Dependencies**: Removed `package-lock.json` in favor of `pnpm-lock.yaml`.
 
 ### Changed

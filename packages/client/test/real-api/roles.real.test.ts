@@ -5,12 +5,12 @@
 
 import { afterAll, beforeAll } from "@jest/globals";
 import z from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { roleSchema } from "./schemas/roles.zod";
 import { createRealApiClient, TestReport } from "./utils/real-api.utils";
 
 describe("Roles API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 
 	const report = new TestReport("Roles");
 

@@ -78,7 +78,7 @@ export interface WebAPICallResult<DATA_TYPE = unknown> {
 	ctx?: WebAPICallContext;
 }
 
-export interface WebClientOptions {
+export interface LoopClientOptions {
 	readonly token?: Readonly<string>;
 	readonly logger?: Logger;
 	readonly logLevel?: LogLevel;
@@ -102,6 +102,6 @@ export type TLSOptions = Pick<
 	"pfx" | "key" | "passphrase" | "cert" | "ca"
 >;
 
-export enum WebClientEvent {
+export enum LoopClientEvent {
 	RateLimited = "rate_limited"
 }

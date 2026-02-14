@@ -5,9 +5,9 @@ import { expect, jest, test } from "@jest/globals";
 import * as againTs from "again-ts";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
+import { LoopClient } from "../src/client";
+import { ContentType } from "../src/client.types";
 import { WebAPIRequestError, WebAPIServerError } from "../src/errors";
-import { ContentType } from "../src/types/web-client";
-import { WebClient } from "../src/web-client";
 import { createMockAxiosInstance } from "./helpers/test-utils";
 
 jest.mock("axios");
@@ -41,7 +41,7 @@ jest.spyOn(againTs, "retry").mockImplementation(async (_, task) => {
 	}
 });
 
-describe("WebClient Payloads & Responses", () => {
+describe("LoopClient Payloads & Responses", () => {
 	let mockAxiosInstance: AxiosInstance;
 
 	beforeEach(() => {
@@ -52,7 +52,7 @@ describe("WebClient Payloads & Responses", () => {
 
 	describe("Payload Handling", () => {
 		it("handles empty request body", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			await client.apiCall(
 				{ path: "test", method: "POST", type: ContentType.JSON },
 				{}
@@ -65,7 +65,7 @@ describe("WebClient Payloads & Responses", () => {
 			{ name: "number", value: 123 },
 			{ name: "null", value: null }
 		])("throws TypeError when options is $name", async ({ value }) => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			await expect(
 				client.apiCall(
 					{ path: "test", method: "GET", type: ContentType.JSON },
@@ -75,7 +75,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles very large payload object", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			const largePayload: Record<string, string> = {};
 			for (let i = 0; i < 1000; i++) {
 				largePayload[`key_${i}`] = `value_${"x".repeat(100)}`;
@@ -89,7 +89,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles deeply nested payload", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			const deepPayload: Record<string, unknown> = {};
 			let current = deepPayload;
 			for (let i = 0; i < 50; i++) {
@@ -111,7 +111,7 @@ describe("WebClient Payloads & Responses", () => {
 			mockAxiosInstance as unknown as jest.Mock<() => Promise<unknown>>;
 
 		it("handles 429 rate limit without Retry-After header", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 429,
 				headers: {},
@@ -132,7 +132,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles 429 with invalid Retry-After header", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 429,
 				headers: { "retry-after": "not-a-number" },
@@ -149,7 +149,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles non-standard HTTP status codes (e.g. 418)", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 418,
 				headers: {},
@@ -170,7 +170,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles malformed error response (missing required fields)", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 500,
 				headers: {},
@@ -187,7 +187,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles empty error response", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 500,
 				headers: {},
@@ -209,7 +209,7 @@ describe("WebClient Payloads & Responses", () => {
 			mockAxiosInstance as unknown as jest.Mock<() => Promise<unknown>>;
 
 		it("handles string response when expecting JSON", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 200,
 				headers: {},
@@ -226,7 +226,7 @@ describe("WebClient Payloads & Responses", () => {
 		});
 
 		it("handles invalid JSON string response", async () => {
-			const client = new WebClient("https://api.example.com");
+			const client = new LoopClient("https://api.example.com");
 			axiosFn().mockResolvedValue({
 				status: 200,
 				headers: {},

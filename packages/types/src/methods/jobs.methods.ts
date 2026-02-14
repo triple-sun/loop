@@ -1,4 +1,4 @@
-import type { JobType } from "loop-types";
+import type { JobType } from "../jobs";
 
 export interface JobsCreateArguments {
 	type: JobType;

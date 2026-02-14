@@ -49,7 +49,7 @@ export function createRateLimitResponse(
 }
 
 /**
- * Factory for creating mock Axios instance for WebClient tests
+ * Factory for creating mock Axios instance for LoopClient tests
  * Creates a fully-featured mock with defaults, interceptors, and methods
  *
  * @example

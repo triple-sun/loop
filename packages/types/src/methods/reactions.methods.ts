@@ -1,4 +1,4 @@
-import type { Reaction } from "loop-types";
+import type { Reaction } from "../general";
 import type { TokenOverridable, UserIDMe } from "./common.methods";
 
 export interface ReactionsCreateArguments extends TokenOverridable, Reaction {}

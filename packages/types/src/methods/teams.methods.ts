@@ -1,4 +1,4 @@
-import type { Team, TeamSearchOpts, TeamType } from "loop-types";
+import type { Team, TeamSearchOpts, TeamType } from "../teams";
 import type {
 	Paginated,
 	TeamID,

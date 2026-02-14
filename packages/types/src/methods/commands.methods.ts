@@ -1,4 +1,4 @@
-import type { Command, CommandMethod } from "loop-types";
+import type { Command, CommandMethod } from "../commands";
 import type { TeamID, TokenOverridable } from "./common.methods";
 
 /**

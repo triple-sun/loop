@@ -1,16 +1,17 @@
 import * as dotenv from "dotenv";
+import { LoopClient } from "loop-client";
 import type { Channel, Post } from "loop-types";
-import { ChannelType, WebClient } from "loop-types";
+import { ChannelType } from "loop-types";
 
 // Load test environment variables
 dotenv.config({ path: ".env.test" });
 
 /**
- * Get WebClient configured with test credentials from .env.test
+ * Get LoopClient configured with test credentials from .env.test
  *
  * @throws Error if TEST_LOOP_TOKEN or TEST_LOOP_URL are not set
  */
-export function getTestClient(): WebClient {
+export function getTestClient(): LoopClient {
 	const token = process.env["TEST_LOOP_TOKEN"];
 	const url = process.env["TEST_LOOP_URL"];
 
@@ -20,7 +21,7 @@ export function getTestClient(): WebClient {
 		);
 	}
 
-	return new WebClient(token);
+	return new LoopClient(token);
 }
 
 /**
@@ -46,13 +47,13 @@ const createdPosts: string[] = [];
 /**
  * Create a temporary test channel
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  * @param teamId - Team ID where channel should be created
  * @param name - Optional channel name (will be auto-generated if not provided)
  * @returns Created channel
  */
 export async function createTestChannel(
-	client: WebClient,
+	client: LoopClient,
 	teamId: string,
 	name?: string
 ): Promise<Channel> {
@@ -73,11 +74,11 @@ export async function createTestChannel(
 /**
  * Delete a test channel
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  * @param channel_id - Channel ID to delete
  */
 export async function deleteTestChannel(
-	client: WebClient,
+	client: LoopClient,
 	channel_id: string
 ): Promise<void> {
 	try {
@@ -94,13 +95,13 @@ export async function deleteTestChannel(
 /**
  * Create a test post in the specified channel
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  * @param channel_id - Channel ID where post should be created
  * @param post - Post data
  * @returns Created post
  */
 export async function createTestPost(
-	client: WebClient,
+	client: LoopClient,
 	channel_id: string,
 	post: Partial<Post>
 ): Promise<Post> {
@@ -117,11 +118,11 @@ export async function createTestPost(
 /**
  * Delete a test post
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  * @param postId - Post ID to delete
  */
 export async function deleteTestPost(
-	client: WebClient,
+	client: LoopClient,
 	postId: string
 ): Promise<void> {
 	try {
@@ -138,11 +139,11 @@ export async function deleteTestPost(
 /**
  * Get the current user's team ID (for creating channels)
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  * @returns Team ID
  */
 export async function getUserTeamId(
-	client: WebClient
+	client: LoopClient
 ): Promise<string | undefined> {
 	const user = await client.users.profile.get.me();
 	const teams = await client.users.teams({ user_id: user.data.id });
@@ -157,9 +158,9 @@ export async function getUserTeamId(
 /**
  * Global cleanup function to remove all created test resources
  *
- * @param client - WebClient instance
+ * @param client - LoopClient instance
  */
-export async function cleanup(client: WebClient): Promise<void> {
+export async function cleanup(client: LoopClient): Promise<void> {
 	// Delete posts first (await in sequence to avoid rate limiting)
 	for (const postId of [...createdPosts]) {
 		// biome-ignore lint/performance/noAwaitInLoops: <should be chained>

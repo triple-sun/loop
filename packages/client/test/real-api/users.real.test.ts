@@ -4,8 +4,9 @@
  */
 /** biome-ignore-all lint/style/noNonNullAssertion: <jest> */
 
+import { afterAll, beforeAll, expect } from "@jest/globals";
 import { z } from "zod";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { channelSchema } from "./schemas/channels.zod";
 import { preferenceSchema } from "./schemas/preferences.zod";
 import { userProfileSchema, userStatusSchema } from "./schemas/users.zod";
@@ -16,7 +17,7 @@ import {
 } from "./utils/real-api.utils";
 
 describe("Users API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 	let currentUserId: string | undefined;
 	let foundTeamId: string | undefined;
 

@@ -148,9 +148,6 @@ importers:
 
   packages/hoop:
     dependencies:
-      loop-client:
-        specifier: workspace:*
-        version: link:../client
       remove-markdown:
         specifier: ^0.6.3
         version: 0.6.3
@@ -179,6 +176,9 @@ importers:
       lint-staged:
         specifier: catalog:dev
         version: 16.2.7
+      loop-client:
+        specifier: workspace:*
+        version: link:../client
       loop-types:
         specifier: workspace:*
         version: link:../types

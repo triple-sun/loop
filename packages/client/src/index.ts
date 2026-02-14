@@ -1,4 +1,6 @@
 export * from "loop-types";
+export { LoopClient } from "./client";
+export * from "./client.types";
 export * from "./const";
 export {
 	ServerErrorID,
@@ -6,6 +8,3 @@ export {
 	WebAPIServerError
 } from "./errors";
 export * from "./instrument";
-export * from "./types/methods";
-export * from "./types/web-client";
-export { WebClient } from "./web-client";

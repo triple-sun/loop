@@ -6,7 +6,7 @@ import type {
 	GroupPatch,
 	GroupSearchOpts,
 	GroupSyncable
-} from "loop-types";
+} from "../groups";
 import type { UserIDMe } from "./common.methods";
 
 export interface GroupsCreateArguments {

@@ -19,7 +19,7 @@ export function getLogger(
 		if (existing !== undefined) {
 			if (level !== undefined) {
 				existing.debug(
-					"The logLevel given to WebClient was ignored as you also gave logger"
+					"The logLevel given to LoopClient was ignored as you also gave logger"
 				);
 			}
 			return existing;

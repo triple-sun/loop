@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { LogLevel } from "@triple-sun/logger";
 import * as dotenv from "dotenv";
-import { WebClient } from "../../../src/web-client";
+import { LoopClient } from "../../../src/client";
 import { describeSchema, validateType, type z } from "./type-schema.utils";
 
 /**
@@ -84,12 +84,12 @@ export const validateTestEnv = (): void => {
 };
 
 /**
- * Creates a WebClient configured for real API testing
+ * Creates a LoopClient configured for real API testing
  */
-export const createRealApiClient = (): WebClient => {
+export const createRealApiClient = (): LoopClient => {
 	validateTestEnv();
 
-	return new WebClient(TEST_LOOP_URL, {
+	return new LoopClient(TEST_LOOP_URL, {
 		logLevel: TEST_LOOP_LOG_LEVEL as LogLevel,
 		retryConfig: { retries: 2 },
 		saveFetchedUserID: true,

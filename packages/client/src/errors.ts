@@ -51,12 +51,12 @@ export class ServerError extends Error {
 	}
 }
 
-export class WebClientCodedError extends Error {
+export class LoopClientCodedError extends Error {
 	code!: ErrorCode;
 }
 
-export class WebClientOptionsError extends WebClientCodedError {
-	override name = WebClientOptionsError.name;
+export class LoopClientOptionsError extends LoopClientCodedError {
+	override name = LoopClientOptionsError.name;
 	override code = ErrorCode.OptionsError;
 
 	constructor(message: string) {
@@ -64,7 +64,7 @@ export class WebClientOptionsError extends WebClientCodedError {
 	}
 }
 
-export class WebAPIServerError extends WebClientCodedError {
+export class WebAPIServerError extends LoopClientCodedError {
 	override name = WebAPIServerError.name;
 	override code = ErrorCode.ServerError;
 	original: ServerError;
@@ -103,7 +103,7 @@ export class WebAPIRateLimitedError extends WebAPIServerError {
 	}
 }
 
-export class WebAPIRequestError extends WebClientCodedError {
+export class WebAPIRequestError extends LoopClientCodedError {
 	override name = WebAPIRequestError.name;
 	override code = ErrorCode.RequestError;
 	original: unknown;

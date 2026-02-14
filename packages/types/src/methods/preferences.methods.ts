@@ -1,4 +1,4 @@
-import type { Preference } from "loop-types";
+import type { Preference } from "../general";
 import type { TokenOverridable, UserID } from "./common.methods";
 
 export interface PreferencesGetArguments extends TokenOverridable, UserID {

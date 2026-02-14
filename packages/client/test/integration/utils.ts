@@ -1,7 +1,7 @@
 import { LogLevel } from "@triple-sun/logger";
 import nock from "nock";
-import type { WebClientOptions } from "../../src/types/web-client";
-import { WebClient } from "../../src/web-client";
+import { LoopClient } from "../../src/client";
+import type { LoopClientOptions } from "../../src/client.types";
 
 export const TEST_URL = "https://loop.example.com";
 export const TEST_TOKEN = "test-token";
@@ -9,12 +9,12 @@ export const TEST_TOKEN = "test-token";
 export function setupTestClient(
 	options: {
 		token?: string;
-		retryConfig?: WebClientOptions["retryConfig"];
+		retryConfig?: LoopClientOptions["retryConfig"];
 	} = {}
 ) {
 	if (!nock.isActive()) nock.activate();
 
-	return new WebClient(TEST_URL, {
+	return new LoopClient(TEST_URL, {
 		token: options.token ?? TEST_TOKEN,
 		logLevel: LogLevel.ERROR, // Use ERROR to reduce noise
 		retryConfig: options.retryConfig ?? { retries: 0 } // Default to 1 retry unless overridden

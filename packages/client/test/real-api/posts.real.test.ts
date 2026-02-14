@@ -5,7 +5,7 @@
 
 import { beforeAll } from "@jest/globals";
 import { PostActionType } from "loop-types";
-import type { WebClient } from "../../src/web-client";
+import type { LoopClient } from "../../src/client";
 import { SelectDataSource } from "./schemas/common";
 import { statusOkResponseSchema } from "./schemas/common.responses.zod";
 import { postListResponseSchema } from "./schemas/posts.responses.zod";
@@ -17,7 +17,7 @@ import {
 } from "./utils/real-api.utils";
 
 describe("Posts API - Real API Tests", () => {
-	let client: WebClient;
+	let client: LoopClient;
 	let foundTeamId: string = "";
 	let foundChannelId: string = "";
 	let currentUserId: string = "";
