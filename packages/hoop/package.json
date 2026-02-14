@@ -48,7 +48,6 @@
 		"dotenv": "catalog:test",
 		"jest": "catalog:test",
 		"lint-staged": "catalog:dev",
-
 		"rimraf": "catalog:dev",
 		"ts-jest": "catalog:test",
 		"ts-node": "catalog:test",
