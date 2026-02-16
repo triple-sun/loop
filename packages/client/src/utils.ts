@@ -163,7 +163,7 @@ export const warnIfFallbackIsMissing = (
 		)
 	) {
 		logger.warn(
-			`The attachment-level \`fallback\` argument is missing in the request payload for a ${path} call - To avoid this warning, it is recommended to always provide a top-level \`text\` argument when posting a message. Alternatively, you can provide an attachment-level \`fallback\` argument, though this is now considered a legacy field (see https://docs.slack.dev/legacy/legacy-messaging/legacy-secondary-message-attachments for more details).`
+			`The attachment-level \`fallback\` argument is missing in the request payload for a ${path} call - To avoid this warning, it is recommended to always provide a top-level \`text\` argument when posting a message. Alternatively, you can provide an attachment-level \`fallback\` argument`
 		);
 	}
 };

@@ -1,6 +1,6 @@
 {
 	"name": "loop-client",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"author": "Simon Kononets <sploit.strannik@gmail.com>",
 	"license": "ISC",
 	"main": "build/src/index.js",

@@ -141,7 +141,7 @@ export class LoopClient extends Methods {
 	private clusterId: string;
 	private serverVersion: string;
 
-	constructor(url: Readonly<string>, options: LoopClientOptions = {}) {
+	constructor(url: string, options: LoopClientOptions = {}) {
 		super();
 		const {
 			token = undefined,
@@ -229,7 +229,7 @@ export class LoopClient extends Methods {
 		}
 
 		/**
-		 * Built-int interceptors
+		 * Built-in interceptors
 		 */
 
 		/** set current user for direct channels interceptor */
@@ -254,7 +254,11 @@ export class LoopClient extends Methods {
 		this.axios.interceptors.request.use(this.serializeApiCallData.bind(this));
 
 		/** test connection if needed */
-		if (testConnectionOnInit) this.system.checkHealth();
+		if (testConnectionOnInit) {
+			this.system.checkHealth().catch(err => {
+				throw new WebAPIRequestError(err);
+			});
+		}
 
 		this.logger.debug("initialized");
 	}
@@ -481,7 +485,10 @@ export class LoopClient extends Methods {
 	private async setCurrentUserForPostCreation(
 		config: InternalAxiosRequestConfig
 	): Promise<InternalAxiosRequestConfig> {
-		if (config.url?.endsWith("/api/v4/posts") && config.method === "post") {
+		if (
+			config.url?.endsWith("/api/v4/posts") &&
+			config.method?.toLowerCase() === "post"
+		) {
 			const { data } = config;
 
 			/** throw if we dont have required params and we can't fetch them */

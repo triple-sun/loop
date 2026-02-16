@@ -300,7 +300,6 @@ import type {
 	TermsOfService,
 	TermsOfServiceCreateArguments,
 	TermsOfServiceGetArguments,
-	TermsOfServiceUpdateArguments,
 	TokenOverridable,
 	UploadSession,
 	UploadsCreateArguments,
@@ -1374,7 +1373,7 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 			 * @see {@link https://developers.loop.ru/API/4.0.0/get-command-by-id|Get command}
 			 */
 			get: bindApiCall<CommandsGetArguments, Command>(this, {
-				method: "DELETE",
+				method: "GET",
 				path: "commands/:command_id",
 				type: ContentType.URLEncoded
 			}),
@@ -1425,7 +1424,7 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 			 * @see {@link https://developers.loop.ru/API/4.0.0/move-command|Move command}
 			 */
 			move: bindApiCall<CommandsMoveArguments, StatusOKResponse>(this, {
-				method: "DELETE",
+				method: "PUT",
 				path: "commands/:command_id/move",
 				type: ContentType.URLEncoded
 			}),
@@ -2240,7 +2239,7 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 		}),
 		get: bindApiCall<PlaybooksGetArguments, PlaybooksGetResponse>(this, {
 			method: "GET",
-			path: "/playbooks/:id",
+			path: "playbooks/:id",
 			type: ContentType.URLEncoded
 		}),
 		list: bindApiCall<PlaybooksListArguments, PlaybooksListResponse>(this, {
@@ -2553,6 +2552,11 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 	} as const;
 
 	public readonly termsOfService = {
+		/**
+		 * Creates a new terms of service
+		 *
+		 * @permissions Must have `manage_system` permission.
+		 */
 		create: bindApiCall<TermsOfServiceCreateArguments, TermsOfService>(this, {
 			method: "POST",
 			path: "terms_of_service",
@@ -2562,17 +2566,12 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 			method: "GET",
 			path: "terms_of_service",
 			type: ContentType.URLEncoded
-		}),
-		update: bindApiCall<TermsOfServiceUpdateArguments, TermsOfService>(this, {
-			method: "POST", // or PUT? Check if update is same as create or distinct.
-			path: "terms_of_service/:term_id", // Usually ID
-			type: ContentType.JSON
 		})
 	} as const;
 
 	/**
 	 * ============================================================================
-	 * @description Uploads profile methods
+	 * @description Uploads methods
 	 * ============================================================================
 	 */
 	public readonly uploads = {
@@ -2854,7 +2853,7 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 		 */
 		guest: {
 			fromUser: bindApiCall<UserID, StatusOKResponse>(this, {
-				method: "post",
+				method: "POST",
 				path: `users/:user_id/demote`,
 				type: ContentType.URLEncoded
 			}),
@@ -2960,8 +2959,7 @@ export abstract class Methods extends EventEmitter<LoopClientEvent> {
 			},
 
 			/**
-			 * @description Set a user's profile information, including custom status.
-			 * @see {@link https://docs.slack.dev/reference/methods/users.profile.set `users.profile.set` API reference}.
+			 * @description Set a user's profile information
 			 */
 			patch: bindApiCall<UsersProfileSetArguments, UserProfile>(this, {
 				method: "PUT",

@@ -7,16 +7,6 @@ export interface TermsOfServiceCreateArguments {
 }
 
 /**
- * Arguments for updating terms of service.
- */
-export interface TermsOfServiceUpdateArguments {
-	/** The ID of the terms of service */
-	id: string;
-	/** The new text */
-	text: string;
-}
-
-/**
  * Arguments for getting terms of service.
  */
 export interface TermsOfServiceGetArguments {
