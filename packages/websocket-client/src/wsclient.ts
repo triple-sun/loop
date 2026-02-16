@@ -500,7 +500,7 @@ export class WebSocketClient {
 				return;
 			}
 
-			console.log("Network online event received, scheduling reconnect"); // eslint-disable-line no-console
+			this.logger.info("Network online event received, scheduling reconnect");
 
 			// Set a timer to reconnect after a delay to avoid rapid connection attempts
 			this.clearReconnectTimeout();
