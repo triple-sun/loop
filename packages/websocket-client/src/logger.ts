@@ -17,11 +17,10 @@ export function getLogger(
 	// Set up the logger.
 	const logger: Logger = (() => {
 		if (existing !== undefined) {
-			if (level !== undefined) {
-				existing.debug(
-					"The logLevel given to LoopClient was ignored as you also gave logger"
-				);
-			}
+			existing.info(
+				"The logLevel given to LoopClient was ignored as you also gave logger"
+			);
+
 			return existing;
 		}
 

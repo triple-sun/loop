@@ -1,6 +1,6 @@
 import packageJson from "../package.json";
 import { LoopEvent } from "./types/events";
-import type { Hello, LoopMessage } from "./types/messages";
+import type { Hello } from "./types/messages";
 
 const getProcessOrBrowserString = (): string => {
 	if (typeof process !== "undefined" && process?.version) {
@@ -31,25 +31,6 @@ export const isValidUrl = (string: string): boolean => {
 	} catch (_) {
 		return false;
 	}
-};
-
-/**
- * Checks that evt.data is WebSocketMessage
- * @param data evt.data
- */
-export const isLoopMessage = (
-	data: Record<string, unknown>
-): data is LoopMessage => {
-	if (
-		"seq" in data &&
-		"event" in data &&
-		"broadcast" in data &&
-		"data" in data
-	) {
-		return true;
-	}
-
-	return false;
 };
 
 /**

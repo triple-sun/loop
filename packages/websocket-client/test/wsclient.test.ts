@@ -123,7 +123,7 @@ describe("WebSocketClient", () => {
 		it("should initialize with provided options", () => {
 			expect(client).toBeDefined();
 			expect(client["sSequence"]).toBe(0);
-			expect(client["failCount"]).toBe(0);
+			expect(client["fails"]).toBe(0);
 			expect(client["logger"]).toBeInstanceOf(ConsoleLogger);
 			expect(client["logger"].getLevel()).toBe(LogLevel.ERROR);
 		});
@@ -168,7 +168,7 @@ describe("WebSocketClient", () => {
 			// Trigger close
 			mockWs.close();
 
-			expect(client["failCount"]).toBe(1);
+			expect(client["fails"]).toBe(1);
 
 			// Should schedule reconnect
 			jest.advanceTimersByTime(5000);
@@ -614,7 +614,7 @@ describe("WebSocketClient", () => {
 			client.init(); // Second init to trigger removal
 			// We can't easily check removal of specific functions without storing them,
 			// but we can check if removeEventListener was called
-			expect(removeEventListenerSpy).toHaveBeenCalledTimes(2); // once for online, once for offline
+			expect(removeEventListenerSpy).toHaveBeenCalledTimes(4); // twice for online, twice for offline
 		});
 	});
 
@@ -870,19 +870,19 @@ describe("WebSocketClient", () => {
 
 			client["minReconnectTime"] = 10;
 			client["maxReconnectTime"] = 1000;
-			client["maxFails"] = 1;
+			client["backoffAfterFails"] = 1;
 			client["jitterRange"] = 0; // Disable jitter for predictable results
 
-			client["failCount"] = 1;
+			client["fails"] = 1;
 			expect(getRetryTime()).toBeCloseTo(10, 0); // 10 * 1 * 1
 
-			client["failCount"] = 2;
+			client["fails"] = 2;
 			expect(getRetryTime()).toBeCloseTo(40, 0); // 10 * 2 * 2
 
-			client["failCount"] = 5;
+			client["fails"] = 5;
 			expect(getRetryTime()).toBeGreaterThan(250); // 10 * 5 * 5
 
-			client["failCount"] = 10;
+			client["fails"] = 10;
 			expect(getRetryTime()).toBe(1000); // Capped at max
 		});
 
@@ -896,7 +896,7 @@ describe("WebSocketClient", () => {
 
 		it("constructor should log debug message if both logger and logLevel are provided", () => {
 			const logger = new ConsoleLogger();
-			const spy = jest.spyOn(logger, "debug");
+			const spy = jest.spyOn(logger, "info");
 			new WebSocketClient({
 				url: "wss://example.com",
 				token: "token",
@@ -910,15 +910,15 @@ describe("WebSocketClient", () => {
 			);
 		});
 
-		it("onError should log error only if failCount <= 1", () => {
+		it("onError should log error only if fails <= 1", () => {
 			client.init();
 			const loggerSpy = jest.spyOn(client["logger"], "error");
 
-			// First error (failCount 0)
+			// First error (fails 0)
 			client["onError"](new Event("error") as any);
 			expect(loggerSpy).toHaveBeenCalledTimes(1);
 
-			client["failCount"] = 2;
+			client["fails"] = 2;
 			client["onError"](new Event("error") as any);
 			// Should not log again
 			expect(loggerSpy).toHaveBeenCalledTimes(1);

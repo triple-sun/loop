@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect } from "@jest/globals";
 import type { Hello } from "../src/types/messages";
-import { getUserAgent, isHelloMessage, isLoopMessage } from "../src/utils";
+import { getUserAgent, isHelloMessage } from "../src/utils";
 
 describe("utils", () => {
 	describe("instrument", () => {
@@ -8,29 +8,6 @@ describe("utils", () => {
 			const ua = getUserAgent();
 			expect(ua).toContain("loop-ws-client");
 			expect(ua).toContain(process.version.replace("v", ""));
-		});
-	});
-
-	describe("isLoopMessage", () => {
-		it("should return true for valid WebSocket message", () => {
-			const data = {
-				seq: 1,
-				event: "posted",
-				broadcast: {},
-				data: {}
-			};
-			expect(isLoopMessage(data)).toBe(true);
-		});
-
-		it("should return false when required fields are missing", () => {
-			expect(isLoopMessage({ event: "posted", broadcast: {}, data: {} })).toBe(
-				false
-			);
-			expect(isLoopMessage({ seq: 1, broadcast: {}, data: {} })).toBe(false);
-			expect(isLoopMessage({ seq: 1, event: "posted", data: {} })).toBe(false);
-			expect(isLoopMessage({ seq: 1, event: "posted", broadcast: {} })).toBe(
-				false
-			);
 		});
 	});
 

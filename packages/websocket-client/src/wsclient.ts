@@ -1,6 +1,7 @@
 import type { Logger } from "@triple-sun/logger";
 import {
 	DEFAULT_MAX_RECONNECT_FAILS,
+	DEFAULT_MAX_RECONNECT_TIME,
 	DEFAULT_MIN_RECONNECT_TIME,
 	DEFAULT_PING_INTERVAL,
 	DEFAULT_RECONNECT_JITTER_RANGE,
@@ -55,8 +56,8 @@ export class WebSocketClient {
 
 	private lastErrCode: string | null;
 
-	private maxFails: number;
-	private failCount: number;
+	private fails: number;
+	private backoffAfterFails: number;
 	private jitterRange: number;
 	private minReconnectTime: number;
 	private maxReconnectTime: number;
@@ -71,7 +72,7 @@ export class WebSocketClient {
 		this.socket = null;
 		this.rSequence = 1;
 		this.sSequence = 0;
-		this.failCount = 0;
+		this.fails = 0;
 		this.pingInterval = null;
 		this.awaitingPong = false;
 		this.lastErrCode = null;
@@ -81,9 +82,9 @@ export class WebSocketClient {
 			throw new TypeError(`${o.url} is not a valid URL`);
 		}
 
-		this.url = o.url;
-		if (this.url && !this.url.endsWith(`v4/websocket`)) {
-			this.url += `v4/websocket`;
+		this.url = o.url.replace(/\/+$/, "");
+		if (this.url && !this.url.endsWith(`/v4/websocket`)) {
+			this.url += `/v4/websocket`;
 		}
 
 		this.token = o.token;
@@ -93,9 +94,9 @@ export class WebSocketClient {
 		this.postedAck = o.postedAck ?? false;
 		this.resetSequenceOnClose = o.resetSequenceOnClose ?? true;
 		this.jitterRange = o.reconnectJitterRange ?? DEFAULT_RECONNECT_JITTER_RANGE;
-		this.maxFails = o.maxReconnectFails ?? DEFAULT_MAX_RECONNECT_FAILS;
+		this.backoffAfterFails = o.maxReconnectFails ?? DEFAULT_MAX_RECONNECT_FAILS;
 		this.minReconnectTime = o.minReconnectTime ?? DEFAULT_MIN_RECONNECT_TIME;
-		this.maxReconnectTime = o.maxReconnectTime ?? DEFAULT_MIN_RECONNECT_TIME;
+		this.maxReconnectTime = o.maxReconnectTime ?? DEFAULT_MAX_RECONNECT_TIME;
 		this.wsCreator = o.wsConstructor ?? ((url: string) => new WebSocket(url));
 		this.pingIntervalLength = o.pingInterval ?? DEFAULT_PING_INTERVAL;
 
@@ -139,30 +140,16 @@ export class WebSocketClient {
 			return this;
 		}
 
-		if (this.failCount === 0) {
+		if (this.fails === 0) {
 			this.logger.info(`Websocket connecting to ${this.url}`);
 		}
 
 		// Setup browser network event listeners
-		// biome-ignore lint/suspicious/noExplicitAny: <required for browser compatibility>
-		const windowGlobal = (globalThis as any).window;
-		if (windowGlobal) {
-			this.setUpBrowserListeners(windowGlobal);
-		}
+		this.setUpBrowserListeners();
 
-		// Creating params string
-		// Add connection id, and last_sequence_number to the query param.
-		const params = Object.entries({
-			connection_id: this.connectionId,
-			sequence_number: this.sSequence,
-			posted_ack: this.postedAck,
-			disconnect_err_code: this.lastErrCode
-		})
-			.filter(([_, value]) => value !== null && value !== undefined)
-			.map(([key, value]) => `${key}=${value}`)
-			.join("&");
-
-		this.socket = this.wsCreator(`${this.url}?${params}`);
+		this.socket = this.wsCreator(
+			`${this.url}?connection_id=${this.connectionId}&sequence_number=${this.sSequence}&posted_ack=${this.postedAck}${this.lastErrCode ? `&disconnect_err_code=${this.lastErrCode}` : ""}`
+		);
 		this.socket.onopen = this.onOpen.bind(this);
 		this.socket.onclose = this.onClose.bind(this);
 		this.socket.onmessage = this.onMessage.bind(this);
@@ -172,7 +159,7 @@ export class WebSocketClient {
 	}
 
 	public close(): this {
-		this.failCount = 0;
+		this.fails = 0;
 		this.rSequence = 1;
 		this.lastErrCode = null;
 
@@ -180,12 +167,14 @@ export class WebSocketClient {
 		this.responseCallbacks.clear();
 		this.stopPingInterval();
 
-		if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+		if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
 			this.socket.onclose = () => null;
 			this.socket.close();
 			this.socket = null;
 			this.logger.debug("Websocket closed manually");
 		}
+
+		this.cleanUpBrowserListeners();
 
 		return this;
 	}
@@ -343,7 +332,7 @@ export class WebSocketClient {
 	}
 
 	private onError(event: ErrorEvent): void {
-		if (this.failCount <= 1) {
+		if (this.fails <= 1) {
 			this.logger.error(`Websocket error: ${event.message}`);
 		}
 		this.executeListeners("error", event);
@@ -354,7 +343,7 @@ export class WebSocketClient {
 			token: this.token
 		});
 
-		if (this.failCount > 0) {
+		if (this.fails > 0) {
 			this.logger.info("Websocket re-established connection");
 			this.executeListeners("reconnect");
 		} else if (this.listenerStore.firstConnect.size > 0) {
@@ -397,7 +386,7 @@ export class WebSocketClient {
 			// call the onclose callback ourselves immediately. We also
 			// unset the callback on the old connection to ensure it
 			// is only called once.
-			this.failCount = 0;
+			this.fails = 0;
 			this.rSequence = 1;
 			this.socket.onclose = () => null;
 			this.socket.close();
@@ -410,7 +399,7 @@ export class WebSocketClient {
 			);
 		}, this.pingIntervalLength);
 
-		this.failCount = 0;
+		this.fails = 0;
 	}
 
 	private onClose(event: CloseEvent): void {
@@ -426,14 +415,14 @@ export class WebSocketClient {
 			this.lastErrCode = `${event.code}`;
 		}
 
-		if (this.failCount === 0) {
+		if (this.fails === 0) {
 			this.logger.warn("Websocket closed");
 		}
 
-		this.failCount++;
+		this.fails++;
 
 		/** call close listeners */
-		this.executeListeners("close", this.failCount);
+		this.executeListeners("close", this.fails);
 
 		// Make sure we stop pinging if the connection is closed
 		this.stopPingInterval();
@@ -484,15 +473,27 @@ export class WebSocketClient {
 		this.executeListeners("message", msg);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: <required for browser compatibility>
-	private setUpBrowserListeners(globalWindow: any): void {
+	private cleanUpBrowserListeners(): void {
+		// biome-ignore lint/suspicious/noExplicitAny: <required for browser compatibility>
+		const windowGlobal = (globalThis as any).window;
+
+		if (!windowGlobal) return;
+
+		if (windowGlobal && this.onlineHandler) {
+			windowGlobal.removeEventListener("online", this.onlineHandler);
+		}
+		if (windowGlobal && this.offlineHandler) {
+			windowGlobal.removeEventListener("offline", this.offlineHandler);
+		}
+	}
+	private setUpBrowserListeners(): void {
+		// biome-ignore lint/suspicious/noExplicitAny: <required for browser compatibility>
+		const windowGlobal = (globalThis as any).window;
+
+		if (!windowGlobal) return;
+
 		// Remove existing listeners if any
-		if (this.onlineHandler) {
-			globalWindow.removeEventListener("online", this.onlineHandler);
-		}
-		if (this.offlineHandler) {
-			globalWindow.removeEventListener("offline", this.offlineHandler);
-		}
+		this.cleanUpBrowserListeners();
 
 		this.onlineHandler = () => {
 			// If we're already connected, don't need to do anything
@@ -535,8 +536,8 @@ export class WebSocketClient {
 			});
 		};
 
-		globalWindow.addEventListener("online", this.onlineHandler);
-		globalWindow.addEventListener("offline", this.offlineHandler);
+		windowGlobal.addEventListener("online", this.onlineHandler);
+		windowGlobal.addEventListener("offline", this.offlineHandler);
 	}
 
 	private executeListeners<K extends keyof ListenerStore>(
@@ -627,7 +628,7 @@ export class WebSocketClient {
 		// call the onclose callback ourselves immediately. We also
 		// unset the callback on the old connection to ensure it
 		// is only called once.
-		this.failCount = 0;
+		this.fails = 0;
 		this.rSequence = 1;
 		if (this.socket) {
 			this.socket.onclose = () => null;
@@ -653,9 +654,9 @@ export class WebSocketClient {
 	private getRetryTime(): number {
 		let retryTime = this.minReconnectTime;
 
-		if (this.failCount > this.maxFails) {
+		if (this.fails > this.backoffAfterFails) {
 			// If we've failed a bunch of connections then start backing off
-			retryTime = this.minReconnectTime * 2 ** this.failCount;
+			retryTime = this.minReconnectTime * 2 ** this.fails;
 			retryTime = Math.min(retryTime, this.maxReconnectTime);
 		}
 

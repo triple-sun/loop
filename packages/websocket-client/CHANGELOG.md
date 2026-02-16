@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1] - 2026-02-17
+
+### Changed
+- Renamed `maxFails` option to `backoffAfterFails`.
+
+### Fixed
+- Fixed `maxReconnectTime` defaulting to min reconnect time.
+
+### Added 
+- Added browser network event listeners teardown.
+
+
 ## [0.1.0] - 2026-02-14
 
 ### Added
