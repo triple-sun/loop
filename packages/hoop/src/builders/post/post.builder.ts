@@ -13,7 +13,6 @@ import { Builder } from "../../internal/builders";
 import {
 	clearCollection,
 	find,
-	findIndex,
 	isSelected,
 	mutateCollection
 } from "../../internal/utils";
@@ -304,14 +303,10 @@ export class PostBuilder<
 			mutagen: Mutagen<AttachmentBuilder>,
 			finder: IndexOrFinder<AttachmentBuilder> = 0
 		): this => {
-			const attachments = this.d.props.get("attachments");
-			const index = findIndex(finder, attachments);
-
-			if (index >= 0 && attachments[index]) {
-				const updated = [...attachments];
-				updated[index] = mutagen(attachments[index]);
-				this.d.props.set("attachments", updated);
-			}
+			this.d.props.set(
+				"attachments",
+				mutateCollection(this.d.props.get("attachments"), mutagen, finder)
+			);
 
 			return this;
 		},
@@ -621,7 +616,7 @@ export class PostBuilder<
 		mutateAll: (
 			mutagen: Mutagen<FieldBuilder>,
 			attachmentSelector?: Selector<AttachmentBuilder>,
-			attachmentActionSelector?: Selector<FieldBuilder>
+			attachmentFieldSelector?: Selector<FieldBuilder>
 		): this => {
 			this.d.props.set(
 				"attachments",
@@ -630,7 +625,7 @@ export class PostBuilder<
 						at.set(
 							"fields",
 							at.get("fields").map((ac, i) => {
-								if (isSelected(ac, attachmentActionSelector, i)) {
+								if (isSelected(ac, attachmentFieldSelector, i)) {
 									return mutagen(ac);
 								}
 

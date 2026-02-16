@@ -1390,8 +1390,6 @@ describe("builders/post/post.builder", () => {
 					}
 				);
 
-				console.log({ builder });
-
 				builder.fields.append(
 					1,
 					{ title: "Field 1", value: "Value 1" },

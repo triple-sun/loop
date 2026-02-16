@@ -6,10 +6,7 @@ export interface OptionInitial extends Partial<Option> {
 }
 
 /**
- * Post attachment field builder
- *
- * {@link https://developers.mattermost.com/integrate/reference/message-attachments/ | Attachments}
- * {@link https://developers.mattermost.com/integrate/plugins/interactive-messages/ | Interactive messages}
+ * Universal option builder
  */
 export class OptionBuilder extends Builder<Option> {
 	constructor(o: OptionInitial) {

@@ -1,6 +1,6 @@
 {
 	"name": "@triple-sun/hoop",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Пакет SDK для Loop/Mattermost",
 	"author": "Semen Kononets <sploit.strannik@gmail.com>",
 	"license": "MIT",
