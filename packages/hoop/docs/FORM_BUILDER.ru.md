@@ -1,8 +1,8 @@
 # Гайд по Form Builder
 
-`FormBuilder` — это инструмент для создания валидных форм Loop/Mattermost (AppForms). Он управляет структурой формы, полями и привязкой событий.
+`FormBuilder` — это инструмент для создания форм для Loop/Mattermost app framework (AppForms).
 
-## Быстрый пример
+## Базовый пример
 
 ```typescript
 import { HoopFactory, FormFieldFactory } from '@triple-sun/hoop';
@@ -17,7 +17,7 @@ const form = HoopFactory.Form()
   .build();
 ```
 
-## Основной билдер: FormBuilder
+## Основной билдер: Form
 
 Точка входа: `HoopFactory.Form()`.
 

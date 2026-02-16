@@ -156,7 +156,7 @@ export class LoopClient extends Methods {
 			testConnectionOnInit = false,
 			agent = undefined,
 			tls = undefined,
-			timeout = 0,
+			timeout = 30000,
 			headers = {},
 			requestInterceptor = undefined,
 			adapter = undefined

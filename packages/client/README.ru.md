@@ -106,7 +106,7 @@ const client = new LoopClient('https://your-loop-server.loop.ru', {
   token: 'your-api-token',
   userID: 'me', // Опционально: ID текущего пользователя (вычисляется автоматически, если не передан)
   
-  // Автоматическое определение и поведение
+  // Автоматическое поведение
   useCurrentUserForDirectChannels: true, // Автоматически подставлять ID текущего пользователя для создания ЛС
   useCurrentUserForPostCreation: true,   // Автоматически определять channel_id или user_id при создании поста
   saveFetchedUserID: false,              // Кешировать полученный ID пользователя для будущих запросов
@@ -117,7 +117,7 @@ const client = new LoopClient('https://your-loop-server.loop.ru', {
   
   // Настройка производительности
   maxRequestConcurrency: 50, // Ограничение параллельных запросов
-  retryConfig: fiveRetriesInFiveMinutes, // Пользовательская политика повторов
+  retryConfig: fiveRetriesInFiveMinutes, // Политика повторов
   
   // Настройка сети
   timeout: 30000, // Таймаут запроса в мс
@@ -159,7 +159,7 @@ await client.users.updateRoles({
   roles: 'system_user system_admin'
 });
 
-// Установить статус пользователя
+// Установить стандартный статус пользователя
 await client.users.status.set({
   user_id: 'me',
   status: 'away'
@@ -294,7 +294,7 @@ await client.teams.search({ term: 'разработка' });
 - **Соответствие**: Отчёты о соответствии (`client.compliance.*`)
 - **И многое другое...**
 
-Смотрите [документацию Loop API](https://developers.loop.ru/API/4.0.0/loop-api-reference) для полного справочника API.
+См. [документацию Loop API](https://developers.loop.ru/API/4.0.0/loop-api-reference) для полного API.
 
 ### Обработка ошибок
 
@@ -341,7 +341,7 @@ const client2 = new LoopClient(url, {
   retryConfig: fiveRetriesInFiveMinutes
 });
 
-// Пользовательская политика повторов
+// Своя политика повторов
 const client3 = new LoopClient(url, {
   token,
   retryConfig: {

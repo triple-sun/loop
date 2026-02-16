@@ -1,6 +1,6 @@
 # Гайд по Post Builder
 
-`PostBuilder` — основной инструмент для создания богатых, интерактивных постов в Loop/Mattermost. Он берет на себя сложность вложенных объектов, позволяя сосредоточиться на контенте.
+`PostBuilder` — основной инструмент для создания постов в Loop/Mattermost.
 
 ## Быстрый пример
 
@@ -39,7 +39,7 @@ const post = HoopFactory.Post()
 
 ### Метаданные
 
-Прикрепление типизированных данных напрямую:
+Прикрепление типизированных метаданных напрямую:
 
 ```typescript
 interface MyMetadata {
@@ -63,8 +63,6 @@ const updateArgs = builder.buildToUpdate('post-id-456');
 ```
 
 ## Вложения (Attachments)
-
-Вложения добавляют структуру: цветные рамки, заголовки и поля.
 
 ### Простые вложения
 
@@ -222,7 +220,7 @@ const allFields = builder.getAllFields();
 
 ## App Bindings
 
-Использование bindings для слэш-команд и меню.
+Использование bindings в постах.
 
 ```typescript
 import { BindingFactory } from '@triple-sun/hoop';
@@ -307,7 +305,7 @@ builder.actions.append(
 );
 ```
 
-## Частые паттерны
+## Примеры
 
 ### Посты с несколькими вложениями
 

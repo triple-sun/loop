@@ -1,7 +1,7 @@
 {
 	"name": "@triple-sun/loop",
 	"description": "Loop TypeScript clients and types",
-	"author": "Simon Kononets <[EMAIL_ADDRESS]>",
+	"author": "Simon Kononets <sploit.strannik@gmail.com>",
 	"license": "ISC",
 	"keywords": [
 		"loop",

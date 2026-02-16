@@ -1,6 +1,8 @@
 {
 	"name": "loop-client",
 	"version": "0.1.2",
+	"author": "Simon Kononets <sploit.strannik@gmail.com>",
+	"license": "ISC",
 	"main": "build/src/index.js",
 	"types": "build/src/index.d.ts",
 	"description": "\"Loop/Mattermost TypeScript client\"",
@@ -23,8 +25,7 @@
 		"type": "git",
 		"url": "git+https://github.com/triple-sun/loop.git"
 	},
-	"author": "Simon Kononets <[EMAIL_ADDRESS]>",
-	"license": "ISC",
+
 	"bugs": {
 		"url": "https://github.com/triple-sun/loop/issues"
 	},
